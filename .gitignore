@@ -1,20 +1,19 @@
-# Data files
-data/
-*.gz
-*.tar.gz
-
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
+*.pyo
 .venv/
 venv/
 
+# 데이터셋 원본 (용량 큼)
+data/raw/
+
+# macOS
+.DS_Store
+
 # IDE
 .idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
+
+# 그래프 이미지 (용량 절약)
+data/**/*.png
+data/**/*.jpg
