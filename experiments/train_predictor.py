@@ -28,6 +28,12 @@ import os
 import ast
 import numpy as np
 import pandas as pd
+import joblib   # 학습된 모델을 파일로 저장/불러오기 위한 라이브러리
+import warnings
+
+# sklearn 내부에서 joblib 버전 불일치로 발생하는 UserWarning 억제
+# (GridSearchCV 병렬 처리 시 수백 줄 반복 출력되는 무해한 경고)
+warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
 
 # 기계학습 관련 (scikit-learn)
 from sklearn.ensemble import RandomForestRegressor
@@ -61,8 +67,13 @@ STAGE1_DIR  = os.path.join(DATA_DIR, 'stage1')   # ANN 실험 결과
 STAGE2_DIR  = os.path.join(DATA_DIR, 'stage2')   # CNN 실험 결과
 STAGE3_DIR  = os.path.join(DATA_DIR, 'stage3', 'v2')  # 예측 모델 결과 저장
 
-ANN_CSV = os.path.join(STAGE1_DIR, 'ann_mnist_results.csv')
-CNN_CSV = os.path.join(STAGE2_DIR, 'cnn_cifar10_results.csv')
+STAGE4_DIR  = os.path.join(DATA_DIR, 'stage4')   # Transformer / GAN 실험 결과
+STAGE3_V3_DIR = os.path.join(DATA_DIR, 'stage3', 'v3')  # v3 결과 저장 (4종 통합)
+
+ANN_CSV         = os.path.join(STAGE1_DIR, 'ann_mnist_results.csv')
+CNN_CSV         = os.path.join(STAGE2_DIR, 'cnn_cifar10_results.csv')
+TRANSFORMER_CSV = os.path.join(STAGE4_DIR, 'transformer_results.csv')
+GAN_CSV         = os.path.join(STAGE4_DIR, 'gan_results.csv')
 
 
 # ──────────────────────────────────────────────────────────
@@ -143,6 +154,12 @@ FEATURE_COLUMNS = [
     'num_classes',
     'batch_size',
     'dataset_encoded',
+    # [Transformer 전용 Feature] — 다른 모델 타입은 0으로 채움
+    'embed_dim',   # 임베딩 벡터 차원 (attention 내부 표현 크기)
+    'num_heads',   # Multi-Head Attention의 헤드 수
+    'patch_size',  # 이미지를 나누는 패치 크기 (Vision Transformer용)
+    # [GAN 전용 Feature] — 다른 모델 타입은 0으로 채움
+    'latent_dim',  # Generator 입력 노이즈 벡터 차원
 ]
 
 TARGET_INFERENCE = 'inference_time_mean_ms'
@@ -230,6 +247,12 @@ def load_ann_data(csv_path):
     df['dataset_name']    = 'MNIST'
     df['dataset_encoded'] = 0
 
+    # Transformer / GAN 전용 Feature (ANN은 해당 없으므로 0)
+    df['embed_dim']  = 0
+    df['num_heads']  = 0
+    df['patch_size'] = 0
+    df['latent_dim'] = 0
+
     print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (로그 변환 Feature 포함)")
     return df
 
@@ -292,25 +315,211 @@ def load_cnn_data(csv_path):
     df['dataset_name']    = 'CIFAR-10'
     df['dataset_encoded'] = 1
 
+    # Transformer / GAN 전용 Feature (CNN은 해당 없으므로 0)
+    df['embed_dim']  = 0
+    df['num_heads']  = 0
+    df['patch_size'] = 0
+    df['latent_dim'] = 0
+
     print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (로그 변환 Feature 포함)")
     return df
 
 
-def merge_data(ann_df, cnn_df):
+def load_transformer_data(csv_path):
     """
-    ANN과 CNN 데이터를 하나로 병합하는 함수
+    Transformer 실험 결과 CSV 로드 및 Feature 추출 함수
+
+    Transformer(Vision Transformer, ViT)는 이미지를 패치로 나눠
+    Self-Attention으로 처리하는 모델입니다.
+
+    [Transformer 고유 Feature]
+    - embed_dim: 임베딩 차원 (각 패치를 표현하는 벡터 크기)
+    - num_heads: Multi-Head Attention의 헤드 수
+    - patch_size: 이미지를 나누는 패치 크기 (예: 4 → 4×4 패치)
+
+    [기존 Feature와의 매핑]
+    - max_width / avg_width / min_width = embed_dim (Transformer의 주요 너비)
+    - num_layers = num_layers (인코더 블록 수)
+    - num_conv_layers = 0 (Convolution 없음)
+    - model_type_encoded = 4 (신규: Transformer)
 
     Args:
-        ann_df: ANN 데이터프레임
-        cnn_df: CNN 데이터프레임
+        csv_path (str): transformer_results.csv 경로
+
+    Returns:
+        pd.DataFrame: Feature가 추출된 데이터프레임
+    """
+    print(f"\n[Transformer 데이터 로드] {os.path.basename(csv_path)}")
+    df = pd.read_csv(csv_path)
+    print(f"  행 수: {len(df)}개")
+
+    # Transformer 고유 구조 Feature 직접 매핑
+    df['embed_dim']  = df['embed_dim']   # 임베딩 차원
+    df['num_heads']  = df['num_heads']   # Attention 헤드 수
+    df['patch_size'] = df['patch_size']  # 패치 크기
+
+    # 기존 Feature 세트와 통일 (Transformer는 FC 구조가 없으므로 embed_dim을 width로 사용)
+    df['max_width']         = df['embed_dim']
+    df['min_width']         = df['embed_dim']
+    df['avg_width']         = df['embed_dim'].astype(float)
+    df['num_hidden_layers'] = df['num_layers']
+    df['num_conv_layers']   = 0          # Transformer는 Conv 레이어 없음
+    df['base_channels']     = 0
+
+    # 모델 크기 계산
+    df['model_size_mb'] = df['total_params'] * 4 / (1024 * 1024)
+
+    # CNN 전용 Feature (Transformer는 해당 없음)
+    df['cnn_has_pooling']   = 0
+    df['cnn_has_batchnorm'] = 0   # LayerNorm 사용 (BatchNorm 아님)
+    df['cnn_num_fc_layers'] = 1   # 분류 헤드 1개
+    df['cnn_kernel_size']   = 0
+
+    # GAN 전용 Feature (해당 없음)
+    df['latent_dim'] = 0
+
+    # 인코딩
+    df['model_type_encoded'] = 4   # Transformer = 4 (신규)
+    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
+
+    # 로그 변환 Feature (범위 균일화)
+    df['log_total_params']  = np.log1p(df['total_params'])
+    df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
+    df['log_max_width']     = np.log1p(df['max_width'])
+
+    # 하드웨어 Feature (M1 Mac 고정값)
+    for key, val in HARDWARE_INFO.items():
+        df[key] = val
+
+    # 입력 데이터 Feature (CIFAR-10 기준)
+    df['input_channels']  = df['img_channels']
+    df['input_height']    = df['img_size']
+    df['input_width']     = df['img_size']
+    df['batch_size']      = df['batch_size']
+    df['dataset_name']    = 'CIFAR-10'
+    df['dataset_encoded'] = 1   # CIFAR-10 = 1
+
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (Transformer 전용 Feature 포함)")
+    return df
+
+
+def load_gan_data(csv_path):
+    """
+    GAN 실험 결과 CSV 로드 및 Feature 추출 함수
+
+    GAN(Generative Adversarial Network)은 Generator와 Discriminator
+    두 신경망이 서로 경쟁하며 학습하는 구조입니다.
+
+    [GAN 고유 Feature]
+    - latent_dim: Generator 입력 노이즈 벡터 차원 (생성 다양성 제어)
+
+    [기존 Feature와의 매핑]
+    - max_width / min_width / avg_width = Generator 히든 레이어의 최대/최소/평균
+    - num_layers = num_layers (Generator 히든 레이어 수)
+    - num_conv_layers = 0 (FC 기반 GAN)
+    - model_type_encoded = 5 (신규: GAN)
+
+    Args:
+        csv_path (str): gan_results.csv 경로
+
+    Returns:
+        pd.DataFrame: Feature가 추출된 데이터프레임
+    """
+    print(f"\n[GAN 데이터 로드] {os.path.basename(csv_path)}")
+    df = pd.read_csv(csv_path)
+    print(f"  행 수: {len(df)}개")
+
+    # g_hidden_dims 컬럼 파싱: "[128, 256]" 문자열 → 파이썬 리스트
+    def parse_dims(s):
+        try:
+            return ast.literal_eval(s)
+        except Exception:
+            return [128]
+
+    df['g_dims_list'] = df['g_hidden_dims'].apply(parse_dims)
+
+    # Generator 히든 레이어 크기를 width로 사용
+    df['max_width']         = df['g_dims_list'].apply(max)
+    df['min_width']         = df['g_dims_list'].apply(min)
+    df['avg_width']         = df['g_dims_list'].apply(np.mean)
+    df['num_hidden_layers'] = df['num_layers']
+    df['num_conv_layers']   = 0   # FC 기반 GAN (Conv 없음)
+    df['base_channels']     = 0
+
+    # GAN 고유 Feature
+    df['latent_dim'] = df['latent_dim']  # 노이즈 벡터 차원
+
+    # 모델 크기 계산 (G + D 합산 파라미터 기준)
+    df['model_size_mb'] = df['total_params'] * 4 / (1024 * 1024)
+
+    # CNN 전용 Feature (GAN은 해당 없음)
+    df['cnn_has_pooling']   = 0
+    df['cnn_has_batchnorm'] = 0
+    df['cnn_num_fc_layers'] = df['num_layers']   # FC 레이어 수 = GAN 레이어 수
+    df['cnn_kernel_size']   = 0
+
+    # Transformer 전용 Feature (GAN은 해당 없음)
+    df['embed_dim']  = 0
+    df['num_heads']  = 0
+    df['patch_size'] = 0
+
+    # 인코딩
+    df['model_type_encoded'] = 5   # GAN = 5 (신규)
+    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
+
+    # 로그 변환 Feature
+    df['log_total_params']  = np.log1p(df['total_params'])
+    df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
+    df['log_max_width']     = np.log1p(df['max_width'])
+
+    # 하드웨어 Feature (M1 Mac 고정값)
+    for key, val in HARDWARE_INFO.items():
+        df[key] = val
+
+    # 입력 데이터 Feature (MNIST 기준)
+    df['input_channels']  = df['img_channels']
+    df['input_height']    = df['img_size']
+    df['input_width']     = df['img_size']
+    df['num_classes']     = 0    # GAN은 분류 클래스 없음
+    df['dataset_name']    = 'MNIST'
+    df['dataset_encoded'] = 0   # MNIST = 0
+
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (GAN 전용 Feature 포함)")
+    return df
+
+
+def merge_data(ann_df, cnn_df, transformer_df, gan_df):
+    """
+    ANN / CNN / Transformer / GAN 데이터를 하나로 병합하는 함수
+
+    v3 업데이트: 4종 모델 타입 통합 (총 ~114행)
+    - ANN      : 52행 (Stage 1 확장)
+    - CNN      : 22행 (Stage 2)
+    - Transformer: 24행 (Stage 4)
+    - GAN      : 16행 (Stage 4)
+
+    Args:
+        ann_df (pd.DataFrame): ANN 데이터프레임
+        cnn_df (pd.DataFrame): CNN 데이터프레임
+        transformer_df (pd.DataFrame): Transformer 데이터프레임
+        gan_df (pd.DataFrame): GAN 데이터프레임
 
     Returns:
         pd.DataFrame: 병합된 데이터프레임
     """
     print(f"\n[데이터 병합]")
     needed_cols = FEATURE_COLUMNS + [TARGET_INFERENCE, TARGET_TRAINING, 'device', 'dataset_name']
-    merged = pd.concat([ann_df[needed_cols], cnn_df[needed_cols]], ignore_index=True)
-    print(f"  ANN {len(ann_df)}행 + CNN {len(cnn_df)}행 = 총 {len(merged)}행")
+    merged = pd.concat(
+        [
+            ann_df[needed_cols],
+            cnn_df[needed_cols],
+            transformer_df[needed_cols],
+            gan_df[needed_cols],
+        ],
+        ignore_index=True,
+    )
+    print(f"  ANN {len(ann_df)}행 + CNN {len(cnn_df)}행 "
+          f"+ Transformer {len(transformer_df)}행 + GAN {len(gan_df)}행 = 총 {len(merged)}행")
     return merged
 
 
@@ -516,16 +725,18 @@ def main():
     """
 
     print("=" * 70)
-    print("  3단계 (개선판): DNN 실행 시간 예측 모델")
-    print("  개선: 로그 변환 + K-Fold(5) + GridSearchCV 하이퍼파라미터 튜닝")
+    print("  3단계 v3: DNN 실행 시간 예측 모델 (Transformer/GAN 통합)")
+    print("  개선: 로그 변환 + K-Fold(5) + GridSearchCV + 4종 모델 통합")
     print("=" * 70)
 
-    # ── 1. 데이터 로드 ─────────────────────────────────────
-    ann_df = load_ann_data(ANN_CSV)
-    cnn_df = load_cnn_data(CNN_CSV)
+    # ── 1. 데이터 로드 (4종 모델) ──────────────────────────
+    ann_df         = load_ann_data(ANN_CSV)
+    cnn_df         = load_cnn_data(CNN_CSV)
+    transformer_df = load_transformer_data(TRANSFORMER_CSV)
+    gan_df         = load_gan_data(GAN_CSV)
 
     # ── 2. 데이터 병합 ─────────────────────────────────────
-    merged_df = merge_data(ann_df, cnn_df)
+    merged_df = merge_data(ann_df, cnn_df, transformer_df, gan_df)
 
     # NaN 처리
     nan_count = merged_df[FEATURE_COLUMNS].isna().sum().sum()
@@ -534,12 +745,14 @@ def main():
         merged_df[FEATURE_COLUMNS] = merged_df[FEATURE_COLUMNS].fillna(0)
 
     print(f"\n[데이터 요약]")
-    print(f"  전체 데이터  : {len(merged_df)}개")
-    print(f"  CPU 데이터   : {(merged_df['device_encoded'] == 0).sum()}개")
-    print(f"  MPS 데이터   : {(merged_df['device_encoded'] == 1).sum()}개")
-    print(f"  ANN 데이터   : {(merged_df['model_type_encoded'] == 0).sum()}개")
-    print(f"  CNN 데이터   : {(merged_df['model_type_encoded'] > 0).sum()}개")
-    print(f"  Feature 수   : {len(FEATURE_COLUMNS)}개")
+    print(f"  전체 데이터     : {len(merged_df)}개")
+    print(f"  CPU 데이터      : {(merged_df['device_encoded'] == 0).sum()}개")
+    print(f"  MPS 데이터      : {(merged_df['device_encoded'] == 1).sum()}개")
+    print(f"  ANN 데이터      : {(merged_df['model_type_encoded'] == 0).sum()}개")
+    print(f"  CNN 데이터      : {(merged_df['model_type_encoded'].isin([1,2,3])).sum()}개")
+    print(f"  Transformer 데이터: {(merged_df['model_type_encoded'] == 4).sum()}개")
+    print(f"  GAN 데이터      : {(merged_df['model_type_encoded'] == 5).sum()}개")
+    print(f"  Feature 수      : {len(FEATURE_COLUMNS)}개")
 
     # ── 3. Feature(X)와 타겟(y) 분리 + 로그 변환 ──────────
     X = merged_df[FEATURE_COLUMNS].values
@@ -622,45 +835,66 @@ def main():
     print(f"  - R2: 원래 단위(ms, sec)에서의 R² (실제 예측 성능)")
 
     # ── 6. 시각화 저장 ─────────────────────────────────────
-    # stage3/v2 폴더가 없으면 생성
-    os.makedirs(STAGE3_DIR, exist_ok=True)
+    # stage3/v3 폴더가 없으면 생성 (v3: Transformer/GAN 통합 버전)
+    os.makedirs(STAGE3_V3_DIR, exist_ok=True)
 
     print(f"\n{'=' * 70}")
-    print("[시각화 저장 → data/stage3/v2/ 폴더]")
+    print("[시각화 저장 → data/stage3/v3/ 폴더]")
     print(f"{'=' * 70}")
 
     print(f"\n  Feature 중요도 그래프:")
     plot_feature_importance(rf_inf_model,  FEATURE_COLUMNS, "RandomForest", "Inference Time",
-                            os.path.join(STAGE3_DIR, "stage3_v2_rf_feature_importance_inference.png"))
+                            os.path.join(STAGE3_V3_DIR, "stage3_v3_rf_feature_importance_inference.png"))
     plot_feature_importance(xgb_inf_model, FEATURE_COLUMNS, "XGBoost",      "Inference Time",
-                            os.path.join(STAGE3_DIR, "stage3_v2_xgb_feature_importance_inference.png"))
+                            os.path.join(STAGE3_V3_DIR, "stage3_v3_xgb_feature_importance_inference.png"))
     plot_feature_importance(rf_tr_model,   FEATURE_COLUMNS, "RandomForest", "Training Time",
-                            os.path.join(STAGE3_DIR, "stage3_v2_rf_feature_importance_training.png"))
+                            os.path.join(STAGE3_V3_DIR, "stage3_v3_rf_feature_importance_training.png"))
     plot_feature_importance(xgb_tr_model,  FEATURE_COLUMNS, "XGBoost",      "Training Time",
-                            os.path.join(STAGE3_DIR, "stage3_v2_xgb_feature_importance_training.png"))
+                            os.path.join(STAGE3_V3_DIR, "stage3_v3_xgb_feature_importance_training.png"))
 
     print(f"\n  예측 vs 실제 산점도 (log 공간 + 원래 단위 동시 표시):")
     plot_pred_vs_actual(y_inf_log, rf_inf_pred,  "RandomForest", "Inference Time (ms)",
-                        os.path.join(STAGE3_DIR, "stage3_v2_rf_pred_vs_actual_inference.png"))
+                        os.path.join(STAGE3_V3_DIR, "stage3_v3_rf_pred_vs_actual_inference.png"))
     plot_pred_vs_actual(y_inf_log, xgb_inf_pred, "XGBoost",      "Inference Time (ms)",
-                        os.path.join(STAGE3_DIR, "stage3_v2_xgb_pred_vs_actual_inference.png"))
+                        os.path.join(STAGE3_V3_DIR, "stage3_v3_xgb_pred_vs_actual_inference.png"))
     plot_pred_vs_actual(y_tr_log,  rf_tr_pred,   "RandomForest", "Training Time (sec)",
-                        os.path.join(STAGE3_DIR, "stage3_v2_rf_pred_vs_actual_training.png"))
+                        os.path.join(STAGE3_V3_DIR, "stage3_v3_rf_pred_vs_actual_training.png"))
     plot_pred_vs_actual(y_tr_log,  xgb_tr_pred,  "XGBoost",      "Training Time (sec)",
-                        os.path.join(STAGE3_DIR, "stage3_v2_xgb_pred_vs_actual_training.png"))
+                        os.path.join(STAGE3_V3_DIR, "stage3_v3_xgb_pred_vs_actual_training.png"))
 
     # ── 7. 결과 저장 ───────────────────────────────────────
-    results_path = os.path.join(STAGE3_DIR, "stage3_v2_prediction_results.csv")
+    results_path = os.path.join(STAGE3_V3_DIR, "stage3_v3_prediction_results.csv")
     results_df.to_csv(results_path, index=False, encoding='utf-8-sig')
 
-    merged_path = os.path.join(STAGE3_DIR, "stage3_v2_merged_features.csv")
+    merged_path = os.path.join(STAGE3_V3_DIR, "stage3_v3_merged_features.csv")
     merged_df.to_csv(merged_path, index=False, encoding='utf-8-sig')
 
+    # ── 8. 학습된 모델 joblib으로 저장 (Stage 5 ONNX 예측에서 사용) ───────
+    # joblib: 파이썬 객체(모델, 배열 등)를 파일로 저장하고 불러오는 도구
+    # 저장된 모델은 predict_from_onnx.py에서 불러와서 새 모델 실행 시간 예측에 사용됨
+    MODEL_DIR = os.path.join(BASE_DIR, 'models', 'trained')
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+    # 추론 시간 예측 모델 저장 (XGBoost + RandomForest)
+    joblib.dump(xgb_inf_model,  os.path.join(MODEL_DIR, 'xgb_inference.pkl'))
+    joblib.dump(xgb_tr_model,   os.path.join(MODEL_DIR, 'xgb_training.pkl'))
+    joblib.dump(rf_inf_model,   os.path.join(MODEL_DIR, 'rf_inference.pkl'))
+    joblib.dump(rf_tr_model,    os.path.join(MODEL_DIR, 'rf_training.pkl'))
+
+    # Feature 컬럼 목록 저장 (predict_from_onnx.py에서 Feature 순서 맞추는 데 필요)
+    joblib.dump(FEATURE_COLUMNS, os.path.join(MODEL_DIR, 'feature_columns.pkl'))
+
     print(f"\n{'=' * 70}")
-    print(f"  3단계 (개선판) 완료!")
+    print(f"  3단계 v3 완료! (ANN+CNN+Transformer+GAN 통합)")
     print(f"  결과: {results_path}")
     print(f"  Feature 데이터: {merged_path}")
-    print(f"  그래프: data/stage3/v2/stage3_v2_*.png (8개)")
+    print(f"  그래프: data/stage3/v3/stage3_v3_*.png (8개)")
+    print(f"\n  [Stage 5용 모델 저장 완료]")
+    print(f"  → {MODEL_DIR}/xgb_inference.pkl  (추론 시간 XGBoost)")
+    print(f"  → {MODEL_DIR}/xgb_training.pkl   (학습 시간 XGBoost)")
+    print(f"  → {MODEL_DIR}/rf_inference.pkl   (추론 시간 RandomForest)")
+    print(f"  → {MODEL_DIR}/rf_training.pkl    (학습 시간 RandomForest)")
+    print(f"  → {MODEL_DIR}/feature_columns.pkl (Feature 컬럼 순서)")
     print(f"{'=' * 70}\n")
 
 

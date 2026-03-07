@@ -17,3 +17,10 @@ data/raw/
 # 그래프 이미지 (용량 절약)
 data/**/*.png
 data/**/*.jpg
+
+# 대용량 데이터 파일 제외
+data/MNIST/
+data/cifar-10-batches-py/
+data/cifar-10-python.tar.gz
+data/ann_mnist_results.csv
+data/cnn_cifar10_results.csv
