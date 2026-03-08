@@ -79,12 +79,14 @@ def extract_features(model, model_type, model_config, device_str, input_config):
     linear_params = 0
     conv_params = 0
 
+    # 레이어 타입별 파라미터 분리: Linear/Conv를 구분하려면 module 단위로 순회해야 함
     for module in model.modules():
         if isinstance(module, nn.Linear):
             linear_params += sum(p.numel() for p in module.parameters())
         elif isinstance(module, nn.Conv2d):
             conv_params += sum(p.numel() for p in module.parameters())
 
+    # 전체/학습가능 파라미터는 타입 구분 없이 모든 텐서를 봐야 하므로 별도 순회
     for p in model.parameters():
         total_params += p.numel()
         if p.requires_grad:
@@ -156,7 +158,7 @@ def extract_features(model, model_type, model_config, device_str, input_config):
 
 
 def _estimate_flops(model, input_shape):
-    """Forward hook으로 FLOPs 추정
+    """Forward hook으로 FLOPs(모델이 계산해야 하는 총 연산 횟수) 추정
 
     Conv2d: 2 * Cin * Cout * K * K * Hout * Wout
     Linear: 2 * in_features * out_features

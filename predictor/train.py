@@ -12,16 +12,20 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+
+# joblib 임시 폴더를 한글 없는 경로로 설정 (UnicodeEncodeError 방지)
+os.environ.setdefault('JOBLIB_TEMP_FOLDER', 'C:/Temp/joblib')
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, GridSearchCV, cross_val_predict
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import xgboost as xgb
 
-ROOT_DIR         = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ANN_CSV_PATH     = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
-CNN_CSV_PATH     = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
-RESULT_CSV_PATH  = os.path.join(ROOT_DIR, 'data', 'predictor_results.csv')
+ROOT_DIR              = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ANN_CSV_PATH          = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
+CNN_CSV_PATH          = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
+RESULT_CSV_PATH       = os.path.join(ROOT_DIR, 'data', 'predictor_results.csv')
+IMPORTANCE_CSV_PATH   = os.path.join(ROOT_DIR, 'data', 'feature_importance_results.csv')
 
 # ── Feature / Target 설정 ─────────────────────────────────
 FEATURE_COLUMNS = [
@@ -50,7 +54,7 @@ def load_data():
     """ANN + CNN CSV 로드 및 전처리
 
     - 존재하는 CSV만 읽어서 합침 (ANN만 있어도 동작)
-    - device 문자열 → 숫자 인코딩 (cpu=0, cuda=1, mps=2)
+    - device 문자열 → 숫자 인코딩 (cpu=0, cuda=1)
     - NaN → 0 대체
     """
     dfs = []
@@ -65,7 +69,7 @@ def load_data():
     df = pd.concat(dfs, ignore_index=True)
     print(f"합계: {len(df)}행\n")
 
-    df['device'] = df['device'].map({'cpu': 0, 'cuda': 1, 'mps': 2})
+    df['device'] = df['device'].map({'cpu': 0, 'cuda': 1})
     df[FEATURE_COLUMNS] = df[FEATURE_COLUMNS].fillna(0)
 
     print(f"  CPU 데이터: {(df['device'] == 0).sum()}개")
@@ -82,6 +86,12 @@ def evaluate(y_true_log, y_pred_log, model_name, target_name):
 
     log1p 역변환(expm1)으로 원래 단위(초) 복원 후
     R², RMSE, MAE 계산
+
+    평가 지표 설명
+    - R²      : 모델이 데이터를 얼마나 잘 설명하는지 나타내는 지표
+    - RMSE    : 예측값과 실제값 차이의 제곱 평균의 루트 (큰 오차에 민감)
+    - MAE     : 예측값과 실제값 차이의 절대값 평균
+    - R²_log  : log 공간에서의 모델 설명력
     """
     y_true = np.expm1(y_true_log)
     y_pred = np.expm1(y_pred_log)
@@ -96,25 +106,36 @@ def evaluate(y_true_log, y_pred_log, model_name, target_name):
           f"RMSE: {rmse:.5f} | MAE: {mae:.5f}")
 
     return {
-        'model':  model_name,
-        'target': target_name,
-        'R2':     round(r2, 4),
-        'R2_log': round(r2_log, 4),
-        'RMSE':   round(rmse, 5),
-        'MAE':    round(mae, 5),
+        'model':      model_name,
+        'target':     target_name,
+        'R2':         round(r2, 4),
+        'R2_log':     round(r2_log, 4),
+        'RMSE':       round(rmse, 5),
+        'MAE':        round(mae, 5),
+        'best_params': None,
+        'cv_r2_log':  None,
     }
 
 
 # ── feature 중요도 출력 ───────────────────────────────────
 
 def print_feature_importance(model, target_name):
-    """RandomForest / XGBoost feature 중요도 상위 10개 출력"""
+    """RandomForest / XGBoost feature 중요도 상위 10개 출력 및 반환"""
     importances = model.feature_importances_
     indices = np.argsort(importances)[::-1]
     print(f"\n  [feature 중요도 - {target_name}] 상위 10개")
-    for i in range(min(10, len(FEATURE_COLUMNS))):
+    rows = []
+    for i in range(len(FEATURE_COLUMNS)):
         idx = indices[i]
-        print(f"    {i+1:2d}. {FEATURE_COLUMNS[idx]:<25s}: {importances[idx]:.4f}")
+        if i < 10:
+            print(f"    {i+1:2d}. {FEATURE_COLUMNS[idx]:<25s}: {importances[idx]:.4f}")
+        rows.append({
+            'target':    target_name,
+            'rank':      i + 1,
+            'feature':   FEATURE_COLUMNS[idx],
+            'importance': round(float(importances[idx]), 6),
+        })
+    return rows
 
 
 # ── 학습 및 교차검증 ─────────────────────────────────────
@@ -141,7 +162,7 @@ def train_and_evaluate(X, y_log, model_type, target_name):
         model = LinearRegression()
         model.fit(X, y_log)
         y_pred_log = cross_val_predict(model, X, y_log, cv=kf)
-        return model, y_pred_log
+        return model, y_pred_log, None, None
 
     if model_type == 'rf':
         base = RandomForestRegressor(random_state=42, n_jobs=-1)
@@ -158,6 +179,7 @@ def train_and_evaluate(X, y_log, model_type, target_name):
             'max_depth':     [3, 5],
         }
 
+    # param_grid에 정의된 여러 하이퍼파라미터 조합을 시험하고 가장 좋은 조합 반환
     gs = GridSearchCV(base, param_grid, cv=kf, scoring='r2', n_jobs=-1, verbose=0)
     gs.fit(X, y_log)
 
@@ -167,7 +189,7 @@ def train_and_evaluate(X, y_log, model_type, target_name):
     # 최적 모델로 교차검증 예측값 수집
     y_pred_log = cross_val_predict(gs.best_estimator_, X, y_log, cv=kf)
 
-    return gs.best_estimator_, y_pred_log
+    return gs.best_estimator_, y_pred_log, gs.best_params_, round(gs.best_score_, 4)
 
 
 # ── 메인 ─────────────────────────────────────────────────
@@ -185,8 +207,9 @@ def main():
     print(f"Feature 수: {len(FEATURE_COLUMNS)}개")
 
     # ── 장치별 분리 학습 ──────────────────────────────────
-    device_map = {0: 'CPU', 1: 'CUDA', 2: 'MPS'}
+    device_map = {0: 'CPU', 1: 'CUDA'}
     all_results = []
+    all_importances = []
 
     for device_code, device_name in device_map.items():
         subset = df[df['device'] == device_code]
@@ -199,41 +222,46 @@ def main():
         print(f"{'='*60}")
 
         X = subset[FEATURE_COLUMNS].values
-        # 타겟에 log1p 변환 적용
-        # 값 범위가 넓을 때(예: 0.001s ~ 100s) 그대로 학습하면 큰 값에 편향됨
-        # log1p 변환으로 범위를 균일하게 만들어 예측 성능 향상
         y_train_log = np.log1p(subset[TARGET_TRAIN].values)
         y_infer_log = np.log1p(subset[TARGET_INFER].values)
 
         # 학습 시간 예측
         print(f"\n  [학습 시간 예측]")
-        lr_tr,  lr_tr_pred  = train_and_evaluate(X, y_train_log, 'lr',  '학습시간')
-        rf_tr,  rf_tr_pred  = train_and_evaluate(X, y_train_log, 'rf',  '학습시간')
-        xgb_tr, xgb_tr_pred = train_and_evaluate(X, y_train_log, 'xgb', '학습시간')
+        lr_tr,  lr_tr_pred,  _,         _          = train_and_evaluate(X, y_train_log, 'lr',  '학습시간')
+        rf_tr,  rf_tr_pred,  rf_tr_p,   rf_tr_cv   = train_and_evaluate(X, y_train_log, 'rf',  '학습시간')
+        xgb_tr, xgb_tr_pred, xgb_tr_p,  xgb_tr_cv  = train_and_evaluate(X, y_train_log, 'xgb', '학습시간')
         print()
         r = evaluate(y_train_log, lr_tr_pred,  'LinearRegression', f'학습시간 [{device_name}]')
         all_results.append(r)
         r = evaluate(y_train_log, rf_tr_pred,  'RandomForest',     f'학습시간 [{device_name}]')
+        r['best_params'] = str(rf_tr_p);  r['cv_r2_log'] = rf_tr_cv
         all_results.append(r)
         r = evaluate(y_train_log, xgb_tr_pred, 'XGBoost',          f'학습시간 [{device_name}]')
+        r['best_params'] = str(xgb_tr_p); r['cv_r2_log'] = xgb_tr_cv
         all_results.append(r)
-        print_feature_importance(rf_tr,  f'학습시간 [{device_name}] - RandomForest')
-        print_feature_importance(xgb_tr, f'학습시간 [{device_name}] - XGBoost')
+        for row in print_feature_importance(rf_tr,  f'학습시간 [{device_name}] - RandomForest'):
+            row['device'] = device_name; all_importances.append(row)
+        for row in print_feature_importance(xgb_tr, f'학습시간 [{device_name}] - XGBoost'):
+            row['device'] = device_name; all_importances.append(row)
 
         # 추론 시간 예측
         print(f"\n  [추론 시간 예측]")
-        lr_inf,  lr_inf_pred  = train_and_evaluate(X, y_infer_log, 'lr',  '추론시간')
-        rf_inf,  rf_inf_pred  = train_and_evaluate(X, y_infer_log, 'rf',  '추론시간')
-        xgb_inf, xgb_inf_pred = train_and_evaluate(X, y_infer_log, 'xgb', '추론시간')
+        lr_inf,  lr_inf_pred,  _,          _           = train_and_evaluate(X, y_infer_log, 'lr',  '추론시간')
+        rf_inf,  rf_inf_pred,  rf_inf_p,   rf_inf_cv   = train_and_evaluate(X, y_infer_log, 'rf',  '추론시간')
+        xgb_inf, xgb_inf_pred, xgb_inf_p,  xgb_inf_cv  = train_and_evaluate(X, y_infer_log, 'xgb', '추론시간')
         print()
         r = evaluate(y_infer_log, lr_inf_pred,  'LinearRegression', f'추론시간 [{device_name}]')
         all_results.append(r)
         r = evaluate(y_infer_log, rf_inf_pred,  'RandomForest',     f'추론시간 [{device_name}]')
+        r['best_params'] = str(rf_inf_p);  r['cv_r2_log'] = rf_inf_cv
         all_results.append(r)
         r = evaluate(y_infer_log, xgb_inf_pred, 'XGBoost',          f'추론시간 [{device_name}]')
+        r['best_params'] = str(xgb_inf_p); r['cv_r2_log'] = xgb_inf_cv
         all_results.append(r)
-        print_feature_importance(rf_inf,  f'추론시간 [{device_name}] - RandomForest')
-        print_feature_importance(xgb_inf, f'추론시간 [{device_name}] - XGBoost')
+        for row in print_feature_importance(rf_inf,  f'추론시간 [{device_name}] - RandomForest'):
+            row['device'] = device_name; all_importances.append(row)
+        for row in print_feature_importance(xgb_inf, f'추론시간 [{device_name}] - XGBoost'):
+            row['device'] = device_name; all_importances.append(row)
 
     # ── 최종 결과 출력 ────────────────────────────────────
     print(f"\n{'='*60}")
@@ -246,7 +274,11 @@ def main():
     # ── 결과 CSV 저장 ─────────────────────────────────────
     os.makedirs(os.path.dirname(RESULT_CSV_PATH), exist_ok=True)
     results_df.to_csv(RESULT_CSV_PATH, index=False, encoding='utf-8-sig')
-    print(f"결과 저장 완료: {RESULT_CSV_PATH} ({len(results_df)}행)")
+    print(f"성능 결과 저장: {RESULT_CSV_PATH} ({len(results_df)}행)")
+
+    imp_df = pd.DataFrame(all_importances)
+    imp_df.to_csv(IMPORTANCE_CSV_PATH, index=False, encoding='utf-8-sig')
+    print(f"중요도 결과 저장: {IMPORTANCE_CSV_PATH} ({len(imp_df)}행)")
 
 
 if __name__ == '__main__':

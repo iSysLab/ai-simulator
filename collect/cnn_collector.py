@@ -4,7 +4,6 @@
     - num_filters     : 8, 16, 32, 64, 128
     - num_conv_layers : 1, 2, 3, 4, 5, 6
     - use_batchnorm   : False, True
-    - 조합 수          : 5 × 6 × 2 = 60가지
     - device          : cpu, cuda
     - warmup          : 3회
     - 반복 측정        : 10회
@@ -110,10 +109,10 @@ def measure_times(model_fn, train_batches, test_batches, device_str):
         sync(device_str)
         t0 = time.perf_counter()
         for data, target in train_batches:
-            optimizer.zero_grad()
-            loss = criterion(model(data), target)
-            loss.backward()
-            optimizer.step()
+            optimizer.zero_grad() # 이전 배치에서 계산된 gradient 초기화
+            loss = criterion(model(data), target) # loss를 기준으로 gradient 계산 (backpropagation)
+            loss.backward() # loss를 기준으로 gradient 계산 (backpropagation)
+            optimizer.step() # 계산된 gradient를 이용해 모델 가중치 업데이트
         sync(device_str)
         train_time = time.perf_counter() - t0
 
@@ -161,11 +160,26 @@ def run():
 
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 
-    results = []
-    total = len(NUM_FILTERS) * len(NUM_CONV_LAYERS) * len(USE_BATCHNORM) * len(devices)
+    # 기존 결과 로드 (이미 측정된 device 스킵)
+    if os.path.exists(OUTPUT_PATH):
+        existing_df = pd.read_csv(OUTPUT_PATH)
+        done_devices = set(existing_df['device'].unique())
+        existing_results = existing_df.to_dict('records')
+        print(f"기존 결과 로드: {len(existing_df)}행, 완료된 device: {done_devices}\n")
+    else:
+        done_devices = set()
+        existing_results = []
+
+    results = list(existing_results)
+    remaining_devices = [d for d in devices if d not in done_devices]
+    total = len(NUM_FILTERS) * len(NUM_CONV_LAYERS) * len(USE_BATCHNORM) * len(remaining_devices)
     count = 0
 
-    for device_str in devices:
+    if not remaining_devices:
+        print("모든 device 측정 완료. 추가 측정 없음.")
+        return
+
+    for device_str in remaining_devices:
         device = torch.device(device_str)
 
         # 데이터를 디바이스에 사전 로딩 (데이터 전송 시간 제외)

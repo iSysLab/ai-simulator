@@ -2,9 +2,7 @@
 
 실험 설정:
     - hidden_size : 16, 32, 64, 128, 256, 512, 1024
-    - num_hidden_layers: 1, 2, 4, 6, 8, 10
-    - 조합 수 : 7 × 6 = 42가지
-    - device   : cpu, cuda
+    - num_hidden_layers: 1, 2, 3, 4, 5, 6, 7
     - warmup   : 3회
     - 반복 측정 : 10회
     - batch_size: 64
@@ -33,11 +31,11 @@ from features.extractor import extract_features
 
 # ── 실험 설정 ─────────────────────────────────────────────
 HIDDEN_SIZES        = [16, 32, 64, 128, 256, 512, 1024]
-NUM_HIDDEN_LAYERS   = [1, 2, 3, 4, 5, 6, 7, 8]
+NUM_HIDDEN_LAYERS   = [1, 2, 3, 4, 5, 6, 7]
 BATCH_SIZE          = 64
 EPOCHS              = 1
-WARMUP_RUNS         = 3
-MEASURE_RUNS        = 10
+WARMUP_RUNS         = 2
+MEASURE_RUNS        = 3
 
 INPUT_CONFIG = {
     'batch_size':     BATCH_SIZE,
@@ -108,10 +106,10 @@ def measure_times(model_fn, train_batches, test_batches, device_str):
         sync(device_str)
         t0 = time.perf_counter()
         for data, target in train_batches:
-            optimizer.zero_grad()
-            loss = criterion(model(data), target)
-            loss.backward()
-            optimizer.step()
+            optimizer.zero_grad() # 이전 배치에서 계산된 gradient 초기화
+            loss = criterion(model(data), target) # loss를 기준으로 gradient 계산 (backpropagation)
+            loss.backward() # loss를 기준으로 gradient 계산 (backpropagation)
+            optimizer.step() # 계산된 gradient를 이용해 모델 가중치 업데이트
         sync(device_str)
         train_time = time.perf_counter() - t0
 
