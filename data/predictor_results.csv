@@ -1,0 +1,13 @@
+﻿model,target,R2,R2_log,RMSE,MAE,best_params,cv_r2_log
+LinearRegression,학습시간 [CPU],0.859,0.9628,11.18036,4.57927,,
+RandomForest,학습시간 [CPU],0.9743,0.9844,4.77314,2.35394,"{'max_depth': None, 'min_samples_split': 2, 'n_estimators': 200}",0.9821
+XGBoost,학습시간 [CPU],0.9898,0.9925,3.00624,1.58622,"{'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200}",0.9916
+LinearRegression,추론시간 [CPU],0.9608,0.979,0.40224,0.19331,,
+RandomForest,추론시간 [CPU],0.9869,0.993,0.23266,0.09718,"{'max_depth': None, 'min_samples_split': 2, 'n_estimators': 200}",0.993
+XGBoost,추론시간 [CPU],0.9944,0.9972,0.15136,0.06986,"{'learning_rate': 0.05, 'max_depth': 5, 'n_estimators': 200}",0.9968
+LinearRegression,학습시간 [CUDA],0.7547,0.9373,7.77573,3.29071,,
+RandomForest,학습시간 [CUDA],0.9586,0.9813,3.19566,1.60083,"{'max_depth': None, 'min_samples_split': 2, 'n_estimators': 200}",0.9811
+XGBoost,학습시간 [CUDA],0.9754,0.9883,2.46101,1.23248,"{'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200}",0.9873
+LinearRegression,추론시간 [CUDA],0.9513,0.9702,0.18863,0.09082,,
+RandomForest,추론시간 [CUDA],0.9701,0.9848,0.14776,0.06729,"{'max_depth': 10, 'min_samples_split': 2, 'n_estimators': 200}",0.9862
+XGBoost,추론시간 [CUDA],0.9675,0.9884,0.15406,0.06329,"{'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200}",0.9899
