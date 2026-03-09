@@ -2,3 +2,7 @@ torch
 torchvision
 numpy
 scikit-learn
+xgboost
+onnx
+joblib
+psutil
