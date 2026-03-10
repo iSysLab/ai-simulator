@@ -25,10 +25,11 @@ class DeviceManager:
         elif device.type == 'mps':
             torch.mps.empty_cache()
 
-    def warmup(self, device, model_fn):
+    def warmup(self, device, model_fn, input_shape=None):
         """GPU 워밍업: 더미 연산으로 커널 초기화"""
         if device.type in ('cuda', 'mps'):
-            dummy = torch.randn(1, 1, 28, 28, device=device)
+            shape = input_shape or (1, 1, 28, 28)
+            dummy = torch.randn(*shape, device=device)
             dummy_model = model_fn().to(device)
             with torch.no_grad():
                 _ = dummy_model(dummy)

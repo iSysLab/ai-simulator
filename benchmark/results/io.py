@@ -40,9 +40,15 @@ class ResultsManager:
         if csv_path is None:
             csv_path = self.output_path.replace('.json', '.csv')
 
-        keys = self.results[0].keys()
+        # 모든 결과에서 키를 수집 (op_profiler 등 선택적 필드 포함)
+        all_keys = {}
+        for r in self.results:
+            for k in r.keys():
+                all_keys[k] = True
+        fieldnames = list(all_keys.keys())
+
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=keys)
+            writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
             writer.writeheader()
             writer.writerows(self.results)
 

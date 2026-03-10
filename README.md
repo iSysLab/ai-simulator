@@ -1,11 +1,85 @@
 # DNN 실행 시간/공간 예측 시뮬레이션 프레임워크
 
 PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 요구량**을 예측하는 벤치마크 프레임워크입니다.
-MNIST / CIFAR-10 데이터셋에서 6종의 모델 아키텍처를 벤치마킹하고, 모델 구조 피처로부터 실행 시간을 예측하는 ML 모델을 학습합니다.
+6종의 모델 아키텍처(ANN, CNN, ResNet, MobileNet, Transformer, GAN)를 벤치마킹하고, **49개 모델 구조 피처**로부터 실행 시간을 예측하는 ML 회귀 모델을 학습합니다.
+
+## 실험 결과 요약
+
+### 벤치마크 데이터 (330개 샘플)
+
+| 모델 | 설정 수 | 디바이스 | 파라미터 범위 | 학습시간(s) | 추론시간(s) |
+|---|---|---|---|---|---|
+| ANN | 84 | CPU, CUDA | 12K ~ 2.2M | 0.24 ~ 2.53 | 0.002 ~ 0.086 |
+| CNN | 120 | CPU, CUDA | 2.5K ~ 8.6M | 0.72 ~ 686.5 | 0.008 ~ 41.7 |
+| ResNet | 36 | CPU, CUDA | 309K ~ 17.4M | 3.54 ~ 451.0 | 0.090 ~ 25.5 |
+| MobileNet | 40 | CPU, CUDA | 4.4K ~ 4.6M | 2.70 ~ 315.4 | 0.103 ~ 19.9 |
+| Transformer | 34 | CPU, CUDA | 108K ~ 4.8M | 2.78 ~ 263.0 | 0.045 ~ 20.5 |
+| GAN | 16 | CPU, CUDA | 1.7M ~ 7.7M | 3.05 ~ 22.1 | 0.215 ~ 1.32 |
+
+> 측정 환경: Intel 8C16T CPU, 31GB RAM, NVIDIA RTX 4060 Ti (CUDA)
+
+### 예측 모델 성능 (XGBoost, 5-Fold CV)
+
+| 예측 타겟 | 디바이스 | R² | R²(log) | RMSE | MAE |
+|---|---|---|---|---|---|
+| 학습 시간 | CPU | 0.9465 | **0.9865** | 25.354s | 10.103s |
+| 학습 시간 | CUDA | 0.9391 | **0.9724** | 1.561s | 0.663s |
+| 추론 시간 | CPU | 0.9345 | **0.9772** | 1.686s | 0.642s |
+| 추론 시간 | CUDA | 0.9520 | **0.9659** | 0.084s | 0.038s |
+| 메모리 | CPU | 0.9445 | **0.9974** | 2.2MB | 0.4MB |
+| 메모리 | CUDA | 0.9430 | **0.9979** | 2.3MB | 0.5MB |
+
+## 시각화 결과
+
+### 1. 파라미터 수 vs 실행 시간
+
+![파라미터 수 vs 시간](results/figures/fig1_params_vs_time.png)
+
+파라미터 수와 실행 시간의 관계를 모델별(색상)·디바이스별(마커)로 표시. CNN/ResNet은 파라미터 증가에 따라 시간이 급증하며, ANN은 상대적으로 변동이 작다.
+
+### 2. FLOPs vs 실행 시간
+
+![FLOPs vs 시간](results/figures/fig2_flops_vs_time.png)
+
+연산량(FLOPs)과 실행 시간의 상관관계. FLOPs가 높을수록 시간이 증가하며, 같은 FLOPs에서도 모델 구조에 따라 실행 시간이 달라진다 (메모리 접근 패턴, 병렬화 효율 차이).
+
+### 3. CPU vs GPU 디바이스별 비교
+
+![디바이스 비교](results/figures/fig3_device_comparison.png)
+
+6종 모델의 CPU/GPU 학습·추론 시간 비교. ResNet, CNN, Transformer에서 GPU 가속 효과가 크고, ANN에서는 GPU 오버헤드로 CPU가 오히려 빠르다.
+
+### 4. GPU Speedup 비율
+
+![Speedup](results/figures/fig4_speedup_ratio.png)
+
+GPU 대비 CPU 속도비. CNN(13.8x), Transformer(12.3x), ResNet(13.0x)은 GPU 가속 효과가 크지만, **ANN은 0.7x로 GPU가 오히려 느림** (모델이 작아 GPU 커널 오버헤드가 지배적).
+
+### 5. 예측 정확도 (실측 vs 예측)
+
+![예측 정확도](results/figures/fig5_prediction_accuracy.png)
+
+XGBoost 5-Fold CV 예측 결과. 대각선(완벽한 예측)에 데이터가 밀착되어 있으며, 학습시간·추론시간·메모리 모두 R²(log) 0.97~0.99 수준의 높은 정확도를 달성.
+
+### 6. 피처 중요도 (Top 15)
+
+![피처 중요도](results/figures/fig6_feature_importance.png)
+
+XGBoost 기준 피처 중요도 분석 결과:
+- **학습 시간**: `model_family_encoded`(모델 종류)와 `conv_params`(Conv 파라미터)가 지배적
+- **추론 시간 (CPU)**: `has_residual`(잔차 연결 유무)이 0.52로 압도적. 추론 시 skip-connection이 추가 연산 유발
+- **추론 시간 (CUDA)**: `model_family_encoded`(0.38) + `flops`(0.29)로 연산량이 핵심
+- **메모리**: `total_params`(0.99+)가 거의 단독으로 결정
+
+### 7. 모델별 복잡도 히트맵
+
+![복잡도 히트맵](results/figures/fig7_complexity_heatmap.png)
+
+CPU 평균 기준 정규화 비교. ResNet이 파라미터·FLOPs·레이어·실행시간 전 지표에서 최대이며, GAN은 파라미터가 많지만 FLOPs는 낮아 학습 시간도 상대적으로 짧다.
 
 ## 팀원별 기여 (3개 브랜치 병합)
 
-### ijunsoo — 기본 프레임워크 설계 + 모듈형 구조
+### ijunsoo - 기본 프레임워크 설계 + 모듈형 구조
 
 - **벤치마크 프레임워크 재설계**: 단일 스크립트(`ann.py`, `cnn.py`) 구조에서 `benchmark/` 패키지 기반 모듈형 구조로 전환
 - **모델 레지스트리** (`benchmark/models/registry.py`): 데코레이터 기반 모델 팩토리 패턴으로 모델 등록/생성 통합
@@ -13,24 +87,24 @@ MNIST / CIFAR-10 데이터셋에서 6종의 모델 아키텍처를 벤치마킹�
 - **4종 기본 모델**: SimpleANN, SimpleCNN, ResNet-MNIST, MobileNet-MNIST 구현
 - **설정 자동 생성** (`benchmark/configs/generator.py`): 모델별 하이퍼파라미터 조합 자동 생성 (160개 config)
 - **장치 관리 / 데이터 로딩 / 실험 루프**: `benchmark/runner/` 패키지로 분리하여 재사용 가능한 구조
-- **피처 추출기** (`benchmark/features/extractor.py`): PyTorch 모델에서 30개 구조 피처 자동 추출 (Forward hook 기반 FLOPs 계산 포함)
+- **피처 추출기** (`benchmark/features/extractor.py`): PyTorch 모델에서 구조 피처 자동 추출 (Forward hook 기반 FLOPs 계산 포함)
 
-### dal-merge (달현) — XGBoost + GridSearchCV + 하드웨어 피처
+### dal-merge (달현) - XGBoost + GridSearchCV + 하드웨어 피처
 
 - **XGBoost 회귀 모델 도입**: RandomForest/GradientBoosting 외에 XGBoost + GridSearchCV로 최적 하이퍼파라미터 자동 탐색
-- **log1p 변환**: 실행 시간의 넓은 범위(μs~s)를 `log1p`/`expm1`으로 안정화 → 예측 정확도 향상
+- **log1p 변환**: 실행 시간의 넓은 범위(ms~수백초)를 `log1p`/`expm1`으로 안정화하여 예측 정확도 향상
 - **하드웨어 피처 통합**: CPU 코어 수, 클럭 주파수, RAM, GPU 메모리를 피처에 추가 (`psutil` 활용)
 - **장치별 별도 모델 학습**: CPU와 GPU의 실행 시간 패턴이 다르므로 장치별 분리 학습
 - **R²(log) 메트릭 추가**: log 공간에서의 결정계수를 별도 평가하여 전 구간 예측 성능 확인
 
-### khg9859 (홍근) — Transformer/GAN + ONNX + Op-Level 프로파일링
+### khg9859 (홍근) - Transformer/GAN + ONNX + Op-Level 프로파일링
 
 - **Transformer (Vision Transformer)** 모델 추가 (`benchmark/models/transformer.py`): PatchEmbedding, MultiHeadAttention, TransformerEncoderBlock 직접 구현, CIFAR-10 대응
 - **GAN (Generator + Discriminator)** 모델 추가 (`benchmark/models/gan.py`): 적대적 학습 벤치마크 지원
-- **ONNX 파이프라인**: `export_onnx.py`(PyTorch→ONNX 변환) + `predict_from_onnx.py`(ONNX→피처추출→시간예측)
+- **ONNX 파이프라인**: `export_onnx.py`(PyTorch->ONNX 변환) + `predict_from_onnx.py`(ONNX->피처추출->시간예측)
 - **ONNX 피처 추출기** (`benchmark/features/onnx_extractor.py`): ONNX 그래프에서 가중치 shape 기반 FLOPs 직접 계산
 - **joblib 모델 저장/로딩**: 학습된 예측 모델을 저장하여 재사용 (`--save-models`)
-- **Op-Level 프로파일러** (`benchmark/features/op_profiler.py`): 모델을 개별 연산 단위로 분해하여 시간/메모리 측정 → 합산 시뮬레이션
+- **Op-Level 프로파일러** (`benchmark/features/op_profiler.py`): 모델을 개별 연산 단위로 분해하여 시간/메모리 측정하여 합산 시뮬레이션
 - **Transformer Attention FLOPs 보정**: `nn.Linear` hook으로 잡히지 않는 Q@K, attn@V matmul FLOPs를 별도 추정
 
 ## 교수님 연구 방향 대응
@@ -38,10 +112,10 @@ MNIST / CIFAR-10 데이터셋에서 6종의 모델 아키텍처를 벤치마킹�
 | 연구 요구사항 | 구현 | 파일 |
 |---|---|---|
 | DNN 추론 시간/공간 예측 시뮬레이션 | 학습시간 + 추론시간 + 메모리 3가지 타겟 예측 | `train_predictor.py` |
-| DNN 시간 추정 모델 타당성 검증 | 4개 ML 모델 × K-Fold CV × GridSearchCV | `train_predictor.py` |
+| DNN 시간 추정 모델 타당성 검증 | 4개 ML 모델 x K-Fold CV x GridSearchCV | `train_predictor.py` |
 | 다양한 모델에 적용 | 6종 (ANN, CNN, ResNet, MobileNet, Transformer, GAN) | `benchmark/models/` |
-| 모델을 작은 연산 단위로 분해하여 예측 | Op-level 분해 → 개별 시간 측정 → 합산 시뮬레이션 | `benchmark/features/op_profiler.py` |
-| ONNX 표준 형식 모델 실행 시간 추론 | ONNX export → 피처 추출 → 학습된 모델로 예측 | `export_onnx.py`, `predict_from_onnx.py` |
+| 모델을 작은 연산 단위로 분해하여 예측 | Op-level 분해 -> 개별 시간 측정 -> 합산 시뮬레이션 | `benchmark/features/op_profiler.py` |
+| ONNX 표준 형식 모델 실행 시간 추론 | ONNX export -> 피처 추출 -> 학습된 모델로 예측 | `export_onnx.py`, `predict_from_onnx.py` |
 
 ## 프로젝트 구조
 
@@ -57,8 +131,8 @@ ann/
 │   │   ├── transformer.py            # Vision Transformer (CIFAR-10)
 │   │   └── gan.py                     # GAN Generator+Discriminator (CIFAR-10)
 │   ├── features/                       # 피처 추출
-│   │   ├── extractor.py               # PyTorch 모델 → 30개 구조 피처
-│   │   ├── onnx_extractor.py          # ONNX 파일 → 30개 구조 피처
+│   │   ├── extractor.py               # PyTorch 모델 -> 49개 구조 피처
+│   │   ├── onnx_extractor.py          # ONNX 파일 -> 구조 피처
 │   │   └── op_profiler.py             # Op-level 분해/시간 측정/시뮬레이션
 │   ├── runner/                         # 실험 실행
 │   │   ├── device.py                  # 장치 감지/동기화/워밍업
@@ -70,8 +144,13 @@ ann/
 │       └── io.py                       # JSON 증분 저장/CSV 변환
 ├── run_benchmark.py                    # 통합 벤치마크 실행 진입점
 ├── train_predictor.py                  # 예측 모델 학습 (LR/RF/GB/XGBoost)
-├── export_onnx.py                      # PyTorch → ONNX 변환
-├── predict_from_onnx.py                # ONNX → 실행 시간 예측
+├── visualize_results.py                # 시각화 (7종 그래프 생성)
+├── export_onnx.py                      # PyTorch -> ONNX 변환
+├── predict_from_onnx.py                # ONNX -> 실행 시간 예측
+├── results/
+│   ├── benchmark_results.json          # 벤치마크 원본 데이터 (330개)
+│   ├── figures/                        # 시각화 그래프 (7개)
+│   └── trained_models/                 # 학습된 예측 모델 (.pkl)
 ├── ann.py / cnn.py / cnn_remaining.py  # 기존 단독 실행 스크립트
 └── requirements.txt
 ```
@@ -88,7 +167,7 @@ pip install -r requirements.txt
 ### 의존성
 
 ```
-torch, torchvision, numpy, scikit-learn, xgboost, onnx, joblib, psutil
+torch, torchvision, numpy, scikit-learn, xgboost, onnx, joblib, psutil, matplotlib
 ```
 
 ## 사용법
@@ -96,7 +175,7 @@ torch, torchvision, numpy, scikit-learn, xgboost, onnx, joblib, psutil
 ### 1. 벤치마크 실행
 
 ```bash
-# 전체 실행 (6종 모델 × 160개 설정 × 10회 반복)
+# 전체 실행 (6종 모델 x 160개 설정 x 10회 반복)
 python run_benchmark.py
 
 # 특정 모델만 실행
@@ -127,7 +206,24 @@ python train_predictor.py --cv 10 --save-models
 **예측 타겟 3가지**: 학습 시간, 추론 시간, 메모리 요구량
 **ML 모델 4가지**: LinearRegression, RandomForest+GridSearchCV, GradientBoosting, XGBoost+GridSearchCV
 
-### 3. ONNX 예측 파이프라인
+### 3. 시각화
+
+```bash
+python visualize_results.py
+# 결과: results/figures/ 에 7개 그래프 생성
+```
+
+| 그래프 | 설명 |
+|---|---|
+| fig1_params_vs_time | 파라미터 수 vs 학습/추론 시간 산점도 |
+| fig2_flops_vs_time | FLOPs vs 학습/추론 시간 산점도 |
+| fig3_device_comparison | CPU vs GPU 디바이스별 막대 그래프 |
+| fig4_speedup_ratio | GPU Speedup 비율 (모델별) |
+| fig5_prediction_accuracy | 실측 vs 예측 산점도 (XGBoost CV) |
+| fig6_feature_importance | 피처 중요도 Top 15 |
+| fig7_complexity_heatmap | 모델별 복잡도 지표 히트맵 |
+
+### 4. ONNX 예측 파이프라인
 
 ```bash
 # 대표 모델을 ONNX로 변환
@@ -138,7 +234,7 @@ python predict_from_onnx.py --onnx model.onnx --device cpu
 python predict_from_onnx.py --demo  # 전체 샘플 예측
 ```
 
-### 4. Op-Level 프로파일링 (단독 사용)
+### 5. Op-Level 프로파일링 (단독 사용)
 
 ```python
 from benchmark.features.op_profiler import measure_op_times, simulate_total_time, print_op_profile
@@ -152,13 +248,25 @@ sim = simulate_total_time(ops)
 print(f"시뮬레이션 총 시간: {sim['total_time_ms']:.4f}ms")
 ```
 
-## 피처 목록 (30개)
+## 통합 Feature Schema (v1.0) - 49개 피처
 
-| 카테고리 | 피처 |
-|---|---|
-| 파라미터 수 | total_params, trainable_params, conv_params, linear_params, bn_params, other_params |
-| 레이어 수 | num_conv_layers, num_linear_layers, num_bn_layers, num_pool_layers, num_activation_layers, total_layers |
-| 연산량/크기 | flops, memory_bytes, model_size_mb, depth, max_channel_width |
-| 구조 플래그 | has_residual, has_depthwise, has_attention |
-| 하드웨어 | cpu_cores, cpu_freq_ghz, ram_total_gb, gpu_memory_gb |
-| 모델 유형 (원핫) | model_type_simple_ann, model_type_simple_cnn, model_type_resnet_mnist, model_type_mobilenet_mnist, model_type_transformer, model_type_gan |
+| 카테고리 | 피처 | 설명 |
+|---|---|---|
+| **파라미터 (6)** | total_params, trainable_params, conv_params, linear_params, bn_params, other_params | 레이어 타입별 파라미터 수 분해 |
+| **레이어 수 (7)** | total_layers, num_hidden_layers, num_conv_layers, num_linear_layers, num_bn_layers, num_pool_layers, num_activation_layers | 연산 레이어 구성 |
+| **폭 (4)** | max_width, min_width, avg_width, max_channel_width | 레이어 폭/채널 수 통계 |
+| **연산량 (5)** | flops, flops_per_sample, params_per_flop, model_size_mb, memory_bytes | 계산 복잡도 + 메모리 |
+| **구조 플래그 (7)** | has_residual, has_depthwise, has_attention, has_pooling, has_batch_norm, has_layer_norm, has_dropout | 아키텍처 특성 바이너리 |
+| **모델 분류 (1)** | model_family_encoded | 모델 계열 수치 인코딩 (0~5) |
+| **모델 전용 (9)** | hidden_size, num_filters, use_batchnorm, embed_dim, num_heads, patch_size, latent_dim, generator_params, discriminator_params | 아키텍처별 고유 하이퍼파라미터 |
+| **입력 데이터 (5)** | batch_size, input_height, input_width, input_channels, num_classes | 데이터셋/배치 정보 |
+| **하드웨어 (5)** | device_type_encoded, cpu_cores, cpu_freq_ghz, ram_total_gb, gpu_memory_gb | 실행 환경 사양 |
+
+## 핵심 인사이트
+
+1. **XGBoost가 최적**: 4가지 ML 모델 중 XGBoost+GridSearchCV가 모든 타겟에서 일관적으로 최고 R²(log) 달성 (0.97~0.99)
+2. **LinearRegression은 부적합**: 비선형 관계가 강해서 R²가 음수까지 떨어짐 (CPU 학습시간 -43, GPU 메모리 -7871)
+3. **ANN은 GPU가 오히려 느림**: Speedup 0.7x - 모델이 너무 작아 GPU 커널 오버헤드가 연산 시간보다 큼
+4. **CNN/ResNet/Transformer는 GPU 12~14x 가속**: 행렬 연산 병렬화 효과 극대화
+5. **메모리는 파라미터 수로 결정**: `total_params` 피처 중요도 0.99+ (거의 선형 관계)
+6. **추론 시간은 CPU/GPU에서 다른 피처가 중요**: CPU는 `has_residual`(잔차 연결), GPU는 `flops`(연산량)가 지배적

@@ -36,24 +36,73 @@ except ImportError:
     HAS_JOBLIB = False
 
 
-# 입력 피처 목록 (extractor.py의 출력과 일치)
+# === 통합 Feature Schema (v1.0) ===
+# extractor.py 출력 + config에서 주입 + 하드웨어 외부 주입
+
+# 1차 핵심 세트 + 2차 확장 (공통 모델 구조)
 FEATURE_COLUMNS = [
+    # 3-1. 파라미터 관련
     'total_params', 'trainable_params', 'conv_params', 'linear_params',
     'bn_params', 'other_params',
-    'num_conv_layers', 'num_linear_layers', 'num_bn_layers',
-    'num_pool_layers', 'num_activation_layers', 'total_layers',
-    'flops', 'memory_bytes', 'model_size_mb', 'depth', 'max_channel_width',
+    # 3-2. 레이어 수
+    'total_layers', 'num_hidden_layers', 'num_conv_layers', 'num_linear_layers',
+    'num_bn_layers', 'num_pool_layers', 'num_activation_layers',
+    # 3-3. 폭(Width)
+    'max_width', 'min_width', 'avg_width', 'max_channel_width',
+    # 3-4. 연산량
+    'flops', 'flops_per_sample', 'params_per_flop',
+    'model_size_mb', 'memory_bytes',
+    # 3-5. 구조 플래그
     'has_residual', 'has_depthwise', 'has_attention',
-    # 하드웨어 피처 (dal-merge 병합)
-    'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb', 'gpu_memory_gb',
-    # 모델 유형 원핫 (6종)
-    'model_type_simple_ann', 'model_type_simple_cnn',
-    'model_type_resnet_mnist', 'model_type_mobilenet_mnist',
-    'model_type_transformer', 'model_type_gan',
+    'has_pooling', 'has_batch_norm', 'has_layer_norm', 'has_dropout',
+    # 3-6. 모델 분류
+    'model_family_encoded',
+    # 4. 모델 전용 피처
+    # ANN
+    'hidden_size',
+    # CNN
+    'num_filters', 'use_batchnorm',
+    # Transformer
+    'embed_dim', 'num_heads', 'patch_size',
+    # GAN
+    'latent_dim', 'generator_params', 'discriminator_params',
+    # 5. 입력 데이터 피처
+    'batch_size', 'input_height', 'input_width', 'input_channels', 'num_classes',
+    # 6. 하드웨어 피처 (1차 핵심)
+    'device_type_encoded',
+    'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb',
+    'gpu_memory_gb',
 ]
 
 # 예측 대상 (시간 + 공간 요구량)
 TARGET_COLUMNS = ['avg_train', 'avg_infer', 'memory_bytes']
+
+# 모델 계열 인코딩
+MODEL_FAMILY_MAP = {
+    'simple_ann': 0,
+    'simple_cnn': 1,
+    'resnet_mnist': 2,
+    'mobilenet_mnist': 3,
+    'transformer': 4,
+    'gan': 5,
+}
+
+# 장치 인코딩
+DEVICE_TYPE_MAP = {
+    'CPU': 0,
+    'GPU(CUDA)': 1,
+    'GPU(MPS)': 2,
+}
+
+# 데이터셋 → 입력 정보 매핑
+DATASET_INFO = {
+    'simple_ann':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
+    'simple_cnn':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
+    'resnet_mnist':     {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
+    'mobilenet_mnist':  {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
+    'transformer':      {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10, 'batch_size': 64},
+    'gan':              {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10, 'batch_size': 64},
+}
 
 
 def load_data(input_path):
@@ -64,8 +113,93 @@ def load_data(input_path):
     return results
 
 
+def enrich_result(r):
+    """벤치마크 결과 1건에 Schema 피처를 주입하여 enriched dict 반환
+
+    - config에서 모델 전용 피처 추출
+    - 데이터셋 정보에서 입력 피처 파생
+    - 모델 구조 피처에서 파생값 계산
+    """
+    model_type = r['model_type']
+    config = r.get('config', {})
+    enriched = dict(r)  # 원본 복사
+
+    # --- 3-2. num_hidden_layers ---
+    enriched.setdefault('num_hidden_layers',
+                        r.get('num_conv_layers', 0) + r.get('num_linear_layers', 0))
+
+    # --- 3-3. 폭(Width) 관련 ---
+    # Linear 기준 width 정보 (config에서 유추)
+    widths = []
+    if model_type == 'simple_ann':
+        hs = config.get('hidden_size', 0)
+        nl = config.get('num_layers', 1)
+        widths = [hs] * nl if hs else []
+    elif model_type == 'simple_cnn':
+        nf = config.get('num_filters', 0)
+        nl = config.get('num_conv_layers', 1)
+        widths = [min(nf * (2 ** i), nf * 4) for i in range(nl)] if nf else []
+    elif model_type == 'transformer':
+        widths = [config.get('embed_dim', 0)]
+    elif model_type == 'gan':
+        widths = config.get('g_hidden_dims', [])
+
+    enriched['max_width'] = max(widths) if widths else r.get('max_channel_width', 0)
+    enriched['min_width'] = min(widths) if widths else 0
+    enriched['avg_width'] = (sum(widths) / len(widths)) if widths else 0
+
+    # --- 3-4. 연산량 파생 ---
+    flops = r.get('flops', 0)
+    enriched['flops_per_sample'] = flops  # batch=1이므로 동일
+    enriched['params_per_flop'] = (
+        r.get('total_params', 0) / flops if flops > 0 else 0)
+
+    # --- 3-5. 구조 플래그 ---
+    enriched['has_pooling'] = 1 if r.get('num_pool_layers', 0) > 0 else 0
+    enriched['has_batch_norm'] = 1 if r.get('num_bn_layers', 0) > 0 else 0
+    enriched['has_layer_norm'] = 1 if model_type == 'transformer' else 0
+    enriched['has_dropout'] = 0  # 현재 모델들에 Dropout 없음
+
+    # --- 3-6. 모델 분류 (숫자 인코딩) ---
+    enriched['model_family_encoded'] = MODEL_FAMILY_MAP.get(model_type, -1)
+
+    # --- 4. 모델 전용 피처 (config에서 추출) ---
+    # ANN
+    enriched['hidden_size'] = config.get('hidden_size', 0)
+    # CNN
+    enriched['num_filters'] = config.get('num_filters', 0)
+    enriched['use_batchnorm'] = 1 if config.get('use_batchnorm', False) else 0
+    # Transformer
+    enriched['embed_dim'] = config.get('embed_dim', 0)
+    enriched['num_heads'] = config.get('num_heads', 0)
+    enriched['patch_size'] = config.get('patch_size', 0)
+    # GAN
+    enriched['latent_dim'] = config.get('latent_dim', 0)
+    # GAN generator/discriminator params 추정
+    if model_type == 'gan':
+        tp = r.get('total_params', 0)
+        enriched['generator_params'] = tp // 2  # 대략 절반
+        enriched['discriminator_params'] = tp - tp // 2
+    else:
+        enriched['generator_params'] = 0
+        enriched['discriminator_params'] = 0
+
+    # --- 5. 입력 데이터 피처 ---
+    ds_info = DATASET_INFO.get(model_type, {})
+    for k, v in ds_info.items():
+        enriched.setdefault(k, v)
+
+    # --- 6. 하드웨어 피처 ---
+    enriched['device_type_encoded'] = DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0)
+
+    return enriched
+
+
 def prepare_features(results):
-    """결과에서 피처 행렬(X)과 타겟 벡터(Y) 추출"""
+    """결과에서 피처 행렬(X)과 타겟 벡터(Y) 추출
+
+    Schema v1.0에 맞춰 config/하드웨어/입력 피처를 주입한 후 추출.
+    """
     X = []
     y_train = []
     y_infer = []
@@ -74,9 +208,10 @@ def prepare_features(results):
     names = []
 
     for r in results:
+        enriched = enrich_result(r)
         row = []
         for col in FEATURE_COLUMNS:
-            val = r.get(col)
+            val = enriched.get(col)
             if val is None:
                 val = 0
             row.append(float(val))
@@ -201,7 +336,7 @@ def feature_importance(model, feature_names, target_name, top_n=10):
     importances = model.feature_importances_
     indices = np.argsort(importances)[::-1]
 
-    print(f"\n  피처 중요도 (상위 {top_n}개) — {target_name}:")
+    print(f"\n  피처 중요도 (상위 {top_n}개) -{target_name}:")
     for i in range(min(top_n, len(feature_names))):
         idx = indices[i]
         print(f"    {i+1:2d}. {feature_names[idx]:<30s}: "
@@ -211,7 +346,7 @@ def feature_importance(model, feature_names, target_name, top_n=10):
 def save_models(models_dict, target_name, output_dir):
     """학습된 모델을 joblib으로 저장 (khg9859에서 병합)"""
     if not HAS_JOBLIB:
-        print("  joblib 미설치 — 모델 저장 건너뜀")
+        print("  joblib 미설치 -모델 저장 건너뜀")
         return
 
     os.makedirs(output_dir, exist_ok=True)
@@ -275,7 +410,7 @@ def main():
         y_memory_dev = y_memory[mask]
 
         if len(X_dev) < args.cv:
-            print(f"[{dev}] 데이터 부족 ({len(X_dev)}개) — 건너뜀\n")
+            print(f"[{dev}] 데이터 부족 ({len(X_dev)}개) -건너뜀\n")
             continue
 
         print(f"{'='*60}")
@@ -297,7 +432,7 @@ def main():
             if key in train_models:
                 feature_importance(
                     train_models[key], FEATURE_COLUMNS,
-                    f'학습시간 [{dev}] — {key.upper()}')
+                    f'학습시간 [{dev}] -{key.upper()}')
 
         # 모델 저장
         if args.save_models:
@@ -313,7 +448,7 @@ def main():
             if key in infer_models:
                 feature_importance(
                     infer_models[key], FEATURE_COLUMNS,
-                    f'추론시간 [{dev}] — {key.upper()}')
+                    f'추론시간 [{dev}] -{key.upper()}')
 
         if args.save_models:
             save_models(infer_models, 'inference', args.model_dir)
@@ -330,7 +465,7 @@ def main():
                 if key in mem_models:
                     feature_importance(
                         mem_models[key], FEATURE_COLUMNS,
-                        f'메모리 [{dev}] — {key.upper()}')
+                        f'메모리 [{dev}] -{key.upper()}')
 
             if args.save_models:
                 save_models(mem_models, 'memory', args.model_dir)

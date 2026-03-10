@@ -118,7 +118,7 @@ def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
 
         # GPU 워밍업 (GAN이 아닌 경우에만)
         if not is_gan:
-            runner.dm.warmup(device, model_fn)
+            runner.dm.warmup(device, model_fn, input_shape=data_mgr.input_shape)
 
         # 벤치마크 실행
         try:
