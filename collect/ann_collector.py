@@ -34,8 +34,8 @@ HIDDEN_SIZES        = [16, 32, 64, 128, 256, 512, 1024]
 NUM_HIDDEN_LAYERS   = [1, 2, 3, 4, 5, 6, 7]
 BATCH_SIZE          = 64
 EPOCHS              = 1
-WARMUP_RUNS         = 2
-MEASURE_RUNS        = 3
+WARMUP_RUNS         = 1
+MEASURE_RUNS        = 1
 
 INPUT_CONFIG = {
     'batch_size':     BATCH_SIZE,
