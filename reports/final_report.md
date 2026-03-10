@@ -778,7 +778,7 @@ pip install joblib onnx onnxscript
 # macOS에서 XGBoost 실행 시 추가 필요
 brew install libomp
 
-# Windows 이전 시 참고
+# Windows 이전 시 참고 (Git clone 권장)
 # reports/WINDOWS_SETUP.md — 이전 방법, 환경 설정, CUDA 지원
 ```
 
@@ -948,14 +948,15 @@ experiments/
 
 ## 20. Windows 환경 이전
 
-Windows PC에서도 작업하려면 다음 가이드를 참고하세요.
+Windows PC에서도 작업하려면 **Git clone**을 권장합니다. (ZIP 대비 빠르고 동기화 용이)
 
-- **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** — 이전 방법(Git/ZIP/클라우드), 환경 설정, CUDA 지원, 트러블슈팅
+- **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** — Git clone 방법, 환경 설정, CUDA 지원, 트러블슈팅
 
 요약:
+- `git clone` 후 `git checkout khg9859/present` (또는 해당 브랜치)
 - `predict_from_onnx.py`는 `--device cuda` 지원 (NVIDIA GPU)
-- `utils/device_utils.py`: 플랫폼별 디바이스 자동 선택 (CUDA > MPS > CPU)
-- `requirements.txt`: `pip install -r requirements.txt`로 패키지 설치
+- `utils/device_utils.py`: 플랫폼별 디바이스 자동 선택
+- `requirements.txt`: `pip install -r requirements.txt`
 
 ---
 

@@ -34,18 +34,18 @@
 
 ## 2. 이전 방법
 
-### 방법 A: Git 사용 (권장)
+### 방법 A: Git 사용 (권장 — ZIP보다 빠름)
 
 Windows PC에서:
 
 ```powershell
-# Git이 설치되어 있다면
+# Git 설치 후
 git clone https://github.com/iSysLab/ai-simulator.git dnn
 cd dnn
 git checkout khg9859/present   # 또는 해당 브랜치
 ```
 
-- **장점**: 코드·데이터 동기화, 버전 관리
+- **장점**: ZIP 대비 빠른 전송, 코드·데이터 동기화, 버전 관리
 - **주의**: `models/trained/*.pkl`, `data/stage*/*.csv` 등이 Git에 커밋되어 있어야 함.  
   `.gitignore`에 있으면 수동 복사 필요.
 
