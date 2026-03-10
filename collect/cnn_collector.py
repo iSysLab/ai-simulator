@@ -37,8 +37,8 @@ NUM_CONV_LAYERS  = [1, 2, 3, 4, 5, 6]
 USE_BATCHNORM    = [False, True]
 BATCH_SIZE       = 64
 EPOCHS           = 1
-WARMUP_RUNS      = 3
-MEASURE_RUNS     = 10
+WARMUP_RUNS      = 1
+MEASURE_RUNS     = 1
 
 INPUT_CONFIG = {
     'batch_size':     BATCH_SIZE,

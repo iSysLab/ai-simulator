@@ -1,6 +1,6 @@
-"""ANN + CNN 실행 시간 예측 모델 학습
+"""ANN + CNN + Transformer + GAN 실행 시간 예측 모델 학습
 
-수집된 ann_results.csv / cnn_results.csv를 읽어서
+수집된 ann_results.csv / cnn_results.csv / transformer_results.csv / gan_results.csv를 읽어서
 LinearRegression / Random Forest / XGBoost로
 학습 시간 및 추론 시간 예측 모델을 학습하고 K-Fold 교차검증으로 성능 평가
 
@@ -21,27 +21,40 @@ from sklearn.model_selection import KFold, GridSearchCV, cross_val_predict
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import xgboost as xgb
 
-ROOT_DIR              = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ANN_CSV_PATH          = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
-CNN_CSV_PATH          = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
-RESULT_CSV_PATH       = os.path.join(ROOT_DIR, 'data', 'predictor_results.csv')
-IMPORTANCE_CSV_PATH   = os.path.join(ROOT_DIR, 'data', 'feature_importance_results.csv')
+ROOT_DIR                  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ANN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
+CNN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
+TRANSFORMER_CSV_PATH      = os.path.join(ROOT_DIR, 'data', 'transformer_results.csv')
+GAN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'gan_results.csv')
+RESULT_CSV_PATH           = os.path.join(ROOT_DIR, 'data', 'predictor_results.csv')
+IMPORTANCE_CSV_PATH       = os.path.join(ROOT_DIR, 'data', 'feature_importance_results.csv')
 
 # ── Feature / Target 설정 ─────────────────────────────────
 FEATURE_COLUMNS = [
     # 모델 구조 (공통)
-    'total_params', 'trainable_params', 'linear_params',
-    'flops', 'model_size_mb', 'num_layers', 'model_type',
-    # ANN 전용
+    'total_params', 'trainable_params', 'conv_params', 'linear_params',
+    'bn_params', 'other_params',
+    'flops', 'model_size_mb', 'total_layers', 'model_type_encoded',
+    # ANN 전용 (다른 모델은 0)
     'hidden_size', 'num_hidden_layers',
-    # CNN 전용 (ANN은 0)
-    'conv_params', 'num_conv_layers', 'num_filters', 'has_batchnorm',
-    'has_pooling', 'kernel_size', 'num_fc_layers',
+    # CNN 전용 (다른 모델은 0)
+    'num_conv_layers', 'num_filters', 'has_batch_norm',
+    'has_pooling', 'kernel_size', 'num_linear_layers',
+    # Transformer 전용 (다른 모델은 0)
+    'embed_dim', 'num_transformer_layers', 'num_heads', 'patch_size',
+    # GAN 전용 (다른 모델은 0)
+    'latent_dim', 'g_hidden_max',
     # 하드웨어
     'device', 'cpu_cores', 'cpu_freq_ghz', 'cpu_cache_l2_mb',
-    'ram_total_gb', 'gpu_memory_gb',
+    'ram_gb', 'gpu_memory_gb',
     # 입력 데이터
-    'batch_size', 'input_channels', 'input_height', 'input_width', 'num_classes',
+    'batch_size', 'img_channels', 'input_height', 'input_width', 'num_classes',
+    # op-level feature
+    'num_ops', 'total_op_flops', 'total_op_memory_read', 'total_op_memory_write',
+    'memory_bytes',
+    'flops_ratio_Conv2d', 'flops_ratio_Linear', 'flops_ratio_BatchNorm2d',
+    'flops_ratio_LayerNorm', 'flops_ratio_MaxPool2d', 'flops_ratio_ReLU', 'flops_ratio_GELU',
+    'max_op_flops', 'avg_op_flops', 'std_op_flops',
 ]
 
 TARGET_TRAIN = 'train_time_mean'
@@ -51,14 +64,20 @@ TARGET_INFER = 'infer_time_mean'
 # ── 데이터 로드 ───────────────────────────────────────────
 
 def load_data():
-    """ANN + CNN CSV 로드 및 전처리
+    """ANN + CNN + Transformer + GAN CSV 로드 및 전처리
 
-    - 존재하는 CSV만 읽어서 합침 (ANN만 있어도 동작)
+    - 존재하는 CSV만 읽어서 합침 (일부 없어도 동작)
     - device 문자열 → 숫자 인코딩 (cpu=0, cuda=1)
     - NaN → 0 대체
     """
     dfs = []
-    for path, name in [(ANN_CSV_PATH, 'ANN'), (CNN_CSV_PATH, 'CNN')]:
+    sources = [
+        (ANN_CSV_PATH,         'ANN'),
+        (CNN_CSV_PATH,         'CNN'),
+        (TRANSFORMER_CSV_PATH, 'Transformer'),
+        (GAN_CSV_PATH,         'GAN'),
+    ]
+    for path, name in sources:
         if os.path.exists(path):
             d = pd.read_csv(path)
             print(f"  {name} 데이터: {len(d)}행")
@@ -74,8 +93,10 @@ def load_data():
 
     print(f"  CPU 데이터: {(df['device'] == 0).sum()}개")
     print(f"  CUDA 데이터: {(df['device'] == 1).sum()}개")
-    print(f"  ANN 데이터: {(df['model_type'] == 0).sum()}개")
-    print(f"  CNN 데이터: {(df['model_type'] == 1).sum()}개")
+    print(f"  ANN 데이터: {(df['model_type_encoded'] == 0).sum()}개")
+    print(f"  CNN 데이터: {(df['model_type_encoded'] == 1).sum()}개")
+    print(f"  Transformer 데이터: {(df['model_type_encoded'] == 2).sum()}개")
+    print(f"  GAN 데이터: {(df['model_type_encoded'] == 3).sum()}개")
     return df
 
 
@@ -120,8 +141,16 @@ def evaluate(y_true_log, y_pred_log, model_name, target_name):
 # ── feature 중요도 출력 ───────────────────────────────────
 
 def print_feature_importance(model, target_name):
-    """RandomForest / XGBoost feature 중요도 상위 10개 출력 및 반환"""
+    """RandomForest / XGBoost feature 중요도 상위 10개 출력 및 반환
+
+    Args:
+        model: 학습이 끝난 RF 또는 XGBoost 모델 객체
+               (model.feature_importances_ 속성으로 중요도 접근)
+        target_name: 출력용 타겟 이름
+    """
+    # 학습된 트리 구조에서 각 feature의 기여도를 배열로 추출 (합계=1)
     importances = model.feature_importances_
+    # 중요도 높은 순으로 feature 인덱스 정렬
     indices = np.argsort(importances)[::-1]
     print(f"\n  [feature 중요도 - {target_name}] 상위 10개")
     rows = []
