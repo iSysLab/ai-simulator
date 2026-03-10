@@ -120,8 +120,16 @@ def evaluate(y_true_log, y_pred_log, model_name, target_name):
 # ── feature 중요도 출력 ───────────────────────────────────
 
 def print_feature_importance(model, target_name):
-    """RandomForest / XGBoost feature 중요도 상위 10개 출력 및 반환"""
+    """RandomForest / XGBoost feature 중요도 상위 10개 출력 및 반환
+
+    Args:
+        model: 학습이 끝난 RF 또는 XGBoost 모델 객체
+               (model.feature_importances_ 속성으로 중요도 접근)
+        target_name: 출력용 타겟 이름
+    """
+    # 학습된 트리 구조에서 각 feature의 기여도를 배열로 추출 (합계=1)
     importances = model.feature_importances_
+    # 중요도 높은 순으로 feature 인덱스 정렬
     indices = np.argsort(importances)[::-1]
     print(f"\n  [feature 중요도 - {target_name}] 상위 10개")
     rows = []
