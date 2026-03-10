@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# 데이터셋 원본 (용량 큼)
+data/raw/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
