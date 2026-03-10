@@ -1,4 +1,4 @@
-# ============================================================
+        # ============================================================
 # 4단계: Transformer 모델 실행 시간 측정 실험
 # ============================================================
 #
@@ -130,6 +130,8 @@ def train_model(model, train_loader, device='cpu', epochs=3):
 
             if device == 'mps':
                 torch.mps.synchronize()
+            elif device == 'cuda':
+                torch.cuda.synchronize()
 
         accuracy = 100. * correct / total
         avg_loss = total_loss / len(train_loader)
@@ -141,16 +143,21 @@ def train_model(model, train_loader, device='cpu', epochs=3):
 # 기존 측정 데이터 확인 (중복 측정 방지)
 # ──────────────────────────────────────────────────────────
 
-def load_existing_configs(output_file):
-    """이미 측정된 config 목록을 CSV에서 불러와 중복 측정 방지"""
+def load_existing_pairs(output_file):
+    """
+    이미 측정된 (config_str, device) 조합을 CSV에서 불러옵니다.
+    Mac(MPS)에서 측정한 config도 Windows(CUDA)에서 cuda 데이터를 추가할 수 있도록
+    (config_str, device) 기준으로 중복 체크합니다.
+    """
     if os.path.exists(output_file):
         df = pd.read_csv(output_file)
-        existing = set(df['config_str'].unique())
+        existing_pairs = set(zip(df['config_str'].astype(str), df['device'].astype(str)))
+        config_to_idx = df.groupby('config_str')['model_idx'].first().to_dict()
         next_idx = int(df['model_idx'].max()) + 1
-        print(f"  기존 CSV 발견: {len(df)}행, {len(existing)}가지 config 측정 완료")
-        return existing, next_idx
+        print(f"  기존 CSV 발견: {len(df)}행, (config_str, device) 조합 {len(existing_pairs)}개")
+        return existing_pairs, config_to_idx, next_idx
     print("  기존 CSV 없음 → 새로 시작")
-    return set(), 0
+    return set(), {}, 0
 
 # ──────────────────────────────────────────────────────────
 # 메인 실험 함수
@@ -174,24 +181,37 @@ def run_experiment():
 
     os.makedirs(STAGE4_DIR, exist_ok=True)
 
+    if torch.cuda.is_available():
+        devices = ['cpu', 'cuda']
+    elif getattr(torch.backends, 'mps', None) and torch.backends.mps.is_available():
+        devices = ['cpu', 'mps']
+    else:
+        devices = ['cpu']
+    print(f"  사용 디바이스: {devices}")
+
     # 기존 측정 확인
     print("\n[Step 1] 기존 측정 데이터 확인")
-    existing_configs, next_idx = load_existing_configs(OUTPUT_FILE)
+    existing_pairs, config_to_idx, next_idx = load_existing_pairs(OUTPUT_FILE)
 
-    # 새 모델 조합 준비
+    # 측정할 (config_str, device) work_list 구성
     print("\n[Step 2] Transformer 모델 조합 준비")
     all_variants = create_transformer_variants(img_size=32, in_channels=3, num_classes=10)
-    new_variants = [
-        (model, info) for model, info in all_variants
-        if info['config_str'] not in existing_configs
-    ]
+    work_list = []
+    for model, info in all_variants:
+        config_str = info['config_str']
+        for device in devices:
+            if (config_str, device) not in existing_pairs:
+                model_idx = config_to_idx.get(config_str, next_idx)
+                if config_str not in config_to_idx:
+                    config_to_idx[config_str] = model_idx
+                    next_idx += 1
+                work_list.append((info, device, config_to_idx[config_str]))
 
-    if not new_variants:
-        print("  모든 조합이 이미 측정됨!")
-        return pd.read_csv(OUTPUT_FILE)
+    if not work_list:
+        print("  모든 (config_str, device) 조합이 이미 측정됨!")
+        return pd.read_csv(OUTPUT_FILE) if os.path.exists(OUTPUT_FILE) else pd.DataFrame()
 
-    print(f"  전체 조합: {len(all_variants)}개 | 새로 측정: {len(new_variants)}개")
-    print(f"  예상 새 데이터: {len(new_variants) * 2}개 (CPU + MPS)")
+    print(f"  전체 조합: {len(all_variants)}개 | 측정할 항목: {len(work_list)}개")
 
     # CIFAR-10 데이터 로드
     print("\n[Step 3] CIFAR-10 데이터 로드")
@@ -200,78 +220,76 @@ def run_experiment():
 
     # 실험 실행
     print("\n[Step 4] 실험 시작")
-    devices     = ['cpu', 'mps']
     new_results = []
 
-    for i, (_, info) in enumerate(new_variants):
+    for i, (info, device, current_idx) in enumerate(work_list):
         config_str = info['config_str']
-        current_idx = next_idx + i
 
         print(f"\n{'─' * 70}")
-        print(f"  [{i+1}/{len(new_variants)}] {config_str}")
+        print(f"  [{i+1}/{len(work_list)}] {config_str} @ {device.upper()}")
         print(f"  embed_dim={info['embed_dim']}, layers={info['num_layers']}, "
               f"heads={info['num_heads']}, patch={info['patch_size']}")
         print(f"  params={info['total_params']:,} | patches={info['num_patches']}")
         print(f"{'─' * 70}")
 
-        for device in devices:
-            print(f"\n  [디바이스: {device.upper()}]")
+        print(f"\n  [디바이스: {device.upper()}]")
 
-            # 각 디바이스마다 새 모델 인스턴스 (독립적 측정)
-            fresh_model = type(new_variants[i][0])(
-                img_size=info['img_size'],
-                patch_size=info['patch_size'],
-                in_channels=3,
-                num_classes=10,
-                embed_dim=info['embed_dim'],
-                num_layers=info['num_layers'],
-                num_heads=info['num_heads'],
-            )
+        # 각 디바이스마다 새 모델 인스턴스 (독립적 측정)
+        model_obj = next(m for m, inf in all_variants if inf['config_str'] == config_str)
+        fresh_model = type(model_obj)(
+            img_size=info['img_size'],
+            patch_size=info['patch_size'],
+            in_channels=3,
+            num_classes=10,
+            embed_dim=info['embed_dim'],
+            num_layers=info['num_layers'],
+            num_heads=info['num_heads'],
+        )
 
-            # 학습
-            print("  학습 중 (3 epoch)...")
-            trained_model = train_model(fresh_model, train_loader, device=device, epochs=3)
+        # 학습
+        print("  학습 중 (3 epoch)...")
+        trained_model = train_model(fresh_model, train_loader, device=device, epochs=3)
 
-            # 시간 측정 (warmup 5회 + 10회 반복)
-            estimator = TimeEstimator(device=device, warmup_runs=5, measure_runs=10)
+        # 시간 측정 (warmup 5회 + 10회 반복)
+        estimator = TimeEstimator(device=device, warmup_runs=5, measure_runs=10)
 
-            print("  추론 시간 측정 중...")
-            inference_mean, inference_std = estimator.measure_inference_time(
-                trained_model,
-                input_shape=(64, 3, 32, 32)  # CIFAR-10: 32×32 컬러
-            )
+        print("  추론 시간 측정 중...")
+        inference_mean, inference_std = estimator.measure_inference_time(
+            trained_model,
+            input_shape=(64, 3, 32, 32)  # CIFAR-10: 32×32 컬러
+        )
 
-            print("  학습 시간 측정 중...")
-            training_mean, training_std = estimator.measure_training_time(
-                trained_model, train_loader, epochs=1
-            )
+        print("  학습 시간 측정 중...")
+        training_mean, training_std = estimator.measure_training_time(
+            trained_model, train_loader, epochs=1
+        )
 
-            # 결과 기록
-            result = {
-                'model_idx': current_idx,
-                'config_str': config_str,
-                'model_type': 'Transformer',
-                'embed_dim': info['embed_dim'],
-                'num_layers': info['num_layers'],
-                'num_heads': info['num_heads'],
-                'patch_size': info['patch_size'],
-                'num_patches': info['num_patches'],
-                'total_params': info['total_params'],
-                'device': device,
-                'inference_time_mean_ms': inference_mean,
-                'inference_time_std_ms': inference_std,
-                'training_time_mean_sec': training_mean,
-                'training_time_std_sec': training_std,
-                'dataset': 'CIFAR-10',
-                'img_size': 32,
-                'img_channels': 3,
-                'num_classes': 10,
-                'batch_size': 64,
-            }
-            new_results.append(result)
+        # 결과 기록
+        result = {
+            'model_idx': current_idx,
+            'config_str': config_str,
+            'model_type': 'Transformer',
+            'embed_dim': info['embed_dim'],
+            'num_layers': info['num_layers'],
+            'num_heads': info['num_heads'],
+            'patch_size': info['patch_size'],
+            'num_patches': info['num_patches'],
+            'total_params': info['total_params'],
+            'device': device,
+            'inference_time_mean_ms': inference_mean,
+            'inference_time_std_ms': inference_std,
+            'training_time_mean_sec': training_mean,
+            'training_time_std_sec': training_std,
+            'dataset': 'CIFAR-10',
+            'img_size': 32,
+            'img_channels': 3,
+            'num_classes': 10,
+            'batch_size': 64,
+        }
+        new_results.append(result)
 
-            print(f"  추론: {inference_mean:.3f} ± {inference_std:.3f} ms")
-            print(f"  학습: {training_mean:.2f} ± {training_std:.2f} 초/epoch")
+        print(f"  추론: {inference_mean:.3f} ± {inference_std:.3f} ms")
+        print(f"  학습: {training_mean:.2f} ± {training_std:.2f} 초/epoch")
 
     # 결과 저장
     print(f"\n{'=' * 70}")

@@ -33,11 +33,25 @@ import sys
 import os
 
 # 프로젝트 루트 디렉터리를 Python 경로에 추가
-# 이렇게 해야 models/, utils/ 등 상위 패키지를 import할 수 있음
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 
 from models.cnn_models import create_cnn_variants
 from utils.timer import TimeEstimator
+
+STAGE2_DIR = os.path.join(BASE_DIR, 'data', 'stage2')
+OUTPUT_FILE = os.path.join(STAGE2_DIR, 'cnn_cifar10_results.csv')
+
+
+def load_existing_pairs():
+    """
+    기존 CSV에 이미 측정된 (model_name, device) 조합을 반환합니다.
+    증분 실행 시 이미 측정된 조합은 건너뜁니다.
+    """
+    if not os.path.isfile(OUTPUT_FILE):
+        return set()
+    df = pd.read_csv(OUTPUT_FILE)
+    return set(zip(df['model_name'].astype(str), df['device'].astype(str)))
 
 
 def prepare_cifar10_data(batch_size=64):
@@ -87,19 +101,19 @@ def prepare_cifar10_data(batch_size=64):
         ),
     ])
 
-    # CIFAR-10 데이터셋 로드 (이미 다운로드된 경우 기존 파일 사용)
+    # CIFAR-10 데이터셋 로드
+    data_dir = os.path.join(BASE_DIR, 'data')
     try:
-        # '../data' 폴더에 이미 다운로드된 데이터가 있으면 바로 로드
-        train_dataset = datasets.CIFAR10('../data', train=True, download=False, transform=transform_train)
-        test_dataset = datasets.CIFAR10('../data', train=False, download=False, transform=transform_test)
+        train_dataset = datasets.CIFAR10(data_dir, train=True, download=False, transform=transform_train)
+        test_dataset = datasets.CIFAR10(data_dir, train=False, download=False, transform=transform_test)
     except:
         # 데이터가 없으면 자동 다운로드 (약 170MB)
         print("CIFAR-10 데이터를 다운로드합니다...")
         # Mac에서 SSL 인증서 오류를 우회하기 위한 임시 설정
         import ssl
         ssl._create_default_https_context = ssl._create_unverified_context
-        train_dataset = datasets.CIFAR10('../data', train=True, download=True, transform=transform_train)
-        test_dataset = datasets.CIFAR10('../data', train=False, download=True, transform=transform_test)
+        train_dataset = datasets.CIFAR10(data_dir, train=True, download=True, transform=transform_train)
+        test_dataset = datasets.CIFAR10(data_dir, train=False, download=True, transform=transform_test)
 
     # DataLoader 생성
     # num_workers=0: Mac에서 멀티프로세싱 권한 문제를 방지하기 위해 단일 프로세스 사용
@@ -181,9 +195,11 @@ def train_model(model, train_loader, device='mps', epochs=3):
             total += target.size(0)
             correct += predicted.eq(target).sum().item()
 
-            # MPS 동기화: GPU 연산 완료 대기
+            # MPS/CUDA 동기화: GPU 연산 완료 대기
             if device == 'mps':
                 torch.mps.synchronize()
+            elif device == 'cuda':
+                torch.cuda.synchronize()
 
             # 100 배치마다 중간 진행상황 출력
             if batch_idx % 100 == 0:
@@ -225,8 +241,14 @@ def run_experiment():
     print("\n1. Preparing CIFAR-10 data...")
     train_loader, test_loader = prepare_cifar10_data(batch_size=64)
 
-    # 측정할 디바이스 목록 (CPU와 M1 MPS GPU)
-    devices = ['cpu', 'mps']
+    # 측정할 디바이스 목록 (Windows: cuda, Mac: mps)
+    if torch.cuda.is_available():
+        devices = ['cpu', 'cuda']
+    elif getattr(torch.backends, 'mps', None) and torch.backends.mps.is_available():
+        devices = ['cpu', 'mps']
+    else:
+        devices = ['cpu']
+    print(f"Devices: {devices}")
     results = []   # 모든 실험 결과를 담을 리스트
 
     # ─────────────────────────────────────────────────────────────
@@ -235,6 +257,10 @@ def run_experiment():
     print("\n2. Creating CNN model variants...")
     model_variants = create_cnn_variants()
     print(f"Total {len(model_variants)} model variants created")
+
+    # 증분: 이미 측정된 (model_name, device) 조합 건너뛰기
+    existing_pairs = load_existing_pairs()
+    print(f"Existing (model_name, device) pairs: {len(existing_pairs)}")
 
     # ─────────────────────────────────────────────────────────────
     # Step 3: 각 모델 × 각 디바이스 조합으로 실험 수행
@@ -246,6 +272,9 @@ def run_experiment():
         print(f"{'=' * 80}")
 
         for device in devices:
+            if (model_info['name'], device) in existing_pairs:
+                print(f"\n[Device: {device.upper()}] SKIP (already measured)")
+                continue
             print(f"\n[Device: {device.upper()}]")
 
             # [중요] 매번 새로운 모델 인스턴스를 생성하여 독립적인 실험 보장
@@ -314,23 +343,33 @@ def run_experiment():
             print(f"Training Time: {training_mean:.2f} ± {training_std:.2f} sec")
 
     # ─────────────────────────────────────────────────────────────
-    # Step 4: 결과 저장
+    # Step 4: 결과 저장 (증분 append)
     # ─────────────────────────────────────────────────────────────
     print("\n" + "=" * 80)
     print("Saving results...")
-    df = pd.DataFrame(results)
+    os.makedirs(STAGE2_DIR, exist_ok=True)
 
-    # 결과 저장 디렉터리 생성 (없으면 자동 생성)
-    os.makedirs('../data', exist_ok=True)
-    output_file = '../data/cnn_cifar10_results.csv'
-    df.to_csv(output_file, index=False)
-    print(f"Results saved to {output_file}")
+    if results:
+        df_new = pd.DataFrame(results)
+        if os.path.isfile(OUTPUT_FILE):
+            df_old = pd.read_csv(OUTPUT_FILE)
+            df = pd.concat([df_old, df_new], ignore_index=True)
+        else:
+            df = df_new
+        df.to_csv(OUTPUT_FILE, index=False)
+        print(f"Results saved to {OUTPUT_FILE} ({len(df_new)} new rows appended)")
+    else:
+        df = pd.read_csv(OUTPUT_FILE) if os.path.isfile(OUTPUT_FILE) else pd.DataFrame()
+        print("No new measurements; existing file unchanged.")
 
     # 결과 요약 출력
-    print("\n" + "=" * 80)
-    print("Experiment Summary")
-    print("=" * 80)
-    print(df[['model_name', 'total_params', 'device', 'inference_time_mean_ms', 'training_time_mean_sec']].to_string())
+    if not df.empty:
+        cols = [c for c in ['model_name', 'total_params', 'device', 'inference_time_mean_ms', 'training_time_mean_sec'] if c in df.columns]
+        if cols:
+            print("\n" + "=" * 80)
+            print("Experiment Summary")
+            print("=" * 80)
+            print(df[cols].to_string())
 
     return df
 

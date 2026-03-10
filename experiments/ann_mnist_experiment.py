@@ -31,7 +31,7 @@ import ssl
 # → models/, utils/ 폴더의 모듈을 import할 수 있게 됨
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.ann_models import SimpleANN, create_extended_variants
+from models.ann_models import SimpleANN, get_all_ann_variants
 from utils.timer import TimeEstimator
 
 # ──────────────────────────────────────────────────────────
@@ -49,29 +49,27 @@ OUTPUT_FILE = os.path.join(STAGE1_DIR, 'ann_mnist_results.csv')
 
 def load_existing_configs(output_file):
     """
-    기존 CSV 파일에서 이미 측정된 config 목록을 불러오는 함수
+    기존 CSV 파일에서 이미 측정된 (config, device) 조합을 불러오는 함수
 
-    이 함수를 통해 이미 측정한 조합은 건너뛰고,
-    새로운 조합만 추가 측정하여 시간을 절약할 수 있음
-
-    Args:
-        output_file (str): 기존 CSV 파일 경로
+    (config, device) 기준으로 중복을 체크하여,
+    Mac(MPS)에서 측정한 config도 Windows(CUDA)에서 cuda 데이터를 추가할 수 있음.
 
     Returns:
-        tuple: (이미 측정된 config 문자열 집합, 다음 model_idx 시작값)
+        tuple: (이미 측정된 (config, device) 집합, config별 model_idx 매핑)
     """
     if os.path.exists(output_file):
         df = pd.read_csv(output_file)
-        # 이미 측정된 config 문자열 목록 (예: "[64]", "[128, 256]" 등)
-        existing_configs = set(df['config'].unique())
-        # 다음 model_idx는 기존 최대값 + 1부터 시작
+        # (config, device) 조합으로 중복 체크
+        existing_pairs = set(zip(df['config'].astype(str), df['device'].astype(str)))
+        # config별 model_idx (첫 등장 시 사용)
+        config_to_idx = df.groupby('config')['model_idx'].first().to_dict()
         next_idx = int(df['model_idx'].max()) + 1
-        print(f"  기존 CSV 발견: {len(df)}행, {len(existing_configs)}가지 config 측정 완료")
+        print(f"  기존 CSV 발견: {len(df)}행, (config, device) 조합 {len(existing_pairs)}개")
         print(f"  다음 model_idx 시작: {next_idx}")
-        return existing_configs, next_idx
+        return existing_pairs, config_to_idx, next_idx
     else:
         print("  기존 CSV 없음 → 새로 시작")
-        return set(), 0
+        return set(), {}, 0
 
 
 # ──────────────────────────────────────────────────────────
@@ -171,9 +169,11 @@ def train_model(model, train_loader, device='cpu', epochs=2):
             total += target.size(0)
             correct += predicted.eq(target).sum().item()
 
-            # MPS(M1 GPU)는 비동기로 작동하므로 정확한 시간 측정을 위해 동기화
+            # MPS/CUDA는 비동기이므로 정확한 시간 측정을 위해 동기화
             if device == 'mps':
                 torch.mps.synchronize()
+            elif device == 'cuda':
+                torch.cuda.synchronize()
 
         accuracy = 100. * correct / total
         avg_loss = total_loss / len(train_loader)
@@ -210,26 +210,38 @@ def run_experiment():
     # ── Step 1. 기존 측정 데이터 확인 ────────────────────────
     print("\n[Step 1] 기존 측정 데이터 확인")
     os.makedirs(DATA_DIR, exist_ok=True)
-    existing_configs, next_model_idx = load_existing_configs(OUTPUT_FILE)
+    existing_pairs, config_to_idx, next_model_idx = load_existing_configs(OUTPUT_FILE)
 
-    # ── Step 2. 새 모델 조합 준비 ────────────────────────────
+    # ── Step 2. 새 모델 조합 준비 (config × device 기준) ─────
     print("\n[Step 2] 추가 ANN 모델 조합 준비")
-    all_variants = create_extended_variants()
+    all_variants = get_all_ann_variants()
+    # Windows: cuda, Mac: mps
+    if torch.cuda.is_available():
+        devices = ['cpu', 'cuda']
+    elif getattr(torch.backends, 'mps', None) and torch.backends.mps.is_available():
+        devices = ['cpu', 'mps']
+    else:
+        devices = ['cpu']
 
-    # 이미 측정된 config는 건너뜀 (중복 측정 방지)
-    new_variants = [
-        (model, info) for model, info in all_variants
-        if str(info['config']) not in existing_configs
-    ]
+    # (config, device) 조합 중 아직 측정 안 된 것만
+    work_list = []  # (model_info, device, model_idx)
+    for model, info in all_variants:
+        cfg_str = str(info['config'])
+        if cfg_str in config_to_idx:
+            idx = config_to_idx[cfg_str]
+        else:
+            idx = next_model_idx
+            config_to_idx[cfg_str] = idx
+            next_model_idx += 1
+        for dev in devices:
+            if (cfg_str, dev) not in existing_pairs:
+                work_list.append((info, dev, idx))
 
-    if not new_variants:
-        print("  모든 새로운 조합이 이미 측정됨. 추가 실험 불필요!")
+    if not work_list:
+        print("  모든 (config, device) 조합이 이미 측정됨. 추가 실험 불필요!")
         return pd.read_csv(OUTPUT_FILE)
 
-    print(f"  전체 추가 조합: {len(all_variants)}개")
-    print(f"  이미 측정됨: {len(all_variants) - len(new_variants)}개")
-    print(f"  새로 측정할 조합: {len(new_variants)}개")
-    print(f"  예상 새 데이터 포인트: {len(new_variants) * 2}개 (CPU + MPS 각각)")
+    print(f"  측정할 (config, device) 조합: {len(work_list)}개")
 
     # ── Step 3. MNIST 데이터 준비 ────────────────────────────
     print("\n[Step 3] MNIST 데이터 로드")
@@ -238,67 +250,59 @@ def run_experiment():
 
     # ── Step 4. 실험 실행 ────────────────────────────────────
     print("\n[Step 4] 실험 시작")
-    devices = ['cpu', 'mps']
+    print(f"  사용 디바이스: {devices}")
     new_results = []
 
-    for i, (_, model_info) in enumerate(new_variants):
+    for i, (model_info, device, current_idx) in enumerate(work_list):
         config = model_info['config']
         total_params = model_info['total_params']
-        current_idx = next_model_idx + i
 
         print(f"\n{'─' * 70}")
-        print(f"  [{i+1}/{len(new_variants)}] Config: {config}")
+        print(f"  [{i+1}/{len(work_list)}] Config: {config} / Device: {device.upper()}")
         print(f"  num_layers={model_info['num_layers']}, total_params={total_params:,}")
         print(f"  model_idx: {current_idx}")
         print(f"{'─' * 70}")
 
-        for device in devices:
-            print(f"\n  [디바이스: {device.upper()}]")
+        # 각 디바이스마다 새로운 모델 인스턴스 생성
+        fresh_model = SimpleANN(hidden_sizes=config)
 
-            # 각 디바이스마다 새로운 모델 인스턴스 생성
-            # (이전 디바이스 학습 상태와 독립적으로 측정하기 위함)
-            fresh_model = SimpleANN(hidden_sizes=config)
+        # 모델 학습 (MNIST 식별 가능한 수준까지)
+        print("  학습 중...")
+        trained_model = train_model(fresh_model, train_loader, device=device, epochs=2)
 
-            # 모델 학습 (MNIST 식별 가능한 수준까지)
-            print("  학습 중...")
-            trained_model = train_model(fresh_model, train_loader, device=device, epochs=2)
+        # 시간 측정기 생성
+        estimator = TimeEstimator(device=device, warmup_runs=5, measure_runs=10)
 
-            # 시간 측정기 생성
-            # warmup_runs=5: 처음 5번은 GPU 캐시 워밍업으로 제외
-            # measure_runs=10: 10번 반복 측정 후 평균 계산
-            estimator = TimeEstimator(device=device, warmup_runs=5, measure_runs=10)
+        # 추론 시간 측정
+        print("  추론 시간 측정 중 (warmup 5회 + 측정 10회)...")
+        inference_mean, inference_std = estimator.measure_inference_time(
+            trained_model,
+            input_shape=(64, 1, 28, 28)
+        )
 
-            # 추론 시간 측정 (배치 크기 64, 이미지 28×28 흑백)
-            print("  추론 시간 측정 중 (warmup 5회 + 측정 10회)...")
-            inference_mean, inference_std = estimator.measure_inference_time(
-                trained_model,
-                input_shape=(64, 1, 28, 28)  # (배치, 채널, 높이, 너비)
-            )
+        # 학습 시간 측정
+        print("  학습 시간 측정 중 (1 epoch)...")
+        training_mean, training_std = estimator.measure_training_time(
+            trained_model,
+            train_loader,
+            epochs=1
+        )
 
-            # 학습 시간 측정 (1 epoch 기준)
-            print("  학습 시간 측정 중 (1 epoch)...")
-            training_mean, training_std = estimator.measure_training_time(
-                trained_model,
-                train_loader,
-                epochs=1
-            )
+        result = {
+            'model_idx': current_idx,
+            'config': str(config),
+            'num_layers': model_info['num_layers'],
+            'total_params': total_params,
+            'device': device,
+            'inference_time_mean_ms': inference_mean,
+            'inference_time_std_ms': inference_std,
+            'training_time_mean_sec': training_mean,
+            'training_time_std_sec': training_std,
+        }
+        new_results.append(result)
 
-            # 결과 저장
-            result = {
-                'model_idx': current_idx,
-                'config': str(config),
-                'num_layers': model_info['num_layers'],
-                'total_params': total_params,
-                'device': device,
-                'inference_time_mean_ms': inference_mean,
-                'inference_time_std_ms': inference_std,
-                'training_time_mean_sec': training_mean,
-                'training_time_std_sec': training_std,
-            }
-            new_results.append(result)
-
-            print(f"  추론 시간: {inference_mean:.3f} ± {inference_std:.3f} ms")
-            print(f"  학습 시간: {training_mean:.2f} ± {training_std:.2f} 초/epoch")
+        print(f"  추론 시간: {inference_mean:.3f} ± {inference_std:.3f} ms")
+        print(f"  학습 시간: {training_mean:.2f} ± {training_std:.2f} 초/epoch")
 
     # ── Step 5. 결과 저장 (기존 CSV에 추가) ──────────────────
     print(f"\n{'=' * 70}")

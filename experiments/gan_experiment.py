@@ -149,6 +149,8 @@ def train_gan(gan, train_loader, device='cpu', epochs=3):
 
             if device == 'mps':
                 torch.mps.synchronize()
+            elif device == 'cuda':
+                torch.cuda.synchronize()
 
             d_losses.append(d_loss.item())
             g_losses.append(g_loss.item())
@@ -191,6 +193,8 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
             _ = gan.generator(noise_batch)
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
 
     # 본 측정
     inference_times = []
@@ -198,12 +202,16 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
         noise = torch.randn(batch_size, gan.latent_dim, device=device)
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
 
         start = time.perf_counter()
         with torch.no_grad():
             _ = gan.generator(noise)
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
         end = time.perf_counter()
 
         inference_times.append((end - start) * 1000)  # ms 변환
@@ -228,6 +236,8 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
         g_optimizer.step()
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
 
     # 본 측정 (배치 1회 기준)
     training_times = []
@@ -240,6 +250,8 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
 
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
 
         start = time.perf_counter()
 
@@ -260,6 +272,8 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
 
         if device == 'mps':
             torch.mps.synchronize()
+        elif device == 'cuda':
+            torch.cuda.synchronize()
 
         end = time.perf_counter()
         training_times.append(end - start)
@@ -273,16 +287,21 @@ def measure_gan_time(gan, device, batch_size=64, warmup=5, n_runs=10):
 # 기존 측정 확인
 # ──────────────────────────────────────────────────────────
 
-def load_existing_configs(output_file):
-    """이미 측정된 config 목록 로드"""
+def load_existing_pairs(output_file):
+    """
+    이미 측정된 (config_str, device) 조합을 CSV에서 불러옵니다.
+    Mac(MPS)에서 측정한 config도 Windows(CUDA)에서 cuda 데이터를 추가할 수 있도록
+    (config_str, device) 기준으로 중복 체크합니다.
+    """
     if os.path.exists(output_file):
-        df       = pd.read_csv(output_file)
-        existing = set(df['config_str'].unique())
+        df = pd.read_csv(output_file)
+        existing_pairs = set(zip(df['config_str'].astype(str), df['device'].astype(str)))
+        config_to_idx = df.groupby('config_str')['model_idx'].first().to_dict()
         next_idx = int(df['model_idx'].max()) + 1
-        print(f"  기존 CSV: {len(df)}행, {len(existing)}가지 config 완료")
-        return existing, next_idx
+        print(f"  기존 CSV: {len(df)}행, (config_str, device) 조합 {len(existing_pairs)}개")
+        return existing_pairs, config_to_idx, next_idx
     print("  기존 CSV 없음 → 새로 시작")
-    return set(), 0
+    return set(), {}, 0
 
 # ──────────────────────────────────────────────────────────
 # 메인 실험 함수
@@ -304,23 +323,37 @@ def run_experiment():
 
     os.makedirs(STAGE4_DIR, exist_ok=True)
 
+    if torch.cuda.is_available():
+        devices = ['cpu', 'cuda']
+    elif getattr(torch.backends, 'mps', None) and torch.backends.mps.is_available():
+        devices = ['cpu', 'mps']
+    else:
+        devices = ['cpu']
+    print(f"  사용 디바이스: {devices}")
+
     # 기존 측정 확인
     print("\n[Step 1] 기존 측정 데이터 확인")
-    existing_configs, next_idx = load_existing_configs(OUTPUT_FILE)
+    existing_pairs, config_to_idx, next_idx = load_existing_pairs(OUTPUT_FILE)
 
-    # GAN 조합 준비 (MNIST: 28×28 흑백)
+    # 측정할 (config_str, device) work_list 구성
     print("\n[Step 2] GAN 모델 조합 준비")
     all_variants = create_gan_variants(img_size=IMG_SIZE, img_channels=IMG_CHANNELS)
-    new_variants = [
-        (gan, info) for gan, info in all_variants
-        if info['config_str'] not in existing_configs
-    ]
+    work_list = []
+    for gan, info in all_variants:
+        config_str = info['config_str']
+        for device in devices:
+            if (config_str, device) not in existing_pairs:
+                model_idx = config_to_idx.get(config_str, next_idx)
+                if config_str not in config_to_idx:
+                    config_to_idx[config_str] = model_idx
+                    next_idx += 1
+                work_list.append((info, device, config_to_idx[config_str]))
 
-    if not new_variants:
-        print("  모든 조합이 이미 측정됨!")
-        return pd.read_csv(OUTPUT_FILE)
+    if not work_list:
+        print("  모든 (config_str, device) 조합이 이미 측정됨!")
+        return pd.read_csv(OUTPUT_FILE) if os.path.exists(OUTPUT_FILE) else pd.DataFrame()
 
-    print(f"  전체: {len(all_variants)}개 | 새로 측정: {len(new_variants)}개")
+    print(f"  전체: {len(all_variants)}개 | 측정할 항목: {len(work_list)}개")
 
     # MNIST 데이터 로드
     print("\n[Step 3] MNIST 데이터 로드")
@@ -329,68 +362,65 @@ def run_experiment():
 
     # 실험
     print("\n[Step 4] 실험 시작")
-    devices     = ['cpu', 'mps']
     new_results = []
 
-    for i, (_, info) in enumerate(new_variants):
-        config_str  = info['config_str']
-        current_idx = next_idx + i
+    for i, (info, device, current_idx) in enumerate(work_list):
+        config_str = info['config_str']
 
         print(f"\n{'─' * 70}")
-        print(f"  [{i+1}/{len(new_variants)}] {config_str}")
+        print(f"  [{i+1}/{len(work_list)}] {config_str} @ {device.upper()}")
         print(f"  latent_dim={info['latent_dim']}, "
               f"G_dims={info['g_hidden_dims']}, "
               f"total_params={info['total_params']:,}")
         print(f"{'─' * 70}")
 
-        for device in devices:
-            print(f"\n  [디바이스: {device.upper()}]")
+        print(f"\n  [디바이스: {device.upper()}]")
 
-            # 새 GAN 인스턴스 생성
-            from models.gan_models import SimpleGAN
-            fresh_gan = SimpleGAN(
-                latent_dim=info['latent_dim'],
-                img_size=IMG_SIZE,
-                img_channels=IMG_CHANNELS,
-                g_hidden_dims=info['g_hidden_dims'],
-                d_hidden_dims=info['d_hidden_dims'],
-            )
+        # 새 GAN 인스턴스 생성
+        from models.gan_models import SimpleGAN
+        fresh_gan = SimpleGAN(
+            latent_dim=info['latent_dim'],
+            img_size=IMG_SIZE,
+            img_channels=IMG_CHANNELS,
+            g_hidden_dims=info['g_hidden_dims'],
+            d_hidden_dims=info['d_hidden_dims'],
+        )
 
-            # 짧은 학습 (3 epoch)
-            print("  학습 중 (3 epoch)...")
-            trained_gan = train_gan(fresh_gan, train_loader, device=device, epochs=EPOCHS_TRAIN)
+        # 짧은 학습 (3 epoch)
+        print("  학습 중 (3 epoch)...")
+        trained_gan = train_gan(fresh_gan, train_loader, device=device, epochs=EPOCHS_TRAIN)
 
-            # 시간 측정
-            print("  시간 측정 중 (warmup 5회 + 10회 반복)...")
-            inf_mean, inf_std, tr_mean, tr_std = measure_gan_time(
-                trained_gan, device, batch_size=BATCH_SIZE, warmup=5, n_runs=10
-            )
+        # 시간 측정
+        print("  시간 측정 중 (warmup 5회 + 10회 반복)...")
+        inf_mean, inf_std, tr_mean, tr_std = measure_gan_time(
+            trained_gan, device, batch_size=BATCH_SIZE, warmup=5, n_runs=10
+        )
 
-            result = {
-                'model_idx': current_idx,
-                'config_str': config_str,
-                'model_type': 'GAN',
-                'latent_dim': info['latent_dim'],
-                'g_hidden_dims': str(info['g_hidden_dims']),
-                'd_hidden_dims': str(info['d_hidden_dims']),
-                'num_layers': info['num_layers'],
-                'total_params': info['total_params'],
-                'g_total_params': info['g_total_params'],
-                'd_total_params': info['d_total_params'],
-                'device': device,
-                'inference_time_mean_ms': inf_mean,
-                'inference_time_std_ms': inf_std,
-                'training_time_mean_sec': tr_mean,
-                'training_time_std_sec': tr_std,
-                'dataset': 'MNIST',
-                'img_size': IMG_SIZE,
-                'img_channels': IMG_CHANNELS,
-                'batch_size': BATCH_SIZE,
-            }
-            new_results.append(result)
+        result = {
+            'model_idx': current_idx,
+            'config_str': config_str,
+            'model_type': 'GAN',
+            'latent_dim': info['latent_dim'],
+            'g_hidden_dims': str(info['g_hidden_dims']),
+            'd_hidden_dims': str(info['d_hidden_dims']),
+            'num_layers': info['num_layers'],
+            'total_params': info['total_params'],
+            'g_total_params': info['g_total_params'],
+            'd_total_params': info['d_total_params'],
+            'device': device,
+            'inference_time_mean_ms': inf_mean,
+            'inference_time_std_ms': inf_std,
+            'training_time_mean_sec': tr_mean,
+            'training_time_std_sec': tr_std,
+            'dataset': 'MNIST',
+            'img_size': IMG_SIZE,
+            'img_channels': IMG_CHANNELS,
+            'batch_size': BATCH_SIZE,
+        }
+        new_results.append(result)
 
-            print(f"  추론(G forward): {inf_mean:.3f} ± {inf_std:.3f} ms")
-            print(f"  학습(G+D 배치): {tr_mean:.4f} ± {tr_std:.4f} 초")
+        print(f"  추론(G forward): {inf_mean:.3f} ± {inf_std:.3f} ms")
+        print(f"  학습(G+D 배치): {tr_mean:.4f} ± {tr_std:.4f} 초")
 
     # 저장
     print(f"\n{'=' * 70}")

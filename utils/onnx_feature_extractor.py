@@ -4,49 +4,70 @@
 #
 # 역할:
 #   ONNX 파일을 읽어서 train_predictor.py에서 사용하는
-#   33개 Feature 딕셔너리로 변환합니다.
-#
-# ONNX란?
-#   Open Neural Network Exchange의 약자.
-#   PyTorch, TensorFlow 등 다양한 프레임워크의 모델을
-#   하나의 표준 파일 형식(.onnx)으로 저장할 수 있음.
-#   모델 구조(레이어 연결 관계)와 파라미터(가중치)를 모두 포함.
-#
-# 파싱 전략:
-#   ONNX 그래프의 노드(Node) 타입을 보고 모델 종류를 자동 판별
-#   - Conv 노드가 많으면 → CNN
-#   - Gemm(행렬 곱) 위주이면 → ANN
-#   - Attention 패턴이 있으면 → Transformer (완전 자동 어려움)
+#   92개 Feature 딕셔너리로 변환합니다.
 #
 # 작성자: 김홍근 / 하드웨어: MacBook Air M1
 # ============================================================
 
 import numpy as np
+import os
+
+# train_predictor와 동일한 92개 컬럼 순서 (동기화 유지)
+FEATURE_COLUMNS_92 = [
+    'total_params', 'log_total_params', 'trainable_params', 'model_size_mb', 'log_model_size_mb',
+    'total_layers', 'num_hidden_layers', 'num_linear_layers', 'num_conv_layers', 'max_width', 'log_max_width',
+    'min_width', 'avg_width', 'base_channels', 'model_family_encoded', 'has_pooling', 'has_batch_norm',
+    'cnn_num_fc_layers', 'cnn_kernel_size', 'flops', 'has_residual', 'has_depthwise', 'has_attention', 'has_cls_token',
+    'num_blocks', 'num_mult_adds', 'activation_memory_mb', 'first_layer_width', 'last_layer_width',
+    'is_sequential', 'has_skip_connection', 'max_channels', 'min_channels',
+    'ann_max_hidden', 'ann_min_hidden', 'ann_avg_hidden', 'cnn_num_filters', 'cnn_max_channels', 'cnn_has_residual', 'cnn_has_depthwise',
+    'embed_dim', 'num_heads', 'patch_size', 'ffn_dim', 'vit_has_cls_token', 'latent_dim', 'generator_params', 'discriminator_params',
+    'ann_num_layers', 'cnn_stem_channels', 'vit_num_encoder_layers',
+    'input_height', 'input_width', 'input_channels', 'num_classes', 'batch_size', 'dataset_encoded', 'input_pixels', 'seq_length',
+    'device_type', 'os_type', 'accelerator_brand', 'accelerator_name', 'cpu_cores_physical', 'cpu_cores_logical',
+    'cpu_perf_cores', 'cpu_efficiency_cores', 'cpu_freq_base_ghz', 'cpu_freq_boost_ghz', 'cpu_cache_l2_mb', 'cpu_cache_l3_mb',
+    'ram_total_gb', 'memory_type', 'memory_bandwidth_gbs', 'is_unified_memory', 'shared_memory_gb', 'dedicated_vram_gb',
+    'gpu_count', 'gpu_memory_gb', 'gpu_core_count', 'peak_bandwidth_gbs', 'tflops_fp32', 'tflops_fp16',
+    'fp16_support', 'bf16_support', 'interconnect_type', 'host_to_device_bandwidth_gbs', 'is_discrete_gpu', 'is_integrated_gpu',
+    'device_encoded', 'cpu_freq_ghz', 'memory_channels',
+]
 
 
-# ──────────────────────────────────────────────────────────
-# 하드웨어 고정 Feature (MacBook Air M1 기준)
-# ──────────────────────────────────────────────────────────
-# 교수님 유의사항: 하드웨어 사양을 반드시 기록할 것
-HARDWARE_INFO = {
-    'cpu_cores':      8,      # M1 CPU 코어 수 (성능 4 + 효율 4)
-    'cpu_freq_ghz':   3.2,    # 최대 클럭 속도 (GHz)
-    'cpu_cache_l2_mb': 12.0,  # L2 캐시 크기 (MB)
-    'ram_total_gb':   8.0,    # 통합 메모리 (GB)
-    'gpu_memory_gb':  8.0,    # M1 GPU 메모리 (CPU와 Unified Memory 공유)
+def _get_feature_columns():
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys_path = os.path.join(base, 'experiments')
+    if sys_path not in __import__('sys').path:
+        __import__('sys').path.insert(0, base)
+    try:
+        from experiments.train_predictor import FEATURE_COLUMNS
+        return FEATURE_COLUMNS
+    except Exception:
+        pass
+    return None
+
+
+# 하드웨어: get_hardware_info 사용 (없으면 fallback)
+try:
+    from utils.hardware_info import get_hardware_info
+except ImportError:
+    get_hardware_info = None
+
+# Fallback 하드웨어 (get_hardware_info 미사용 시)
+HARDWARE_FALLBACK = {
+    'device_type': 0, 'os_type': 0, 'accelerator_brand': 0, 'accelerator_name': 0,
+    'cpu_cores_physical': 8, 'cpu_cores_logical': 8, 'cpu_perf_cores': 4, 'cpu_efficiency_cores': 4,
+    'cpu_freq_base_ghz': 0.6, 'cpu_freq_boost_ghz': 3.2, 'cpu_cache_l2_mb': 12.0, 'cpu_cache_l3_mb': 0.0,
+    'ram_total_gb': 8.0, 'memory_type': 0, 'memory_bandwidth_gbs': 0.0, 'is_unified_memory': 1,
+    'shared_memory_gb': 8.0, 'dedicated_vram_gb': 0.0, 'gpu_count': 0, 'gpu_memory_gb': 0.0,
+    'gpu_core_count': 0, 'peak_bandwidth_gbs': 0.0, 'tflops_fp32': 0.0, 'tflops_fp16': 0.0,
+    'fp16_support': 0, 'bf16_support': 0, 'interconnect_type': 0, 'host_to_device_bandwidth_gbs': 0.0,
+    'is_discrete_gpu': 0, 'is_integrated_gpu': 0, 'device_encoded': 0, 'cpu_freq_ghz': 3.2, 'memory_channels': 0,
 }
 
-# ──────────────────────────────────────────────────────────
-# 모델 타입 인코딩 (train_predictor.py와 동일하게 맞춰야 함)
-# ──────────────────────────────────────────────────────────
 MODEL_TYPE = {
-    'ANN': 0,
-    'SimpleCNN': 1,
-    'ResNet': 2,
-    'MobileNet': 3,
-    'Transformer': 4,
-    'GAN': 5,
+    'ANN': 0, 'SimpleCNN': 1, 'ResNet': 2, 'MobileNet': 3, 'Transformer': 4, 'GAN': 5,
 }
+DEFAULT_BATCH_SIZE = 64
 
 # 배치 크기 기본값 (학습/추론 시 사용한 배치 크기)
 DEFAULT_BATCH_SIZE = 64
@@ -229,59 +250,84 @@ def extract_features_from_onnx(
     device_encoded = 0 if device.lower() == 'cpu' else 1
 
     # ── 10. base_channels (CNN 기본 채널 수) ──────────────
-    # CNN이면 max_width를 base_channels로 사용 (단순화)
     base_channels = max_width if model_type_encoded in [1, 2, 3] else 0
 
-    # ── 11. 최종 Feature 딕셔너리 구성 ────────────────────
-    # train_predictor.py의 FEATURE_COLUMNS 순서와 반드시 일치해야 함
+    # ── 11. 92개 Feature 딕셔너리 구성 ───────────────────
+    # 공통 + 모델전용 + 입력 (ONNX/인자에서 채움)
     features = {
-        # 모델 구조 Feature
-        'total_params':      total_params,
-        'log_total_params':  log_total_params,
-        'model_size_mb':     model_size_mb,
+        'total_params': total_params,
+        'log_total_params': log_total_params,
+        'trainable_params': total_params,
+        'model_size_mb': model_size_mb,
         'log_model_size_mb': log_model_size_mb,
-        'num_layers':        num_layers,
+        'total_layers': num_layers,
         'num_hidden_layers': num_hidden_layers,
-        'num_conv_layers':   num_conv_layers,
-        'max_width':         max_width,
-        'log_max_width':     log_max_width,
-        'min_width':         min_width,
-        'avg_width':         avg_width,
-        'base_channels':     base_channels,
-        'model_type_encoded': model_type_encoded,
-        # CNN 전용 Feature
-        'cnn_has_pooling':   cnn_has_pooling,
-        'cnn_has_batchnorm': cnn_has_batchnorm,
+        'num_linear_layers': num_gemm,
+        'num_conv_layers': num_conv_layers,
+        'max_width': max_width,
+        'log_max_width': log_max_width,
+        'min_width': min_width,
+        'avg_width': avg_width,
+        'base_channels': base_channels,
+        'model_family_encoded': model_type_encoded,
+        'has_pooling': cnn_has_pooling,
+        'has_batch_norm': cnn_has_batchnorm,
         'cnn_num_fc_layers': cnn_num_fc_layers,
-        'cnn_kernel_size':   cnn_kernel_size,
-        # 하드웨어 Feature (M1 Mac 고정)
-        'device_encoded':    device_encoded,
-        'cpu_cores':         HARDWARE_INFO['cpu_cores'],
-        'cpu_freq_ghz':      HARDWARE_INFO['cpu_freq_ghz'],
-        'cpu_cache_l2_mb':   HARDWARE_INFO['cpu_cache_l2_mb'],
-        'ram_total_gb':      HARDWARE_INFO['ram_total_gb'],
-        'gpu_memory_gb':     HARDWARE_INFO['gpu_memory_gb'],
-        # 입력 데이터 Feature
-        'input_channels':    input_channels,
-        'input_height':      input_height,
-        'input_width':       input_width,
-        'num_classes':       num_classes,
-        'batch_size':        batch_size,
-        'dataset_encoded':   dataset_encoded,
-        # Transformer 전용 Feature (다른 모델은 0)
-        'embed_dim':         embed_dim,
-        'num_heads':         num_heads,
-        'patch_size':        patch_size,
-        # GAN 전용 Feature (다른 모델은 0)
-        'latent_dim':        latent_dim,
+        'cnn_kernel_size': cnn_kernel_size,
+        'flops': 0,
+        'has_residual': 1 if model_type_encoded in [2, 3] else 0,
+        'has_depthwise': 1 if model_type_encoded == 3 else 0,
+        'has_attention': 1 if model_type_encoded == 4 else 0,
+        'has_cls_token': 1 if model_type_encoded == 4 else 0,
+        'num_blocks': num_layers,
+        'num_mult_adds': 0,
+        'activation_memory_mb': 0,
+        'first_layer_width': layer_widths[0] if layer_widths else 0,
+        'last_layer_width': layer_widths[-1] if layer_widths else 0,
+        'is_sequential': 1,
+        'has_skip_connection': 1 if model_type_encoded in [2, 3] else 0,
+        'max_channels': max_width if model_type_encoded in [1, 2, 3] else 0,
+        'min_channels': min_width if model_type_encoded in [1, 2, 3] else 0,
+        'ann_max_hidden': max_width if model_type_encoded == 0 else 0,
+        'ann_min_hidden': min_width if model_type_encoded == 0 else 0,
+        'ann_avg_hidden': int(avg_width) if model_type_encoded == 0 else 0,
+        'cnn_num_filters': max_width if model_type_encoded in [1, 2, 3] else 0,
+        'cnn_max_channels': max_width if model_type_encoded in [1, 2, 3] else 0,
+        'cnn_has_residual': 1 if model_type_encoded in [2, 3] else 0,
+        'cnn_has_depthwise': 1 if model_type_encoded == 3 else 0,
+        'embed_dim': embed_dim,
+        'num_heads': num_heads,
+        'patch_size': patch_size,
+        'ffn_dim': embed_dim * 4 if model_type_encoded == 4 else 0,
+        'vit_has_cls_token': 1 if model_type_encoded == 4 else 0,
+        'latent_dim': latent_dim,
+        'generator_params': total_params // 2 if model_type_encoded == 5 else 0,
+        'discriminator_params': total_params - (total_params // 2) if model_type_encoded == 5 else 0,
+        'ann_num_layers': num_layers if model_type_encoded == 0 else 0,
+        'cnn_stem_channels': base_channels if model_type_encoded in [1, 2, 3] else 0,
+        'vit_num_encoder_layers': num_layers if model_type_encoded == 4 else 0,
+        'input_height': input_height,
+        'input_width': input_width,
+        'input_channels': input_channels,
+        'num_classes': num_classes,
+        'batch_size': batch_size,
+        'dataset_encoded': dataset_encoded,
+        'input_pixels': input_channels * input_height * input_width,
+        'seq_length': 0,
     }
 
-    print(f"\n  [Feature 추출 완료]")
-    print(f"  총 파라미터: {total_params:,}")
-    print(f"  모델 타입  : {model_type_name}")
-    print(f"  레이어 수  : {num_layers} (Conv: {num_conv_layers}, FC: {cnn_num_fc_layers})")
-    print(f"  모델 크기  : {model_size_mb:.2f} MB")
-    print(f"  입력 크기  : {input_channels}×{input_height}×{input_width}")
-    print(f"  디바이스   : {device} (encoded={device_encoded})")
+    # 하드웨어: get_hardware_info(device) 사용
+    hw = get_hardware_info(device) if get_hardware_info else HARDWARE_FALLBACK.copy()
+    for k, v in hw.items():
+        features[k] = v
 
+    # FEATURE_COLUMNS 순서대로 92개만 유지 (누락 키는 0으로)
+    cols = _get_feature_columns() or FEATURE_COLUMNS_92
+    for c in cols:
+        if c not in features:
+            features[c] = 0
+    features = {c: features[c] for c in cols}
+
+    print(f"\n  [Feature 추출 완료] 92개 feature")
+    print(f"  총 파라미터: {total_params:,}, 모델 타입: {model_type_name}, 디바이스: {device}")
     return features

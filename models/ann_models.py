@@ -101,24 +101,20 @@ def create_extended_variants():
     """
     new_configs = [
         # ── Width 32 (매우 작은 히든 레이어) ─────────────────────
-        # 파라미터 수가 매우 적어 CPU/MPS 차이가 극명하게 나타날 것으로 예상
         [32],           # 히든 1층: 약 25K 파라미터
         [32, 32],       # 히든 2층: 약 26K 파라미터
         [32, 32, 32],   # 히든 3층: 약 27K 파라미터
 
         # ── Width 1024 (매우 큰 히든 레이어) ─────────────────────
-        # 파라미터 수가 많아 MPS 가속 효과가 잘 나타날 것으로 예상
         [1024],         # 히든 1층: 약 813K 파라미터
         [1024, 1024],   # 히든 2층: 약 1.8M 파라미터
 
         # ── 5층 레이어 (히든 레이어 4개) ─────────────────────────
-        # 기존 최대 4층(히든 3개)에서 한 층 더 깊게
         [64, 64, 64, 64],       # 히든 4층, 넓이 64
         [128, 128, 128, 128],   # 히든 4층, 넓이 128
         [256, 256, 256, 256],   # 히든 4층, 넓이 256
 
         # ── 피라미드/역피라미드 형태 ──────────────────────────────
-        # 실제 DNN 설계에서 자주 쓰이는 구조 (넓어지거나 좁아지는 형태)
         [512, 256, 128],          # 역피라미드: 점점 좁아짐 (히든 3개)
         [128, 256, 512],          # 피라미드: 점점 넓어짐 (히든 3개)
         [512, 512, 512],          # 히든 3층, 넓이 512 (크고 깊음)
@@ -133,3 +129,65 @@ def create_extended_variants():
         variants.append((model, model_info))
 
     return variants
+
+
+def create_expanded_variants_for_92features():
+    """
+    데이터 확대용 추가 ANN 조합 (통합 92 Feature 스키마 대응).
+    목표: ANN만 40~50개 구성 → 2 디바이스 = 80~100행.
+
+    기존 create_model_variants + create_extended_variants 에 더해
+    균일 구조·추가 너비·레이어 조합을 넣음.
+    """
+    extra_configs = [
+        # 균일 구조 추가 (2~5층, 너비 128/256/512)
+        [128, 128],
+        [256, 256],
+        [512, 512],
+        [128, 128, 128],
+        [256, 256, 256],
+        [512, 512, 512],
+        [128, 128, 128, 128],
+        [256, 256, 256, 256],
+        [64, 64, 64, 64, 64],
+        [128, 128, 128, 128, 128],
+        [256, 256, 256, 256, 256],
+        # 추가 너비/깊이 조합
+        [64, 256, 64],
+        [256, 64, 256],
+        [128, 512, 128],
+        [512, 128, 512],
+        [64, 256, 512, 256, 64],
+        [128, 256, 512, 256, 128],
+        [96, 192, 384],
+        [384, 192, 96],
+        [192, 384, 192],
+        [320, 640],
+        [640, 320],
+        [320, 320, 320],
+        [160, 320, 640, 320],
+    ]
+    variants = []
+    for config in extra_configs:
+        model = SimpleANN(hidden_sizes=config)
+        model_info = model.get_model_info()
+        model_info['config'] = config
+        variants.append((model, model_info))
+    return variants
+
+
+def get_all_ann_variants():
+    """기존 14 + 확장 12 + 데이터확대용 추가분을 모두 합친 ANN variant 리스트."""
+    base = create_model_variants()
+    extended = create_extended_variants()
+    expanded = create_expanded_variants_for_92features()
+    # config 중복 제거 (동일 config는 하나만)
+    seen = set()
+    out = []
+    for model, info in base + extended + expanded:
+        key = tuple(info['config'])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((model, info))
+    return out

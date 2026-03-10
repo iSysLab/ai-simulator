@@ -249,10 +249,10 @@ def create_cnn_variants():
     실험에 사용할 다양한 CNN 모델 변형(Variant)들을 생성하여 리스트로 반환합니다.
 
     [생성되는 모델 목록]
-    SimpleCNN: num_conv_layers (2, 3, 4) × base_channels (16, 32, 64) = 9가지
+    SimpleCNN: num_conv_layers (2, 3, 4, 5) × base_channels (16, 32, 64, 128, 96) = 20가지
     ResNet18: 1가지
     MobileNetV2: 1가지
-    총 11가지 모델 변형
+    총 22가지 모델 변형 (데이터 확대: 25~35 목표에 맞춤)
 
     [왜 다양한 구조를 실험하는가?]
     예측 모델 학습에 충분한 학습 데이터(다양한 입력-출력 쌍)가 필요합니다.
@@ -267,10 +267,11 @@ def create_cnn_variants():
     variants = []
 
     # ─────────────────────────────────────────────────────────────
-    # SimpleCNN: 3 레이어 수 × 3 채널 수 = 9가지 조합
+    # SimpleCNN: 4 레이어 수 × 5 채널 수 = 20가지 조합 (데이터 확대)
+    # num_conv_layers: 2, 3, 4, 5 / base_channels: 16, 32, 64, 96, 128
     # ─────────────────────────────────────────────────────────────
-    for num_layers in [2, 3, 4]:
-        for base_ch in [16, 32, 64]:
+    for num_layers in [2, 3, 4, 5]:
+        for base_ch in [16, 32, 64, 96, 128]:
             # 모델 인스턴스 생성
             model = SimpleCNN(num_classes=10, num_conv_layers=num_layers, base_channels=base_ch)
 

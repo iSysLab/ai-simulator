@@ -25,6 +25,7 @@
 # 라이브러리 불러오기
 # ──────────────────────────────────────────────────────────
 import os
+import sys
 import ast
 import numpy as np
 import pandas as pd
@@ -34,6 +35,9 @@ import warnings
 # sklearn 내부에서 joblib 버전 불일치로 발생하는 UserWarning 억제
 # (GridSearchCV 병렬 처리 시 수백 줄 반복 출력되는 무해한 경고)
 warnings.filterwarnings('ignore', category=UserWarning, module='sklearn')
+# matplotlib 한글 폰트 미설치 시 findfont/Glyph 경고 억제 (Windows 등)
+warnings.filterwarnings('ignore', message='.*findfont.*')
+warnings.filterwarnings('ignore', message='.*Glyph.*missing.*')
 
 # 기계학습 관련 (scikit-learn)
 from sklearn.ensemble import RandomForestRegressor
@@ -48,12 +52,22 @@ import matplotlib
 matplotlib.use('Agg')  # GUI 없이 파일로 저장
 import matplotlib.pyplot as plt
 
-# 한국어 폰트 설정 (Mac)
-try:
-    plt.rcParams['font.family'] = 'AppleGothic'
-    plt.rcParams['axes.unicode_minus'] = False
-except Exception:
-    pass
+# 한국어 폰트 설정 (Mac: AppleGothic, Windows: Malgun Gothic)
+import platform
+plt.rcParams['axes.unicode_minus'] = False
+if platform.system() == 'Darwin':
+    try:
+        plt.rcParams['font.family'] = 'AppleGothic'
+    except Exception:
+        pass
+elif platform.system() == 'Windows':
+    try:
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+    except Exception:
+        try:
+            plt.rcParams['font.family'] = 'NanumGothic'
+        except Exception:
+            pass
 
 
 # ──────────────────────────────────────────────────────────
@@ -61,6 +75,11 @@ except Exception:
 # ──────────────────────────────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR    = os.path.join(BASE_DIR, 'data')
+sys.path.insert(0, BASE_DIR)
+try:
+    from utils.hardware_info import get_hardware_info
+except ImportError:
+    get_hardware_info = None
 
 # 단계별 서브폴더 경로
 STAGE1_DIR  = os.path.join(DATA_DIR, 'stage1')   # ANN 실험 결과
@@ -94,72 +113,142 @@ HARDWARE_INFO = {
 # ──────────────────────────────────────────────────────────
 CNN_ARCHITECTURE_INFO = {
     'SimpleCNN': {
-        'cnn_has_pooling': 1,
-        'cnn_has_batchnorm': 0,
+        'num_conv_layers': None,
+        'base_channels': None,
+        'has_pooling': 1,
+        'has_batch_norm': 0,
         'cnn_num_fc_layers': 1,
         'cnn_kernel_size': 3,
+        'cnn_has_residual': 0,
+        'cnn_has_depthwise': 0,
+        'cnn_stem_channels': None,
     },
     'ResNet18': {
         'num_conv_layers': 17,
         'base_channels': 64,
-        'cnn_has_pooling': 1,
-        'cnn_has_batchnorm': 1,
+        'has_pooling': 1,
+        'has_batch_norm': 1,
         'cnn_num_fc_layers': 1,
         'cnn_kernel_size': 3,
+        'cnn_has_residual': 1,
+        'cnn_has_depthwise': 0,
+        'cnn_stem_channels': 64,
     },
     'MobileNetV2': {
         'num_conv_layers': 52,
         'base_channels': 32,
-        'cnn_has_pooling': 1,
-        'cnn_has_batchnorm': 1,
+        'has_pooling': 1,
+        'has_batch_norm': 1,
         'cnn_num_fc_layers': 1,
         'cnn_kernel_size': 3,
+        'cnn_has_residual': 1,
+        'cnn_has_depthwise': 1,
+        'cnn_stem_channels': 32,
     },
 }
 
 # ──────────────────────────────────────────────────────────
-# Feature 컬럼 목록
+# Feature 컬럼 목록 (통합 스키마 92개)
 # ──────────────────────────────────────────────────────────
-# 교수님 유의사항: Feature를 최대한 많이 선정할 것
+# 순서: (1) 공통 모델 구조 33개 → (2) 모델 전용 18개 → (3) 입력 데이터 8개 → (4) 하드웨어 33개
+# 모델 타입별로 채우지 않는 피처는 0 또는 NaN → merge 후 fillna(0)
 FEATURE_COLUMNS = [
-    # [모델 구조 Feature]
+    # ─── (1) 공통 모델 구조 33개 ─────────────────────────────
     'total_params',
-    'log_total_params',      # ★ 신규: log1p(total_params) - 범위 균일화
+    'log_total_params',
+    'trainable_params',
     'model_size_mb',
-    'log_model_size_mb',     # ★ 신규: log1p(model_size_mb) - 범위 균일화
-    'num_layers',
+    'log_model_size_mb',
+    'total_layers',
     'num_hidden_layers',
+    'num_linear_layers',
     'num_conv_layers',
     'max_width',
-    'log_max_width',         # ★ 신규: log1p(max_width)
+    'log_max_width',
     'min_width',
     'avg_width',
     'base_channels',
-    'model_type_encoded',
-    'cnn_has_pooling',
-    'cnn_has_batchnorm',
+    'model_family_encoded',
+    'has_pooling',
+    'has_batch_norm',
     'cnn_num_fc_layers',
     'cnn_kernel_size',
-    # [하드웨어 Feature]
-    'device_encoded',
-    'cpu_cores',
-    'cpu_freq_ghz',
-    'cpu_cache_l2_mb',
-    'ram_total_gb',
-    'gpu_memory_gb',
-    # [입력 데이터 Feature]
-    'input_channels',
+    'flops',
+    'has_residual',
+    'has_depthwise',
+    'has_attention',
+    'has_cls_token',
+    'num_blocks',
+    'num_mult_adds',
+    'activation_memory_mb',
+    'first_layer_width',
+    'last_layer_width',
+    'is_sequential',
+    'has_skip_connection',
+    'max_channels',
+    'min_channels',
+    # ─── (2) 모델 전용 18개 (ANN / CNN / Transformer / GAN) ──
+    'ann_max_hidden',
+    'ann_min_hidden',
+    'ann_avg_hidden',
+    'cnn_num_filters',
+    'cnn_max_channels',
+    'cnn_has_residual',
+    'cnn_has_depthwise',
+    'embed_dim',
+    'num_heads',
+    'patch_size',
+    'ffn_dim',
+    'vit_has_cls_token',
+    'latent_dim',
+    'generator_params',
+    'discriminator_params',
+    'ann_num_layers',
+    'cnn_stem_channels',
+    'vit_num_encoder_layers',
+    # ─── (3) 입력 데이터 8개 ────────────────────────────────
     'input_height',
     'input_width',
+    'input_channels',
     'num_classes',
     'batch_size',
     'dataset_encoded',
-    # [Transformer 전용 Feature] — 다른 모델 타입은 0으로 채움
-    'embed_dim',   # 임베딩 벡터 차원 (attention 내부 표현 크기)
-    'num_heads',   # Multi-Head Attention의 헤드 수
-    'patch_size',  # 이미지를 나누는 패치 크기 (Vision Transformer용)
-    # [GAN 전용 Feature] — 다른 모델 타입은 0으로 채움
-    'latent_dim',  # Generator 입력 노이즈 벡터 차원
+    'input_pixels',
+    'seq_length',
+    # ─── (4) 하드웨어 33개 ─────────────────────────────────
+    'device_type',
+    'os_type',
+    'accelerator_brand',
+    'accelerator_name',
+    'cpu_cores_physical',
+    'cpu_cores_logical',
+    'cpu_perf_cores',
+    'cpu_efficiency_cores',
+    'cpu_freq_base_ghz',
+    'cpu_freq_boost_ghz',
+    'cpu_cache_l2_mb',
+    'cpu_cache_l3_mb',
+    'ram_total_gb',
+    'memory_type',
+    'memory_bandwidth_gbs',
+    'is_unified_memory',
+    'shared_memory_gb',
+    'dedicated_vram_gb',
+    'gpu_count',
+    'gpu_memory_gb',
+    'gpu_core_count',
+    'peak_bandwidth_gbs',
+    'tflops_fp32',
+    'tflops_fp16',
+    'fp16_support',
+    'bf16_support',
+    'interconnect_type',
+    'host_to_device_bandwidth_gbs',
+    'is_discrete_gpu',
+    'is_integrated_gpu',
+    'device_encoded',
+    'cpu_freq_ghz',
+    'memory_channels',
 ]
 
 TARGET_INFERENCE = 'inference_time_mean_ms'
@@ -187,6 +276,18 @@ def parse_config(config_str):
         return [64]
 
 
+def _fill_hardware_features(df, device_col='device'):
+    """device 컬럼에 따라 하드웨어 피처 33개 채움. device_encoded: cpu=0, cuda/mps=1."""
+    hw_keys = FEATURE_COLUMNS[59:]
+    for device in df[device_col].dropna().unique():
+        mask = df[device_col] == device
+        d = str(device).strip().lower()
+        hw = get_hardware_info(d) if get_hardware_info else {k: 0 for k in hw_keys}
+        for key in hw_keys:
+            df.loc[mask, key] = hw.get(key, 0)
+    df['device_encoded'] = df[device_col].map({'cpu': 0, 'mps': 1, 'cuda': 1}).fillna(0)
+
+
 def load_ann_data(csv_path):
     """
     ANN 실험 결과 CSV 로드 및 Feature 추출 함수
@@ -211,49 +312,75 @@ def load_ann_data(csv_path):
     # config 문자열 파싱
     df['config_list'] = df['config'].apply(parse_config)
 
-    # 모델 구조 Feature
+    # (1) 공통 모델 구조
     df['max_width']         = df['config_list'].apply(max)
     df['min_width']         = df['config_list'].apply(min)
     df['avg_width']         = df['config_list'].apply(np.mean)
     df['num_hidden_layers'] = df['config_list'].apply(len)
-
-    # ★ 로그 변환 Feature (범위 균일화)
-    df['log_total_params']  = np.log1p(df['total_params'])
-    df['log_model_size_mb'] = np.log1p(df['total_params'] * 4 / (1024 * 1024))
+    df['total_layers']      = df['num_hidden_layers']
+    df['num_linear_layers'] = df['num_hidden_layers']
+    df['num_conv_layers']   = 0
+    df['base_channels']     = 0
+    df['model_family_encoded'] = 0
+    df['has_pooling']       = 0
+    df['has_batch_norm']    = 0
+    df['cnn_num_fc_layers'] = 1
+    df['cnn_kernel_size']   = 0
+    df['trainable_params'] = df['total_params']
+    df['model_size_mb']     = df['total_params'] * 4 / (1024 * 1024)
+    df['log_total_params'] = np.log1p(df['total_params'])
+    df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
     df['log_max_width']     = np.log1p(df['max_width'])
+    df['flops'] = 0
+    df['has_residual'] = 0
+    df['has_depthwise'] = 0
+    df['has_attention'] = 0
+    df['has_cls_token'] = 0
+    df['num_blocks'] = 0
+    df['num_mult_adds'] = 0
+    df['activation_memory_mb'] = 0
+    df['first_layer_width'] = df['config_list'].apply(lambda x: x[0] if x else 0)
+    df['last_layer_width']  = df['config_list'].apply(lambda x: x[-1] if x else 0)
+    df['is_sequential'] = 1
+    df['has_skip_connection'] = 0
+    df['max_channels'] = 0
+    df['min_channels'] = 0
 
-    df['model_type_encoded'] = 0  # ANN=0
-    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
-    df['model_size_mb']      = df['total_params'] * 4 / (1024 * 1024)
-
-    # CNN 전용 Feature (ANN은 0)
-    df['num_conv_layers']    = 0
-    df['base_channels']      = 0
-    df['cnn_has_pooling']    = 0
-    df['cnn_has_batchnorm']  = 0
-    df['cnn_num_fc_layers']  = 1
-    df['cnn_kernel_size']    = 0
-
-    # 하드웨어 Feature (M1 Mac 고정값)
-    for key, val in HARDWARE_INFO.items():
-        df[key] = val
-
-    # 입력 데이터 Feature (MNIST 기준)
-    df['input_channels']  = 1
-    df['input_height']    = 28
-    df['input_width']     = 28
-    df['num_classes']     = 10
-    df['batch_size']      = 64
-    df['dataset_name']    = 'MNIST'
-    df['dataset_encoded'] = 0
-
-    # Transformer / GAN 전용 Feature (ANN은 해당 없으므로 0)
-    df['embed_dim']  = 0
-    df['num_heads']  = 0
+    # (2) 모델 전용 — ANN
+    df['ann_max_hidden'] = df['max_width']
+    df['ann_min_hidden'] = df['min_width']
+    df['ann_avg_hidden'] = df['avg_width']
+    df['ann_num_layers'] = df['num_hidden_layers']
+    df['cnn_num_filters'] = 0
+    df['cnn_max_channels'] = 0
+    df['cnn_has_residual'] = 0
+    df['cnn_has_depthwise'] = 0
+    df['embed_dim'] = 0
+    df['num_heads'] = 0
     df['patch_size'] = 0
+    df['ffn_dim'] = 0
+    df['vit_has_cls_token'] = 0
     df['latent_dim'] = 0
+    df['generator_params'] = 0
+    df['discriminator_params'] = 0
+    df['cnn_stem_channels'] = 0
+    df['vit_num_encoder_layers'] = 0
 
-    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (로그 변환 Feature 포함)")
+    # (3) 입력 데이터
+    df['input_height']   = 28
+    df['input_width']    = 28
+    df['input_channels'] = 1
+    df['num_classes']    = 10
+    df['batch_size']     = 64
+    df['dataset_encoded'] = 0
+    df['input_pixels']   = 28 * 28 * 1
+    df['seq_length']     = 0
+
+    # (4) 하드웨어
+    _fill_hardware_features(df)
+
+    df['dataset_name'] = 'MNIST'
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (92 feature)")
     return df
 
 
@@ -275,53 +402,80 @@ def load_cnn_data(csv_path):
     print(f"  행 수: {len(df)}개")
 
     model_type_map = {'SimpleCNN': 1, 'ResNet18': 2, 'MobileNetV2': 3}
-    df['model_type_encoded'] = df['model_type'].map(model_type_map)
-    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
+    df['model_family_encoded'] = df['model_type'].map(model_type_map)
 
     for model_name, info in CNN_ARCHITECTURE_INFO.items():
         mask = df['model_type'] == model_name
-        if 'num_conv_layers' in info:
-            df.loc[mask & df['num_conv_layers'].isna(), 'num_conv_layers'] = info['num_conv_layers']
-        if 'base_channels' in info:
-            df.loc[mask & df['base_channels'].isna(), 'base_channels'] = info['base_channels']
-        df.loc[mask, 'cnn_has_pooling']   = info['cnn_has_pooling']
-        df.loc[mask, 'cnn_has_batchnorm'] = info['cnn_has_batchnorm']
+        for key in ['num_conv_layers', 'base_channels', 'cnn_stem_channels']:
+            if info.get(key) is not None:
+                df.loc[mask, key] = info[key]
+        df.loc[mask, 'has_pooling'] = info['has_pooling']
+        df.loc[mask, 'has_batch_norm'] = info['has_batch_norm']
         df.loc[mask, 'cnn_num_fc_layers'] = info['cnn_num_fc_layers']
-        df.loc[mask, 'cnn_kernel_size']   = info['cnn_kernel_size']
+        df.loc[mask, 'cnn_kernel_size'] = info['cnn_kernel_size']
+        df.loc[mask, 'cnn_has_residual'] = info['cnn_has_residual']
+        df.loc[mask, 'cnn_has_depthwise'] = info['cnn_has_depthwise']
+        if info.get('cnn_stem_channels') is not None:
+            df.loc[mask, 'cnn_stem_channels'] = info['cnn_stem_channels']
 
-    df['num_conv_layers'] = df['num_conv_layers'].fillna(0)
-    df['base_channels']   = df['base_channels'].fillna(0)
+    df['num_conv_layers'] = df['num_conv_layers'].fillna(0).astype(int)
+    df['base_channels']   = df['base_channels'].fillna(0).astype(int)
+    df['cnn_stem_channels'] = df.get('cnn_stem_channels', pd.Series(0, index=df.index)).fillna(0)
 
-    df['num_layers']        = df['num_conv_layers']
+    df['total_layers']      = df['num_conv_layers']
+    df['num_hidden_layers'] = 0
+    df['num_linear_layers'] = 0
     df['max_width']         = df['base_channels']
     df['min_width']         = df['base_channels']
-    df['avg_width']         = df['base_channels']
-    df['num_hidden_layers'] = 0
+    df['avg_width']         = df['base_channels'].astype(float)
+    df['trainable_params']  = df['total_params']
     df['model_size_mb']     = df['total_params'] * 4 / (1024 * 1024)
-
-    # ★ 로그 변환 Feature
     df['log_total_params']  = np.log1p(df['total_params'])
     df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
     df['log_max_width']     = np.log1p(df['max_width'])
+    df['flops'] = 0
+    df['has_residual'] = df['cnn_has_residual']
+    df['has_depthwise'] = df['cnn_has_depthwise']
+    df['has_attention'] = 0
+    df['has_cls_token'] = 0
+    df['num_blocks'] = 0
+    df['num_mult_adds'] = 0
+    df['activation_memory_mb'] = 0
+    df['first_layer_width'] = df['base_channels']
+    df['last_layer_width']  = df['base_channels']
+    df['is_sequential'] = 1
+    df['has_skip_connection'] = df['cnn_has_residual']
+    df['max_channels'] = df['base_channels']
+    df['min_channels'] = df['base_channels']
 
-    for key, val in HARDWARE_INFO.items():
-        df[key] = val
-
-    df['input_channels']  = 3
-    df['input_height']    = 32
-    df['input_width']     = 32
-    df['num_classes']     = 10
-    df['batch_size']      = 64
-    df['dataset_name']    = 'CIFAR-10'
-    df['dataset_encoded'] = 1
-
-    # Transformer / GAN 전용 Feature (CNN은 해당 없으므로 0)
-    df['embed_dim']  = 0
-    df['num_heads']  = 0
+    df['ann_max_hidden'] = 0
+    df['ann_min_hidden'] = 0
+    df['ann_avg_hidden'] = 0
+    df['ann_num_layers'] = 0
+    df['cnn_num_filters'] = df['base_channels']
+    df['cnn_max_channels'] = df['base_channels']
+    df['embed_dim'] = 0
+    df['num_heads'] = 0
     df['patch_size'] = 0
+    df['ffn_dim'] = 0
+    df['vit_has_cls_token'] = 0
     df['latent_dim'] = 0
+    df['generator_params'] = 0
+    df['discriminator_params'] = 0
+    df['vit_num_encoder_layers'] = 0
 
-    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (로그 변환 Feature 포함)")
+    df['input_height']   = 32
+    df['input_width']    = 32
+    df['input_channels'] = 3
+    df['num_classes']    = 10
+    df['batch_size']     = 64
+    df['dataset_encoded'] = 1
+    df['input_pixels']   = 32 * 32 * 3
+    df['seq_length']     = 0
+
+    _fill_hardware_features(df)
+    df['dataset_name'] = 'CIFAR-10'
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (92 feature)")
     return df
 
 
@@ -353,53 +507,71 @@ def load_transformer_data(csv_path):
     df = pd.read_csv(csv_path)
     print(f"  행 수: {len(df)}개")
 
-    # Transformer 고유 구조 Feature 직접 매핑
-    df['embed_dim']  = df['embed_dim']   # 임베딩 차원
-    df['num_heads']  = df['num_heads']   # Attention 헤드 수
-    df['patch_size'] = df['patch_size']  # 패치 크기
+    df['embed_dim']  = df['embed_dim']
+    df['num_heads']  = df['num_heads']
+    df['patch_size'] = df['patch_size']
 
-    # 기존 Feature 세트와 통일 (Transformer는 FC 구조가 없으므로 embed_dim을 width로 사용)
     df['max_width']         = df['embed_dim']
-    df['min_width']         = df['embed_dim']
+    df['min_width']         = df['embed_dim'].astype(float)
     df['avg_width']         = df['embed_dim'].astype(float)
     df['num_hidden_layers'] = df['num_layers']
-    df['num_conv_layers']   = 0          # Transformer는 Conv 레이어 없음
+    df['total_layers']      = df['num_layers']
+    df['num_conv_layers']   = 0
+    df['num_linear_layers'] = 0
     df['base_channels']     = 0
-
-    # 모델 크기 계산
-    df['model_size_mb'] = df['total_params'] * 4 / (1024 * 1024)
-
-    # CNN 전용 Feature (Transformer는 해당 없음)
-    df['cnn_has_pooling']   = 0
-    df['cnn_has_batchnorm'] = 0   # LayerNorm 사용 (BatchNorm 아님)
-    df['cnn_num_fc_layers'] = 1   # 분류 헤드 1개
+    df['model_family_encoded'] = 4
+    df['has_pooling']       = 0
+    df['has_batch_norm']    = 0
+    df['cnn_num_fc_layers'] = 1
     df['cnn_kernel_size']   = 0
-
-    # GAN 전용 Feature (해당 없음)
-    df['latent_dim'] = 0
-
-    # 인코딩
-    df['model_type_encoded'] = 4   # Transformer = 4 (신규)
-    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
-
-    # 로그 변환 Feature (범위 균일화)
-    df['log_total_params']  = np.log1p(df['total_params'])
+    df['trainable_params']  = df['total_params']
+    df['model_size_mb']     = df['total_params'] * 4 / (1024 * 1024)
+    df['log_total_params'] = np.log1p(df['total_params'])
     df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
     df['log_max_width']     = np.log1p(df['max_width'])
+    df['flops'] = 0
+    df['has_residual'] = 0
+    df['has_depthwise'] = 0
+    df['has_attention'] = 1
+    df['has_cls_token'] = 1
+    df['num_blocks'] = df['num_layers']
+    df['num_mult_adds'] = 0
+    df['activation_memory_mb'] = 0
+    df['first_layer_width'] = df['embed_dim']
+    df['last_layer_width']  = df['embed_dim']
+    df['is_sequential'] = 1
+    df['has_skip_connection'] = 0
+    df['max_channels'] = 0
+    df['min_channels'] = 0
 
-    # 하드웨어 Feature (M1 Mac 고정값)
-    for key, val in HARDWARE_INFO.items():
-        df[key] = val
+    df['ann_max_hidden'] = 0
+    df['ann_min_hidden'] = 0
+    df['ann_avg_hidden'] = 0
+    df['ann_num_layers'] = 0
+    df['cnn_num_filters'] = 0
+    df['cnn_max_channels'] = 0
+    df['cnn_has_residual'] = 0
+    df['cnn_has_depthwise'] = 0
+    df['ffn_dim'] = df['embed_dim'] * 4
+    df['vit_has_cls_token'] = 1
+    df['latent_dim'] = 0
+    df['generator_params'] = 0
+    df['discriminator_params'] = 0
+    df['cnn_stem_channels'] = 0
+    df['vit_num_encoder_layers'] = df['num_layers']
 
-    # 입력 데이터 Feature (CIFAR-10 기준)
-    df['input_channels']  = df['img_channels']
-    df['input_height']    = df['img_size']
-    df['input_width']     = df['img_size']
-    df['batch_size']      = df['batch_size']
-    df['dataset_name']    = 'CIFAR-10'
-    df['dataset_encoded'] = 1   # CIFAR-10 = 1
+    df['input_height']   = df['img_size'] if 'img_size' in df.columns else 32
+    df['input_width']    = df['img_size'] if 'img_size' in df.columns else 32
+    df['input_channels'] = df['img_channels'] if 'img_channels' in df.columns else 3
+    df['num_classes']    = 10
+    df['batch_size']     = df['batch_size'] if 'batch_size' in df.columns else 64
+    df['dataset_encoded'] = 1
+    df['input_pixels']   = df['input_height'] * df['input_width'] * df['input_channels']
+    df['seq_length']     = 0
 
-    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (Transformer 전용 Feature 포함)")
+    _fill_hardware_features(df)
+    df['dataset_name'] = 'CIFAR-10'
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (92 feature)")
     return df
 
 
@@ -438,53 +610,70 @@ def load_gan_data(csv_path):
 
     df['g_dims_list'] = df['g_hidden_dims'].apply(parse_dims)
 
-    # Generator 히든 레이어 크기를 width로 사용
     df['max_width']         = df['g_dims_list'].apply(max)
     df['min_width']         = df['g_dims_list'].apply(min)
     df['avg_width']         = df['g_dims_list'].apply(np.mean)
     df['num_hidden_layers'] = df['num_layers']
-    df['num_conv_layers']   = 0   # FC 기반 GAN (Conv 없음)
+    df['total_layers']      = df['num_layers']
+    df['num_conv_layers']   = 0
+    df['num_linear_layers'] = df['num_layers']
     df['base_channels']     = 0
-
-    # GAN 고유 Feature
-    df['latent_dim'] = df['latent_dim']  # 노이즈 벡터 차원
-
-    # 모델 크기 계산 (G + D 합산 파라미터 기준)
-    df['model_size_mb'] = df['total_params'] * 4 / (1024 * 1024)
-
-    # CNN 전용 Feature (GAN은 해당 없음)
-    df['cnn_has_pooling']   = 0
-    df['cnn_has_batchnorm'] = 0
-    df['cnn_num_fc_layers'] = df['num_layers']   # FC 레이어 수 = GAN 레이어 수
+    df['model_family_encoded'] = 5
+    df['has_pooling']       = 0
+    df['has_batch_norm']    = 0
+    df['cnn_num_fc_layers'] = df['num_layers']
     df['cnn_kernel_size']   = 0
-
-    # Transformer 전용 Feature (GAN은 해당 없음)
-    df['embed_dim']  = 0
-    df['num_heads']  = 0
-    df['patch_size'] = 0
-
-    # 인코딩
-    df['model_type_encoded'] = 5   # GAN = 5 (신규)
-    df['device_encoded']     = df['device'].map({'cpu': 0, 'mps': 1})
-
-    # 로그 변환 Feature
+    df['trainable_params']  = df['total_params']
+    df['model_size_mb']     = df['total_params'] * 4 / (1024 * 1024)
     df['log_total_params']  = np.log1p(df['total_params'])
     df['log_model_size_mb'] = np.log1p(df['model_size_mb'])
     df['log_max_width']     = np.log1p(df['max_width'])
+    df['flops'] = 0
+    df['has_residual'] = 0
+    df['has_depthwise'] = 0
+    df['has_attention'] = 0
+    df['has_cls_token'] = 0
+    df['num_blocks'] = 0
+    df['num_mult_adds'] = 0
+    df['activation_memory_mb'] = 0
+    df['first_layer_width'] = df['g_dims_list'].apply(lambda x: x[0] if x else 0)
+    df['last_layer_width']  = df['g_dims_list'].apply(lambda x: x[-1] if x else 0)
+    df['is_sequential'] = 1
+    df['has_skip_connection'] = 0
+    df['max_channels'] = 0
+    df['min_channels'] = 0
 
-    # 하드웨어 Feature (M1 Mac 고정값)
-    for key, val in HARDWARE_INFO.items():
-        df[key] = val
+    df['ann_max_hidden'] = 0
+    df['ann_min_hidden'] = 0
+    df['ann_avg_hidden'] = 0
+    df['ann_num_layers'] = 0
+    df['cnn_num_filters'] = 0
+    df['cnn_max_channels'] = 0
+    df['cnn_has_residual'] = 0
+    df['cnn_has_depthwise'] = 0
+    df['embed_dim'] = 0
+    df['num_heads'] = 0
+    df['patch_size'] = 0
+    df['ffn_dim'] = 0
+    df['vit_has_cls_token'] = 0
+    df['latent_dim'] = df['latent_dim']
+    df['generator_params'] = (df['total_params'] // 2)
+    df['discriminator_params'] = (df['total_params'] - df['generator_params'])
+    df['cnn_stem_channels'] = 0
+    df['vit_num_encoder_layers'] = 0
 
-    # 입력 데이터 Feature (MNIST 기준)
-    df['input_channels']  = df['img_channels']
-    df['input_height']    = df['img_size']
-    df['input_width']     = df['img_size']
-    df['num_classes']     = 0    # GAN은 분류 클래스 없음
-    df['dataset_name']    = 'MNIST'
-    df['dataset_encoded'] = 0   # MNIST = 0
+    df['input_height']   = df['img_size'] if 'img_size' in df.columns else 32
+    df['input_width']    = df['img_size'] if 'img_size' in df.columns else 32
+    df['input_channels'] = df['img_channels'] if 'img_channels' in df.columns else 1
+    df['num_classes']    = 0
+    df['batch_size']     = df['batch_size'] if 'batch_size' in df.columns else 64
+    df['dataset_encoded'] = 0
+    df['input_pixels']   = df['input_height'] * df['input_width'] * df['input_channels']
+    df['seq_length']     = 0
 
-    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (GAN 전용 Feature 포함)")
+    _fill_hardware_features(df)
+    df['dataset_name'] = 'MNIST'
+    print(f"  Feature 수: {len(FEATURE_COLUMNS)}개 (92 feature)")
     return df
 
 
@@ -492,11 +681,8 @@ def merge_data(ann_df, cnn_df, transformer_df, gan_df):
     """
     ANN / CNN / Transformer / GAN 데이터를 하나로 병합하는 함수
 
-    v3 업데이트: 4종 모델 타입 통합 (총 ~114행)
-    - ANN      : 52행 (Stage 1 확장)
-    - CNN      : 22행 (Stage 2)
-    - Transformer: 24행 (Stage 4)
-    - GAN      : 16행 (Stage 4)
+    v3 업데이트: 4종 모델 타입 통합 (총 190~250행 목표)
+    - ANN: 80~100행, CNN: 50~70행, Transformer: 36~48행, GAN: 24~32행
 
     Args:
         ann_df (pd.DataFrame): ANN 데이터프레임
@@ -748,10 +934,10 @@ def main():
     print(f"  전체 데이터     : {len(merged_df)}개")
     print(f"  CPU 데이터      : {(merged_df['device_encoded'] == 0).sum()}개")
     print(f"  MPS 데이터      : {(merged_df['device_encoded'] == 1).sum()}개")
-    print(f"  ANN 데이터      : {(merged_df['model_type_encoded'] == 0).sum()}개")
-    print(f"  CNN 데이터      : {(merged_df['model_type_encoded'].isin([1,2,3])).sum()}개")
-    print(f"  Transformer 데이터: {(merged_df['model_type_encoded'] == 4).sum()}개")
-    print(f"  GAN 데이터      : {(merged_df['model_type_encoded'] == 5).sum()}개")
+    print(f"  ANN 데이터      : {(merged_df['model_family_encoded'] == 0).sum()}개")
+    print(f"  CNN 데이터      : {(merged_df['model_family_encoded'].isin([1,2,3])).sum()}개")
+    print(f"  Transformer 데이터: {(merged_df['model_family_encoded'] == 4).sum()}개")
+    print(f"  GAN 데이터      : {(merged_df['model_family_encoded'] == 5).sum()}개")
     print(f"  Feature 수      : {len(FEATURE_COLUMNS)}개")
 
     # ── 3. Feature(X)와 타겟(y) 분리 + 로그 변환 ──────────
