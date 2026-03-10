@@ -225,7 +225,8 @@ def extract_features_from_onnx(
     log_max_width     = np.log1p(max_width)
 
     # ── 9. 디바이스 인코딩 ────────────────────────────────
-    device_encoded = 0 if device.lower() == 'cpu' else 1  # cpu=0, mps=1
+    # cpu=0, mps/cuda=1 (GPU는 학습 데이터의 mps와 동일하게 취급)
+    device_encoded = 0 if device.lower() == 'cpu' else 1
 
     # ── 10. base_channels (CNN 기본 채널 수) ──────────────
     # CNN이면 max_width를 base_channels로 사용 (단순화)

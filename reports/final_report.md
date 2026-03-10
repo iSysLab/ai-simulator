@@ -28,6 +28,8 @@
 16. [핵심 개념 용어 정리](#16-핵심-개념-용어-정리)
 17. [참고 자료](#17-참고-자료)
 18. [브랜치 병합 (ijunsoo / dal-merge)](#18-브랜치-병합-ijunsoo--dal-merge)
+19. [교수님 진행상황 보고서](#19-교수님-진행상황-보고서)
+20. [Windows 환경 이전](#20-windows-환경-이전)
 
 ---
 
@@ -775,6 +777,9 @@ pip install joblib onnx onnxscript
 
 # macOS에서 XGBoost 실행 시 추가 필요
 brew install libomp
+
+# Windows 이전 시 참고
+# reports/WINDOWS_SETUP.md — 이전 방법, 환경 설정, CUDA 지원
 ```
 
 ### 실행 순서 (Stage 1 ~ 5 전체)
@@ -930,6 +935,27 @@ experiments/
 ```
 
 상세 내용은 `reports/branch_merge_report.md`를 참고하세요.
+
+---
+
+## 19. 교수님 진행상황 보고서
+
+교수님께 제출용으로 **6가지 항목**(진행상황, 코드 선택 이유, Feature 선정 이유, 모델 비교분석, 데이터량 선정 이유, 성과)으로 구성된 보고서를 별도 작성했습니다.
+
+- **[progress_report.md](progress_report.md)** — 교수님 보고서 (6가지 항목 요약)
+
+---
+
+## 20. Windows 환경 이전
+
+Windows PC에서도 작업하려면 다음 가이드를 참고하세요.
+
+- **[WINDOWS_SETUP.md](WINDOWS_SETUP.md)** — 이전 방법(Git/ZIP/클라우드), 환경 설정, CUDA 지원, 트러블슈팅
+
+요약:
+- `predict_from_onnx.py`는 `--device cuda` 지원 (NVIDIA GPU)
+- `utils/device_utils.py`: 플랫폼별 디바이스 자동 선택 (CUDA > MPS > CPU)
+- `requirements.txt`: `pip install -r requirements.txt`로 패키지 설치
 
 ---
 

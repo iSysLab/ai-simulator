@@ -1,0 +1,15 @@
+# DNN 실행 시간 예측 연구 — 필수 패키지
+# Python 3.10+ 권장
+# 설치: pip install -r requirements.txt
+
+torch>=2.0
+torchvision
+scikit-learn
+xgboost
+matplotlib
+pandas
+numpy
+joblib
+onnx
+onnxscript
+psutil

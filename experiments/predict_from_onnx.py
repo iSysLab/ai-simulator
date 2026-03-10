@@ -231,8 +231,8 @@ def parse_args():
 
     # 선택 인자 (기본값 있음)
     parser.add_argument(
-        '--device', type=str, default='cpu', choices=['cpu', 'mps'],
-        help='예측 디바이스 (cpu 또는 mps, 기본값: cpu)'
+        '--device', type=str, default='cpu', choices=['cpu', 'mps', 'cuda'],
+        help='예측 디바이스 (cpu, mps[Mac], cuda[Windows/Linux], 기본값: cpu)'
     )
     parser.add_argument(
         '--batch-size', type=int, default=64,
