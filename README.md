@@ -1,7 +1,7 @@
 # DNN 실행 시간/공간 예측 시뮬레이션 프레임워크
 
 PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 요구량**을 예측하는 벤치마크 프레임워크입니다.
-6종의 모델 아키텍처(ANN, CNN, ResNet, MobileNet, Transformer, GAN)를 벤치마킹하고, **49개 모델 구조 피처**로부터 실행 시간을 예측하는 ML 회귀 모델을 학습합니다.
+6종의 모델 아키텍처(ANN, CNN, ResNet, MobileNet, Transformer, GAN)를 벤치마킹하고, **45개 모델 구조 + 하드웨어 피처**로부터 실행 시간을 예측하는 ML 회귀 모델을 학습합니다. 멀티 플랫폼(Windows/macOS/Linux) 하드웨어 자동 감지를 지원합니다.
 
 ## 실험 결과 요약
 
@@ -151,7 +151,6 @@ ann/
 │   ├── benchmark_results.json          # 벤치마크 원본 데이터 (330개)
 │   ├── figures/                        # 시각화 그래프 (7개)
 │   └── trained_models/                 # 학습된 예측 모델 (.pkl)
-├── ann.py / cnn.py / cnn_remaining.py  # 기존 단독 실행 스크립트
 └── requirements.txt
 ```
 
@@ -159,8 +158,8 @@ ann/
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Mac/Linux
+source .venv/bin/activate       # Mac/Linux
+# .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 ```
 
@@ -248,19 +247,152 @@ sim = simulate_total_time(ops)
 print(f"시뮬레이션 총 시간: {sim['total_time_ms']:.4f}ms")
 ```
 
-## 통합 Feature Schema (v1.0) - 49개 피처
+## 통합 Feature Schema (v2.0) — 45개 피처
 
-| 카테고리 | 피처 | 설명 |
+`extractor.py`가 단일 소스(single source of truth)로 모든 피처를 직접 생성합니다.
+
+### 피처 카테고리 요약
+
+| 카테고리 | 수 | 피처 | 설명 |
+|---|---|---|---|
+| **파라미터** | 6 | total_params, trainable_params, conv_params, linear_params, bn_params, other_params | 레이어 타입별 파라미터 수 분해 |
+| **레이어 수** | 7 | total_layers, num_hidden_layers, num_conv_layers, num_linear_layers, num_bn_layers, num_pool_layers, num_activation_layers | 연산 레이어 구성 |
+| **폭** | 4 | max_width, min_width, avg_width, max_channel_width | 레이어 폭/채널 수 통계 |
+| **연산량** | 5 | flops, flops_per_sample, params_per_flop, model_size_mb, memory_bytes | 계산 복잡도 + 메모리 |
+| **구조 플래그** | 7 | has_residual, has_depthwise, has_attention, has_pooling, has_batch_norm, has_layer_norm, has_dropout | 아키텍처 특성 (0/1) |
+| **모델 분류** | 1 | model_family_encoded | 모델 계열 정수 인코딩 (0~5) |
+| **모델 전용** | 9 | hidden_size, num_filters, use_batchnorm, embed_dim, num_heads, patch_size, latent_dim, generator_params, discriminator_params | 아키텍처별 고유 하이퍼파라미터 |
+| **입력 데이터** | 5 | batch_size, input_height, input_width, input_channels, num_classes | 데이터셋/배치 정보 |
+| **하드웨어** | 6 | device_type_encoded, cpu_cores, cpu_freq_ghz, ram_total_gb, gpu_cores, gpu_memory_gb | 실행 환경 사양 (OS 자동 감지) |
+
+### 피처 상세 설명
+
+#### 1. 파라미터 관련 (6개)
+
+| 피처 | 타입 | 단위 | 설명 | 예시 (ResNet-18) |
+|---|---|---|---|---|
+| `total_params` | int | 개 | 모델 전체 파라미터 수 | 11,173,962 |
+| `trainable_params` | int | 개 | 학습 가능한 파라미터 수 (frozen 제외) | 11,173,962 |
+| `conv_params` | int | 개 | Conv2d 레이어 파라미터 합계 | 10,950,144 |
+| `linear_params` | int | 개 | Linear(FC) 레이어 파라미터 합계 | 5,130 |
+| `bn_params` | int | 개 | BatchNorm 레이어 파라미터 합계 | 18,688 |
+| `other_params` | int | 개 | 위 3종에 포함되지 않는 파라미터 | 200,000 |
+
+#### 2. 레이어 수 (7개)
+
+| 피처 | 설명 | ANN 예시 | CNN 예시 | Transformer 예시 |
+|---|---|---|---|---|
+| `total_layers` | Conv + Linear + BN 레이어 총합 | 3 | 12 | 26 |
+| `num_hidden_layers` | Conv + Linear 레이어 수 | 3 | 8 | 20 |
+| `num_conv_layers` | Conv2d 레이어 수 | 0 | 5 | 0 |
+| `num_linear_layers` | Linear(FC) 레이어 수 | 3 | 3 | 20 |
+| `num_bn_layers` | BatchNorm 레이어 수 | 0 | 4 | 0 |
+| `num_pool_layers` | Pooling(Max/Avg/Adaptive) 레이어 수 | 0 | 2 | 0 |
+| `num_activation_layers` | 활성화 함수(ReLU/GELU 등) 수 | 2 | 7 | 12 |
+
+#### 3. 폭 (4개)
+
+| 피처 | 설명 | 예시 |
 |---|---|---|
-| **파라미터 (6)** | total_params, trainable_params, conv_params, linear_params, bn_params, other_params | 레이어 타입별 파라미터 수 분해 |
-| **레이어 수 (7)** | total_layers, num_hidden_layers, num_conv_layers, num_linear_layers, num_bn_layers, num_pool_layers, num_activation_layers | 연산 레이어 구성 |
-| **폭 (4)** | max_width, min_width, avg_width, max_channel_width | 레이어 폭/채널 수 통계 |
-| **연산량 (5)** | flops, flops_per_sample, params_per_flop, model_size_mb, memory_bytes | 계산 복잡도 + 메모리 |
-| **구조 플래그 (7)** | has_residual, has_depthwise, has_attention, has_pooling, has_batch_norm, has_layer_norm, has_dropout | 아키텍처 특성 바이너리 |
-| **모델 분류 (1)** | model_family_encoded | 모델 계열 수치 인코딩 (0~5) |
-| **모델 전용 (9)** | hidden_size, num_filters, use_batchnorm, embed_dim, num_heads, patch_size, latent_dim, generator_params, discriminator_params | 아키텍처별 고유 하이퍼파라미터 |
-| **입력 데이터 (5)** | batch_size, input_height, input_width, input_channels, num_classes | 데이터셋/배치 정보 |
-| **하드웨어 (5)** | device_type_encoded, cpu_cores, cpu_freq_ghz, ram_total_gb, gpu_memory_gb | 실행 환경 사양 |
+| `max_width` | config 기반 최대 레이어 폭 | ANN hidden_size=512 → 512 |
+| `min_width` | config 기반 최소 레이어 폭 | CNN [32,64,128] → 32 |
+| `avg_width` | config 기반 평균 레이어 폭 | CNN [32,64,128] → 74.7 |
+| `max_channel_width` | 모델 introspection 기반 최대 채널/뉴런 수 | ResNet out_channels=512 → 512 |
+
+#### 4. 연산량 (5개)
+
+| 피처 | 단위 | 설명 | 예시 |
+|---|---|---|---|
+| `flops` | 회 | Forward hook 기반 FLOPs 추정치 (batch=1) | 37,748,736 |
+| `flops_per_sample` | 회 | = flops (batch=1이므로 동일) | 37,748,736 |
+| `params_per_flop` | ratio | total_params / flops (파라미터 효율) | 0.296 |
+| `model_size_mb` | MB | 모델 파라미터 크기 (FP32 기준) | 42.6 |
+| `memory_bytes` | bytes | 파라미터 실제 메모리 점유 | 44,695,848 |
+
+#### 5. 구조 플래그 (7개) — 모두 0 또는 1
+
+| 피처 | =1 조건 | 해당 모델 |
+|---|---|---|
+| `has_residual` | Skip connection 있음 | ResNet, MobileNet, Transformer |
+| `has_depthwise` | Depthwise separable conv 있음 | MobileNet |
+| `has_attention` | MultiheadAttention 있음 | Transformer |
+| `has_pooling` | Pooling 레이어 있음 | CNN, ResNet, MobileNet |
+| `has_batch_norm` | BatchNorm 있음 | CNN, ResNet, MobileNet, GAN |
+| `has_layer_norm` | LayerNorm 있음 | Transformer |
+| `has_dropout` | Dropout 있음 | (현재 모델에 미사용) |
+
+#### 6. 모델 분류 (1개)
+
+| 값 | 모델 | 데이터셋 |
+|---|---|---|
+| 0 | simple_ann | MNIST (28×28×1) |
+| 1 | simple_cnn | MNIST |
+| 2 | resnet_mnist | MNIST |
+| 3 | mobilenet_mnist | MNIST |
+| 4 | transformer | CIFAR-10 (32×32×3) |
+| 5 | gan | CIFAR-10 |
+
+#### 7. 모델 전용 피처 (9개)
+
+| 피처 | 해당 모델 | 설명 | 비해당 시 |
+|---|---|---|---|
+| `hidden_size` | ANN | FC 레이어 뉴런 수 | 0 |
+| `num_filters` | CNN | 첫 번째 Conv 필터 수 | 0 |
+| `use_batchnorm` | CNN | BN 사용 여부 (0/1) | 0 |
+| `embed_dim` | Transformer | 임베딩 차원 | 0 |
+| `num_heads` | Transformer | Attention Head 수 | 0 |
+| `patch_size` | Transformer | ViT 패치 크기 | 0 |
+| `latent_dim` | GAN | 노이즈 벡터 차원 | 0 |
+| `generator_params` | GAN | Generator 실제 파라미터 수 | 0 |
+| `discriminator_params` | GAN | Discriminator 실제 파라미터 수 | 0 |
+
+#### 8. 입력 데이터 피처 (5개)
+
+| 피처 | MNIST 모델 | CIFAR-10 모델 |
+|---|---|---|
+| `batch_size` | 64 | 64 |
+| `input_height` | 28 | 32 |
+| `input_width` | 28 | 32 |
+| `input_channels` | 1 | 3 |
+| `num_classes` | 10 | 10 |
+
+#### 9. 하드웨어 피처 (6개) — OS 자동 감지
+
+| 피처 | macOS (Apple Silicon) | Windows (NVIDIA) | 조회 방법 |
+|---|---|---|---|
+| `device_type_encoded` | 0(CPU) / 2(MPS) | 0(CPU) / 1(CUDA) | `torch.device.type` 매핑 |
+| `cpu_cores` | 10 | 16 | `psutil` / `sysctl hw.logicalcpu` |
+| `cpu_freq_ghz` | 3.5 | 3.8 | `psutil` / `sysctl` / `wmic` |
+| `ram_total_gb` | 24.0 | 31.2 | `psutil` / `sysctl hw.memsize` |
+| `gpu_cores` | 10 | 34 (SM) | `system_profiler` / `cuda.get_device_properties` |
+| `gpu_memory_gb` | 18.0 (RAM×75%) | 15.6 | 통합 메모리 추정 / `cuda.get_device_properties` |
+
+> **멀티 플랫폼 지원**: psutil이 없어도 macOS는 `sysctl`/`system_profiler`, Windows는 `wmic`으로 자동 fallback합니다.
+
+### 피처 추출 예시 (SimpleANN, hidden_size=256, 3 layers, CPU)
+
+```json
+{
+  "total_params": 269322, "trainable_params": 269322,
+  "conv_params": 0, "linear_params": 269322, "bn_params": 0, "other_params": 0,
+  "total_layers": 3, "num_hidden_layers": 3,
+  "num_conv_layers": 0, "num_linear_layers": 3,
+  "num_bn_layers": 0, "num_pool_layers": 0, "num_activation_layers": 2,
+  "max_width": 256, "min_width": 256, "avg_width": 256, "max_channel_width": 256,
+  "flops": 538644, "flops_per_sample": 538644, "params_per_flop": 0.5,
+  "model_size_mb": 1.028, "memory_bytes": 1077288,
+  "has_residual": 0, "has_depthwise": 0, "has_attention": 0,
+  "has_pooling": 0, "has_batch_norm": 0, "has_layer_norm": 0, "has_dropout": 0,
+  "model_family_encoded": 0,
+  "hidden_size": 256, "num_filters": 0, "use_batchnorm": 0,
+  "embed_dim": 0, "num_heads": 0, "patch_size": 0,
+  "latent_dim": 0, "generator_params": 0, "discriminator_params": 0,
+  "batch_size": 64, "input_height": 28, "input_width": 28, "input_channels": 1, "num_classes": 10,
+  "device_type_encoded": 0,
+  "cpu_cores": 10, "cpu_freq_ghz": 3.5, "ram_total_gb": 24.0,
+  "gpu_cores": 0, "gpu_memory_gb": 0.0
+}
+```
 
 ## 핵심 인사이트
 

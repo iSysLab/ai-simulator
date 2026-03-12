@@ -4,54 +4,107 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a PyTorch benchmarking project that compares ANN (Artificial Neural Network) and CNN (Convolutional Neural Network) performance on the MNIST dataset across CPU and GPU (CUDA/MPS) devices. The project measures training time, inference time, and accuracy across different model configurations, repeating each experiment 10 times for statistical reliability.
+PyTorch-based DNN benchmarking and execution time/memory prediction framework. Benchmarks 6 model architectures (ANN, CNN, ResNet, MobileNet, Transformer, GAN) on MNIST/CIFAR-10, extracts 45 structural + hardware features, and trains ML regressors (XGBoost, RandomForest, etc.) to predict training time, inference time, and memory usage. Supports multi-platform hardware auto-detection (macOS/Windows/Linux).
 
 ## Setup
 
 ```bash
-# Python 3.11 venv
 python -m venv .venv
-.venv\Scripts\activate    # Windows
+source .venv/bin/activate        # Mac/Linux
+# .venv\Scripts\activate         # Windows
 pip install -r requirements.txt
 ```
 
-Dependencies: `torch`, `torchvision`, `numpy`
+Dependencies: `torch`, `torchvision`, `numpy`, `scikit-learn`, `xgboost`, `onnx`, `joblib`, `psutil` (matplotlib for visualization)
 
-## Running Experiments
+## Commands
 
 ```bash
-python ann.py            # ANN benchmark (all 9 configs × 10 repeats per device)
-python cnn.py            # CNN benchmark (all 9 configs × 10 repeats per device)
-python cnn_remaining.py  # CNN partial re-run (MPS-focused, CPU only runs (128,5))
+# Full benchmark (6 models × 160 configs × 10 repeats, hours on CPU)
+python run_benchmark.py
+
+# Single model type
+python run_benchmark.py --model simple_ann
+python run_benchmark.py --model transformer
+
+# Quick test (3 repeats, CPU only)
+python run_benchmark.py --repeats 3 --device cpu
+
+# Resume interrupted run
+python run_benchmark.py --resume
+
+# With op-level profiling
+python run_benchmark.py --profile-ops
+
+# Train prediction models (XGBoost + GridSearchCV, 5-fold CV)
+python train_predictor.py
+python train_predictor.py --cv 10 --save-models
+
+# Generate 7 visualization figures
+python visualize_results.py
+
+# ONNX pipeline
+python export_onnx.py                              # PyTorch → ONNX
+python predict_from_onnx.py --onnx model.onnx --device cpu
+python predict_from_onnx.py --demo                 # all sample predictions
 ```
 
-Each script auto-detects available devices (CPU always, plus CUDA on Windows or MPS on Mac) and runs experiments on all of them. Results are saved to `ann_results.json` and `cnn_results.json`. Large CNN configs (e.g., 128 filters, 5 layers) can take 10+ minutes per repeat on CPU.
+Legacy standalone scripts (`ann.py`, `cnn.py`, `cnn_remaining.py`) have been removed — use `run_benchmark.py` instead.
 
 ## Architecture
 
-All three scripts follow the same pattern and are self-contained (no shared modules):
+### Pipeline Flow
 
-1. **Hyperparameters** — batch size 64, LR 0.01, 1 epoch per run, 10 repeats
-2. **Device setup** — auto-detect CPU/CUDA/MPS with sync and cache helpers
-3. **Data loading** — MNIST downloaded to `./data/`, pre-loaded to device memory to exclude data transfer from timing
-4. **Model definition** — configurable by (neurons/filters count, layer count)
-5. **Experiment loop** — iterates over 9 configs: `{32,64,128} × {2,3,5}` layers
-6. **Results** — JSON output with avg/std for train time, inference time, and accuracy
+```
+run_benchmark.py → benchmark/ package → results/benchmark_results.json
+                                              ↓
+                                     train_predictor.py → results/trained_models/*.pkl
+                                              ↓
+                                     visualize_results.py → results/figures/*.png
+```
 
-### Model Configs
+Parallel ONNX path: `export_onnx.py` → `.onnx` files → `predict_from_onnx.py` (uses trained models to predict execution time from ONNX graph structure)
 
-Both ANN and CNN test the same 9 (size, depth) combinations. The size parameter means hidden neurons for ANN and conv filters for CNN.
+### benchmark/ Package
 
-| Config Param | ANN (`SimpleANN`) | CNN (`SimpleCNN`) |
-|---|---|---|
-| Size | hidden layer neuron count | base filter count (doubles per layer, capped at ×4) |
-| Depth | number of hidden `Linear` layers | number of `Conv2d` layers (pooling every 2nd) |
-| Classifier | single output Linear | flatten → 128-unit FC → output |
+- **models/registry.py**: Decorator-based model factory (`@register_model("name")` → `create_model("name", **kwargs)`). All 6 model files import-register themselves.
+- **models/**: `simple_ann.py`, `simple_cnn.py`, `resnet_mnist.py`, `mobilenet_mnist.py` (MNIST, 28×28×1), `transformer.py`, `gan.py` (CIFAR-10, 32×32×3)
+- **configs/generator.py**: Generates 160 hyperparameter combinations across all 6 model types (cartesian products of size/depth/width params)
+- **features/extractor.py**: Single source of truth for all 45 FEATURE_COLUMNS. Extracts structural features via `named_modules()` introspection + forward hooks for FLOPs + OS-auto-detected hardware info (macOS `sysctl`/`system_profiler`, Windows `wmic`/CUDA props, Linux `psutil`)
+- **features/onnx_extractor.py**: Same 45-feature schema but from ONNX graph (weight shapes → FLOPs). Imports constants from extractor.py to stay in sync.
+- **features/op_profiler.py**: Decomposes model into individual ops, measures per-op time/memory, simulates total
+- **runner/device.py**: Auto-detects CPU/CUDA/MPS, handles sync and warmup
+- **runner/data.py**: `MNISTDataManager` and `CIFAR10DataManager` — preloads batches to device memory
+- **runner/experiment.py**: `ExperimentRunner` — timed training/inference loops (classification + GAN), 10 repeats with avg/std
+- **results/io.py**: Atomic JSON save (`os.replace`) + corrupted file recovery + CSV export
 
-### Key Differences: `cnn_remaining.py`
+### Prediction Pipeline (train_predictor.py)
 
-This is a partial re-run variant of `cnn.py` designed for completing experiments that were interrupted. It hardcodes CPU to only run `(128, 5)` and runs all 8 configs on MPS. It also omits accuracy tracking in its result dict (only times).
+- Loads `results/benchmark_results.json`, builds feature matrix from 45 columns defined in `FEATURE_COLUMNS`
+- Trains 4 ML models: LinearRegression, RandomForest+GridSearchCV, GradientBoosting, XGBoost+GridSearchCV
+- Predicts 3 targets per device (CPU/GPU separately): training time, inference time, memory
+- Uses `log1p` transform on targets for stability across wide ranges (ms to hundreds of seconds)
+- Key metric: R²(log) — evaluated in log space for balanced accuracy across scales
+
+### Key Design Decisions
+
+- **MNIST vs CIFAR-10 split**: ANN/CNN/ResNet/MobileNet use MNIST (28×28×1), Transformer/GAN use CIFAR-10 (32×32×3). Determined by `MNIST_MODELS`/`CIFAR10_MODELS` sets in `run_benchmark.py`.
+- **Data preloading**: All batches are loaded to device memory before timing to exclude data transfer overhead
+- **GAN handled separately**: `ExperimentRunner.run_gan()` measures adversarial training time + generator inference, distinct from classification `run()`
+- **Incremental save**: Results are appended after each config completes, enabling `--resume` after interruption
+- **CNN AdaptiveAvgPool2d**: `SimpleCNN` uses `AdaptiveAvgPool2d((1,1))` before classifier to fix parameter inversion bug where deeper models had fewer params
+
+## Data Files
+
+- `results/benchmark_results.json` / `.csv`: 330 benchmark samples (tracked in git despite .gitignore `*.json` — force-added)
+- `results/trained_models/`: Saved `.pkl` predictor models (joblib)
+- `results/figures/`: 7 visualization PNGs
+- `data/`: Auto-downloaded MNIST/CIFAR-10 (gitignored)
 
 ## Language
 
-Code comments and print output are in Korean (한국어). The `ANN 실행시간 이미지/` directory contains benchmark result screenshots.
+Code comments, print output, and commit messages are in Korean (한국어). Variable/function names are in English.
+
+### Commit Convention
+
+`[TAG] 설명` — tags: `[feat]`, `[fix]`, `[chore]`, `[add]`, `[docs]`, `[refactor]`, `[improve]`
