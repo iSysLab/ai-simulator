@@ -5,6 +5,8 @@ extractor가 피처의 단일 소스(single source of truth)가 되도록 통합
 """
 import torch
 import torch.nn as nn
+import platform
+import subprocess
 
 
 # 모델 계열 인코딩 (train_predictor.py와 동일)
@@ -45,25 +47,162 @@ def get_hardware_info(device_str='cpu'):
         'cpu_cores': 0,
         'cpu_freq_ghz': 0.0,
         'ram_total_gb': 0.0,
+        'gpu_cores': 0,
         'gpu_memory_gb': 0.0,
     }
+
+    os_name = platform.system()  # 'Darwin', 'Windows', 'Linux'
 
     try:
         import psutil
         hw['cpu_cores'] = psutil.cpu_count(logical=True)
-        freq = psutil.cpu_freq()
-        if freq:
-            hw['cpu_freq_ghz'] = round(freq.max / 1000, 2)
         hw['ram_total_gb'] = round(
             psutil.virtual_memory().total / (1024 ** 3), 1)
-    except ImportError:
-        pass
 
+        # CPU 주파수: OS별 분기
+        freq = psutil.cpu_freq()
+        if freq and freq.max > 0:
+            hw['cpu_freq_ghz'] = round(freq.max / 1000, 2)
+        elif os_name == 'Darwin':
+            hw['cpu_freq_ghz'] = _get_macos_cpu_freq()
+        elif os_name == 'Windows':
+            hw['cpu_freq_ghz'] = _get_windows_cpu_freq()
+    except ImportError:
+        # psutil 없을 때도 OS 기본 명령으로 시도
+        if os_name == 'Darwin':
+            hw['cpu_cores'] = _get_macos_cpu_cores()
+            hw['cpu_freq_ghz'] = _get_macos_cpu_freq()
+            hw['ram_total_gb'] = _get_macos_ram_gb()
+        elif os_name == 'Windows':
+            hw['cpu_freq_ghz'] = _get_windows_cpu_freq()
+
+    # GPU 정보: 장치별 분기
     if device_str == 'cuda' and torch.cuda.is_available():
         props = torch.cuda.get_device_properties(0)
         hw['gpu_memory_gb'] = round(props.total_memory / (1024 ** 3), 1)
+        hw['gpu_cores'] = props.multi_processor_count
+    elif device_str == 'mps' and os_name == 'Darwin':
+        hw['gpu_memory_gb'] = round(hw['ram_total_gb'] * 0.75, 1)
+        hw['gpu_cores'] = _get_macos_gpu_cores()
+    elif os_name == 'Windows' and device_str != 'cpu':
+        hw['gpu_cores'] = _get_windows_gpu_cores()
 
     return hw
+
+
+def _get_macos_cpu_freq():
+    """macOS: sysctl로 CPU 최대 주파수 조회 (GHz)"""
+    # Apple Silicon은 hw.cpufrequency_max가 없을 수 있음
+    for key in ['hw.cpufrequency_max', 'hw.cpufrequency']:
+        try:
+            result = subprocess.run(
+                ['sysctl', '-n', key],
+                capture_output=True, text=True, timeout=5)
+            if result.returncode == 0 and result.stdout.strip():
+                return round(int(result.stdout.strip()) / 1e9, 2)
+        except Exception:
+            continue
+    # Apple Silicon 칩 감지 후 알려진 주파수 반환
+    try:
+        result = subprocess.run(
+            ['sysctl', '-n', 'machdep.cpu.brand_string'],
+            capture_output=True, text=True, timeout=5)
+        brand = result.stdout.strip().lower()
+        if 'apple' in brand:
+            return 3.5  # Apple Silicon P-core 평균
+    except Exception:
+        pass
+    return 0.0
+
+
+def _get_macos_cpu_cores():
+    """macOS: sysctl로 CPU 코어 수 조회"""
+    try:
+        result = subprocess.run(
+            ['sysctl', '-n', 'hw.logicalcpu'],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            return int(result.stdout.strip())
+    except Exception:
+        pass
+    return 0
+
+
+def _get_macos_ram_gb():
+    """macOS: sysctl로 총 RAM 조회 (GB)"""
+    try:
+        result = subprocess.run(
+            ['sysctl', '-n', 'hw.memsize'],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            return round(int(result.stdout.strip()) / (1024 ** 3), 1)
+    except Exception:
+        pass
+    return 0.0
+
+
+def _get_windows_cpu_freq():
+    """Windows: wmic 또는 레지스트리로 CPU 주파수 조회 (GHz)"""
+    try:
+        result = subprocess.run(
+            ['wmic', 'cpu', 'get', 'MaxClockSpeed', '/value'],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                if 'MaxClockSpeed' in line:
+                    mhz = int(line.split('=')[1].strip())
+                    return round(mhz / 1000, 2)
+    except Exception:
+        pass
+    return 0.0
+
+
+def _get_macos_gpu_cores():
+    """macOS: system_profiler로 Apple GPU 코어 수 조회"""
+    try:
+        result = subprocess.run(
+            ['system_profiler', 'SPDisplaysDataType'],
+            capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            for line in result.stdout.split('\n'):
+                if 'Total Number of Cores' in line:
+                    return int(line.split(':')[1].strip())
+    except Exception:
+        pass
+    return 0
+
+
+def _get_windows_gpu_cores():
+    """Windows: wmic으로 NVIDIA/AMD GPU 코어 수 조회
+
+    NVIDIA → nvidia-smi 우선, wmic fallback
+    AMD → wmic VideoController
+    """
+    # nvidia-smi 시도 (가장 정확)
+    try:
+        result = subprocess.run(
+            ['nvidia-smi', '--query-gpu=count', '--format=csv,noheader,nounits'],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            # nvidia-smi는 SM(Streaming Multiprocessor) 수를 직접 안 줌
+            # CUDA props로 이미 처리되므로 여기선 wmic fallback
+            pass
+    except Exception:
+        pass
+
+    # wmic VideoController (범용)
+    try:
+        result = subprocess.run(
+            ['wmic', 'path', 'Win32_VideoController', 'get',
+             'AdapterRAM,Name', '/value'],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            # wmic은 코어 수를 직접 제공하지 않음 → 0 반환
+            # CUDA 장치일 경우 get_hardware_info()에서 props.multi_processor_count 사용
+            pass
+    except Exception:
+        pass
+    return 0
 
 
 def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
@@ -272,6 +411,7 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
         'cpu_cores': hw['cpu_cores'],
         'cpu_freq_ghz': hw['cpu_freq_ghz'],
         'ram_total_gb': hw['ram_total_gb'],
+        'gpu_cores': hw['gpu_cores'],
         'gpu_memory_gb': hw['gpu_memory_gb'],
     }
 

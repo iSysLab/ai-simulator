@@ -217,6 +217,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         'device_type_encoded': DEVICE_TYPE_MAP.get(device, 0),
         'cpu_cores': hw['cpu_cores'],
         'cpu_freq_ghz': hw['cpu_freq_ghz'],
+        'gpu_cores': hw['gpu_cores'],
         'ram_total_gb': hw['ram_total_gb'],
         'gpu_memory_gb': hw['gpu_memory_gb'],
     }

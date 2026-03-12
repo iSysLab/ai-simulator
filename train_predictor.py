@@ -71,7 +71,7 @@ FEATURE_COLUMNS = [
     # 6. 하드웨어 피처 (1차 핵심)
     'device_type_encoded',
     'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb',
-    'gpu_memory_gb',
+    'gpu_cores', 'gpu_memory_gb',
 ]
 
 # 예측 대상 (시간 + 공간 요구량)
@@ -162,6 +162,7 @@ def enrich_result(r):
     # 하드웨어 피처
     enriched.setdefault('device_type_encoded',
                         DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0))
+    enriched.setdefault('gpu_cores', 0)
 
     return enriched
 
