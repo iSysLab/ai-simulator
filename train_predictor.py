@@ -114,83 +114,54 @@ def load_data(input_path):
 
 
 def enrich_result(r):
-    """벤치마크 결과 1건에 Schema 피처를 주입하여 enriched dict 반환
+    """벤치마크 결과 1건의 피처 보정 (하위 호환용)
 
-    - config에서 모델 전용 피처 추출
-    - 데이터셋 정보에서 입력 피처 파생
-    - 모델 구조 피처에서 파생값 계산
+    extractor.py가 44개 피처를 모두 생성하므로, 여기서는
+    구버전 JSON 데이터에 누락된 필드만 fallback으로 채움.
     """
     model_type = r['model_type']
     config = r.get('config', {})
-    enriched = dict(r)  # 원본 복사
+    enriched = dict(r)
 
-    # --- 3-2. num_hidden_layers ---
+    # extractor v2 이전 데이터 호환: 누락 필드 보정
     enriched.setdefault('num_hidden_layers',
                         r.get('num_conv_layers', 0) + r.get('num_linear_layers', 0))
 
-    # --- 3-3. 폭(Width) 관련 ---
-    # Linear 기준 width 정보 (config에서 유추)
-    widths = []
-    if model_type == 'simple_ann':
-        hs = config.get('hidden_size', 0)
-        nl = config.get('num_layers', 1)
-        widths = [hs] * nl if hs else []
-    elif model_type == 'simple_cnn':
-        nf = config.get('num_filters', 0)
-        nl = config.get('num_conv_layers', 1)
-        widths = [min(nf * (2 ** i), nf * 4) for i in range(nl)] if nf else []
-    elif model_type == 'transformer':
-        widths = [config.get('embed_dim', 0)]
-    elif model_type == 'gan':
-        widths = config.get('g_hidden_dims', [])
+    enriched.setdefault('max_width', r.get('max_channel_width', 0))
+    enriched.setdefault('min_width', 0)
+    enriched.setdefault('avg_width', 0)
 
-    enriched['max_width'] = max(widths) if widths else r.get('max_channel_width', 0)
-    enriched['min_width'] = min(widths) if widths else 0
-    enriched['avg_width'] = (sum(widths) / len(widths)) if widths else 0
-
-    # --- 3-4. 연산량 파생 ---
     flops = r.get('flops', 0)
-    enriched['flops_per_sample'] = flops  # batch=1이므로 동일
-    enriched['params_per_flop'] = (
-        r.get('total_params', 0) / flops if flops > 0 else 0)
+    enriched.setdefault('flops_per_sample', flops)
+    enriched.setdefault('params_per_flop',
+                        r.get('total_params', 0) / flops if flops > 0 else 0)
 
-    # --- 3-5. 구조 플래그 ---
-    enriched['has_pooling'] = 1 if r.get('num_pool_layers', 0) > 0 else 0
-    enriched['has_batch_norm'] = 1 if r.get('num_bn_layers', 0) > 0 else 0
-    enriched['has_layer_norm'] = 1 if model_type == 'transformer' else 0
-    enriched['has_dropout'] = 0  # 현재 모델들에 Dropout 없음
+    enriched.setdefault('has_pooling', 1 if r.get('num_pool_layers', 0) > 0 else 0)
+    enriched.setdefault('has_batch_norm', 1 if r.get('num_bn_layers', 0) > 0 else 0)
+    enriched.setdefault('has_layer_norm', 1 if model_type == 'transformer' else 0)
+    enriched.setdefault('has_dropout', 0)
 
-    # --- 3-6. 모델 분류 (숫자 인코딩) ---
-    enriched['model_family_encoded'] = MODEL_FAMILY_MAP.get(model_type, -1)
+    enriched.setdefault('model_family_encoded', MODEL_FAMILY_MAP.get(model_type, -1))
 
-    # --- 4. 모델 전용 피처 (config에서 추출) ---
-    # ANN
-    enriched['hidden_size'] = config.get('hidden_size', 0)
-    # CNN
-    enriched['num_filters'] = config.get('num_filters', 0)
-    enriched['use_batchnorm'] = 1 if config.get('use_batchnorm', False) else 0
-    # Transformer
-    enriched['embed_dim'] = config.get('embed_dim', 0)
-    enriched['num_heads'] = config.get('num_heads', 0)
-    enriched['patch_size'] = config.get('patch_size', 0)
-    # GAN
-    enriched['latent_dim'] = config.get('latent_dim', 0)
-    # GAN generator/discriminator params 추정
-    if model_type == 'gan':
-        tp = r.get('total_params', 0)
-        enriched['generator_params'] = tp // 2  # 대략 절반
-        enriched['discriminator_params'] = tp - tp // 2
-    else:
-        enriched['generator_params'] = 0
-        enriched['discriminator_params'] = 0
+    # 모델 전용 피처 (구버전 호환)
+    enriched.setdefault('hidden_size', config.get('hidden_size', 0))
+    enriched.setdefault('num_filters', config.get('num_filters', 0))
+    enriched.setdefault('use_batchnorm', 1 if config.get('use_batchnorm', False) else 0)
+    enriched.setdefault('embed_dim', config.get('embed_dim', 0))
+    enriched.setdefault('num_heads', config.get('num_heads', 0))
+    enriched.setdefault('patch_size', config.get('patch_size', 0))
+    enriched.setdefault('latent_dim', config.get('latent_dim', 0))
+    enriched.setdefault('generator_params', 0)
+    enriched.setdefault('discriminator_params', 0)
 
-    # --- 5. 입력 데이터 피처 ---
+    # 입력 데이터 피처
     ds_info = DATASET_INFO.get(model_type, {})
     for k, v in ds_info.items():
         enriched.setdefault(k, v)
 
-    # --- 6. 하드웨어 피처 ---
-    enriched['device_type_encoded'] = DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0)
+    # 하드웨어 피처
+    enriched.setdefault('device_type_encoded',
+                        DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0))
 
     return enriched
 

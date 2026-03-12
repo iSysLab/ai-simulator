@@ -12,10 +12,21 @@ class ResultsManager:
         self.results = self._load_existing()
 
     def _load_existing(self):
-        """기존 결과 파일이 있으면 로딩"""
+        """기존 결과 파일이 있으면 로딩 (손상된 JSON 복구 시도)"""
         if os.path.exists(self.output_path):
-            with open(self.output_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            try:
+                with open(self.output_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if not isinstance(data, list):
+                    print(f"[경고] {self.output_path}: 최상위가 list가 아님 — 빈 리스트로 초기화")
+                    return []
+                return data
+            except json.JSONDecodeError as e:
+                backup = self.output_path + '.bak'
+                print(f"[경고] JSON 파싱 실패: {e}")
+                print(f"  손상된 파일을 {backup}으로 백업 후 빈 리스트로 시작합니다.")
+                os.rename(self.output_path, backup)
+                return []
         return []
 
     def is_completed(self, model_name, device_label):
@@ -26,10 +37,12 @@ class ResultsManager:
         return False
 
     def append_and_save(self, result):
-        """결과 추가 후 즉시 파일 저장"""
+        """결과 추가 후 즉시 파일 저장 (원자적 쓰기)"""
         self.results.append(result)
-        with open(self.output_path, 'w', encoding='utf-8') as f:
+        tmp_path = self.output_path + '.tmp'
+        with open(tmp_path, 'w', encoding='utf-8') as f:
             json.dump(self.results, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, self.output_path)
 
     def to_csv(self, csv_path=None):
         """피처 + 측정값을 CSV로 내보내기"""

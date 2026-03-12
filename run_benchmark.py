@@ -93,7 +93,8 @@ def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
             features = extract_features(
                 dummy_model, model_type,
                 input_shape=data_mgr.input_shape,
-                device_str=device.type)
+                device_str=device.type,
+                config=cfg['config'])
         except Exception as e:
             print(f"  [실패] {model_name}: 피처 추출 오류 — {e}")
             del dummy_model
