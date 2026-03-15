@@ -5,7 +5,9 @@ PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 �
 
 ## 실험 결과 요약
 
-### 벤치마크 데이터 (330개 샘플)
+### 벤치마크 데이터 (698개 샘플, 2개 플랫폼)
+
+#### Desktop — Windows (378개 샘플)
 
 | 모델 | 설정 수 | 디바이스 | 파라미터 범위 | 학습시간(s) | 추론시간(s) |
 |---|---|---|---|---|---|
@@ -16,9 +18,33 @@ PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 �
 | Transformer | 34 | CPU, CUDA | 108K ~ 4.8M | 2.78 ~ 263.0 | 0.045 ~ 20.5 |
 | GAN | 16 | CPU, CUDA | 1.7M ~ 7.7M | 3.05 ~ 22.1 | 0.215 ~ 1.32 |
 
-> 측정 환경: Intel 8C16T CPU, 31GB RAM, NVIDIA RTX 4060 Ti (CUDA)
+> 측정 환경: AMD Ryzen 7 7800X3D 8C16T, 31GB RAM, NVIDIA RTX 4060 Ti (CUDA)
+> 반복: 3회, PyTorch (MKLDNN 활성화)
 
-### 예측 모델 성능 (XGBoost, 5-Fold CV)
+#### macOS — Apple Silicon (320개 샘플)
+
+| 모델 | 설정 수 | 디바이스 | 파라미터 범위 | 학습시간(s) | 추론시간(s) |
+|---|---|---|---|---|---|
+| ANN | 84 | CPU, MPS | 12.7K ~ 2.2M | 0.11 ~ 1.30 | 0.002 ~ 0.088 |
+| CNN | 120 | CPU, MPS | 2.5K ~ 8.6M | 0.51 ~ 673.7 | 0.028 ~ 40.3 |
+| ResNet | 36 | CPU, MPS | 308K ~ 17.4M | 6.48 ~ 771.8 | 0.276 ~ 40.5 |
+| MobileNet | 40 | CPU, MPS | 4.4K ~ 4.6M | 5.98 ~ 5289.5 | 0.290 ~ 71.3 |
+| Transformer | 24 | CPU, MPS | 108K ~ 4.8M | 1.74 ~ 154.5 | 0.086 ~ 11.4 |
+| GAN | 16 | CPU, MPS | 1.7M ~ 7.7M | 2.59 ~ 13.4 | 0.154 ~ 0.725 |
+
+> 측정 환경: Apple M4 (4P+6E 10코어), 24GB 통합 메모리, MPS (Metal Performance Shaders)
+> 반복: 3회 (ANN/CNN/ResNet/MobileNet CPU는 기존 10회 측정치 활용), PyTorch (MKLDNN 비활성화)
+
+#### 크로스 플랫폼 비교
+
+| 비교 항목 | ANN | CNN | ResNet | MobileNet | Transformer | GAN |
+|---|---|---|---|---|---|---|
+| Mac CPU / Desktop CPU | 0.9x | 1.9x | 2.5x | **14.0x** | 0.8x | 0.6x |
+| MPS Speedup (Mac GPU/CPU) | 0.5x | 5.1x | 7.1x | **35.0x** | 2.7x | 1.7x |
+
+> **주요 발견**: MobileNet의 depthwise separable convolution은 Mac ARM CPU에서 14배 느림 (PyTorch ARM 빌드에 MKLDNN/oneDNN 미포함으로 depthwise conv 전용 최적화 커널 부재). 반면 MPS(GPU)에서는 35배 가속되어 정상 성능 발휘. ANN은 두 플랫폼 모두에서 GPU 오버헤드로 인해 CPU가 더 빠름.
+
+### 예측 모델 성능 (XGBoost, 5-Fold CV) — Desktop 데이터 기준
 
 | 예측 타겟 | 디바이스 | R² | R²(log) | RMSE | MAE |
 |---|---|---|---|---|---|
@@ -28,6 +54,8 @@ PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 �
 | 추론 시간 | CUDA | 0.9520 | **0.9659** | 0.084s | 0.038s |
 | 메모리 | CPU | 0.9445 | **0.9974** | 2.2MB | 0.4MB |
 | 메모리 | CUDA | 0.9430 | **0.9979** | 2.3MB | 0.5MB |
+
+> Mac (MPS) 예측 모델은 벤치마크 완료 후 학습 예정
 
 ## 시각화 결과
 
@@ -144,12 +172,13 @@ ann/
 │       └── io.py                       # JSON 증분 저장/CSV 변환
 ├── run_benchmark.py                    # 통합 벤치마크 실행 진입점
 ├── train_predictor.py                  # 예측 모델 학습 (LR/RF/GB/XGBoost)
-├── visualize_results.py                # 시각화 (7종 그래프 생성)
+├── visualize_results.py                # 시각화 (9종 그래프 생성)
 ├── export_onnx.py                      # PyTorch -> ONNX 변환
 ├── predict_from_onnx.py                # ONNX -> 실행 시간 예측
 ├── results/
-│   ├── benchmark_results.json          # 벤치마크 원본 데이터 (330개)
-│   ├── figures/                        # 시각화 그래프 (7개)
+│   ├── benchmark_results.json          # Desktop 벤치마크 데이터 (378개, CPU+CUDA)
+│   ├── benchmark_results_mac.json      # Mac 벤치마크 데이터 (320개, CPU+MPS)
+│   ├── figures/                        # 시각화 그래프 (9개)
 │   └── trained_models/                 # 학습된 예측 모델 (.pkl)
 └── requirements.txt
 ```
@@ -174,8 +203,8 @@ torch, torchvision, numpy, scikit-learn, xgboost, onnx, joblib, psutil, matplotl
 ### 1. 벤치마크 실행
 
 ```bash
-# 전체 실행 (6종 모델 x 160개 설정 x 10회 반복)
-python run_benchmark.py
+# 전체 실행 (6종 모델 x 160개 설정 x 3회 반복)
+python run_benchmark.py --repeats 3
 
 # 특정 모델만 실행
 python run_benchmark.py --model simple_ann
@@ -209,7 +238,9 @@ python train_predictor.py --cv 10 --save-models
 
 ```bash
 python visualize_results.py
-# 결과: results/figures/ 에 7개 그래프 생성
+# 결과: results/figures/ 에 9개 그래프 생성
+# Mac 데이터 포함 시 크로스 플랫폼 비교 그래프도 자동 생성
+python visualize_results.py --input-mac results/benchmark_results_mac.json
 ```
 
 | 그래프 | 설명 |
@@ -221,6 +252,8 @@ python visualize_results.py
 | fig5_prediction_accuracy | 실측 vs 예측 산점도 (XGBoost CV) |
 | fig6_feature_importance | 피처 중요도 Top 15 |
 | fig7_complexity_heatmap | 모델별 복잡도 지표 히트맵 |
+| fig8_cross_platform | 4-플랫폼 (Desktop CPU/CUDA, Mac CPU/MPS) 학습시간 비교 + 성능 비율 |
+| fig9_depthwise_penalty | MobileNet Depthwise Conv 페널티: 파라미터 vs 학습시간 (플랫폼별) |
 
 ### 4. ONNX 예측 파이프라인
 
@@ -396,9 +429,18 @@ print(f"시뮬레이션 총 시간: {sim['total_time_ms']:.4f}ms")
 
 ## 핵심 인사이트
 
+### 예측 모델
 1. **XGBoost가 최적**: 4가지 ML 모델 중 XGBoost+GridSearchCV가 모든 타겟에서 일관적으로 최고 R²(log) 달성 (0.97~0.99)
 2. **LinearRegression은 부적합**: 비선형 관계가 강해서 R²가 음수까지 떨어짐 (CPU 학습시간 -43, GPU 메모리 -7871)
-3. **ANN은 GPU가 오히려 느림**: Speedup 0.7x - 모델이 너무 작아 GPU 커널 오버헤드가 연산 시간보다 큼
-4. **CNN/ResNet/Transformer는 GPU 12~14x 가속**: 행렬 연산 병렬화 효과 극대화
-5. **메모리는 파라미터 수로 결정**: `total_params` 피처 중요도 0.99+ (거의 선형 관계)
-6. **추론 시간은 CPU/GPU에서 다른 피처가 중요**: CPU는 `has_residual`(잔차 연결), GPU는 `flops`(연산량)가 지배적
+3. **메모리는 파라미터 수로 결정**: `total_params` 피처 중요도 0.99+ (거의 선형 관계)
+4. **추론 시간은 CPU/GPU에서 다른 피처가 중요**: CPU는 `has_residual`(잔차 연결), GPU는 `flops`(연산량)가 지배적
+
+### GPU 가속
+5. **ANN은 GPU가 오히려 느림**: Desktop CUDA 0.7x, Mac MPS 0.5x — 모델이 너무 작아 GPU 커널 오버헤드가 연산 시간보다 큼
+6. **CNN/ResNet은 GPU 가속 효과 큼**: Desktop CUDA 12~14x, Mac MPS 5~7x
+7. **MobileNet은 Mac MPS에서 35x 가속**: CPU depthwise conv 병목이 GPU에서 해소 (Desktop CUDA에서는 7x)
+
+### 크로스 플랫폼
+8. **PyTorch ARM CPU 빌드의 한계**: MKLDNN(oneDNN) 미포함으로 depthwise separable convolution 전용 커널 부재. MobileNet CPU 학습이 x86 대비 14배 느림
+9. **BLAS 연산은 플랫폼 간 동등**: ANN(FC만 사용)은 Apple Accelerate와 MKL이 비슷한 성능 (0.9x). Transformer/GAN(Linear 위주)도 Mac이 오히려 빠름 (0.6~0.8x)
+10. **연산 종류가 플랫폼 성능 격차를 결정**: 같은 모델이라도 depthwise conv 비중에 따라 1배~14배까지 격차 발생

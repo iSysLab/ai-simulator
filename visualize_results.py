@@ -10,7 +10,11 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+import platform as _platform
+if _platform.system() == 'Darwin':
+    matplotlib.rcParams['font.family'] = 'AppleGothic'
+else:
+    matplotlib.rcParams['font.family'] = 'Malgun Gothic'
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 # 색상 팔레트
@@ -470,30 +474,174 @@ def fig7_model_complexity_heatmap(data, output_dir):
     print(f"  저장: {path}")
 
 
+def fig8_cross_platform_comparison(desktop_data, mac_data, output_dir):
+    """그림 8: 크로스 플랫폼 비교 (Desktop vs Mac, CPU 학습시간)"""
+    from collections import defaultdict
+
+    model_types = ['simple_ann', 'simple_cnn', 'resnet_mnist', 'mobilenet_mnist', 'transformer', 'gan']
+
+    # 모델별 CPU 평균 학습시간
+    dt_cpu = defaultdict(list)
+    mac_cpu = defaultdict(list)
+    mac_mps = defaultdict(list)
+    dt_cuda = defaultdict(list)
+
+    for r in desktop_data:
+        if r['device'] == 'CPU':
+            dt_cpu[r['model_type']].append(r['avg_train'])
+        elif 'GPU' in r['device']:
+            dt_cuda[r['model_type']].append(r['avg_train'])
+
+    for r in mac_data:
+        if r['device'] == 'CPU':
+            mac_cpu[r['model_type']].append(r['avg_train'])
+        elif 'GPU' in r['device']:
+            mac_mps[r['model_type']].append(r['avg_train'])
+
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+
+    # 왼쪽: 4개 플랫폼 학습시간 비교
+    ax = axes[0]
+    x = np.arange(len(model_types))
+    width = 0.2
+
+    platforms = [
+        (dt_cpu, 'Desktop CPU', '#4C72B0'),
+        (dt_cuda, 'Desktop CUDA', '#DD8452'),
+        (mac_cpu, 'Mac CPU', '#55A868'),
+        (mac_mps, 'Mac MPS', '#C44E52'),
+    ]
+
+    for i, (pdata, plabel, pcolor) in enumerate(platforms):
+        means = [np.mean(pdata[mt]) if pdata[mt] else 0 for mt in model_types]
+        offset = (i - 1.5) * width
+        ax.bar(x + offset, means, width * 0.9, label=plabel, color=pcolor, alpha=0.85)
+
+    ax.set_xlabel('모델', fontsize=12)
+    ax.set_ylabel('평균 학습 시간 (초)', fontsize=12)
+    ax.set_title('플랫폼별 학습 시간 비교', fontsize=14)
+    ax.set_xticks(x)
+    ax.set_xticklabels([MODEL_LABELS[mt] for mt in model_types], fontsize=10)
+    ax.set_yscale('log')
+    ax.legend(fontsize=10)
+    ax.grid(True, alpha=0.3, axis='y')
+
+    # 오른쪽: Mac CPU / Desktop CPU 비율
+    ax2 = axes[1]
+    ratios_cpu = []
+    ratios_mps = []
+    for mt in model_types:
+        dt_mean = np.mean(dt_cpu[mt]) if dt_cpu[mt] else 1
+        mac_mean = np.mean(mac_cpu[mt]) if mac_cpu[mt] else 0
+        mps_mean = np.mean(mac_mps[mt]) if mac_mps[mt] else 0
+        ratios_cpu.append(mac_mean / dt_mean if dt_mean > 0 else 0)
+        ratios_mps.append(mps_mean / dt_mean if dt_mean > 0 else 0)
+
+    ax2.bar(x - width/2, ratios_cpu, width, label='Mac CPU / Desktop CPU', color='#55A868', alpha=0.85)
+    ax2.bar(x + width/2, ratios_mps, width, label='Mac MPS / Desktop CPU', color='#C44E52', alpha=0.85)
+    ax2.axhline(y=1, color='red', linestyle='--', alpha=0.5, label='동일 성능 (1.0x)')
+
+    ax2.set_xlabel('모델', fontsize=12)
+    ax2.set_ylabel('시간 비율 (높을수록 느림)', fontsize=12)
+    ax2.set_title('크로스 플랫폼 성능 비율 (Desktop CPU 기준)', fontsize=14)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels([MODEL_LABELS[mt] for mt in model_types], fontsize=10)
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3, axis='y')
+
+    for i, (rc, rm) in enumerate(zip(ratios_cpu, ratios_mps)):
+        ax2.text(i - width/2, rc + 0.2, f'{rc:.1f}x', ha='center', fontsize=8)
+        ax2.text(i + width/2, rm + 0.05, f'{rm:.1f}x', ha='center', fontsize=8)
+
+    plt.tight_layout()
+    path = os.path.join(output_dir, 'fig8_cross_platform.png')
+    plt.savefig(path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"  저장: {path}")
+
+
+def fig9_depthwise_penalty(desktop_data, mac_data, output_dir):
+    """그림 9: Depthwise Conv 페널티 분석 (MobileNet 파라미터 vs 시간, 플랫폼별)"""
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+    datasets = [
+        (desktop_data, 'Desktop (Ryzen 7800X3D + RTX 4060 Ti)'),
+        (mac_data, 'Mac (Apple M4)'),
+    ]
+
+    for ax, (data, title) in zip(axes, datasets):
+        markers = {'CPU': 'o', 'GPU(CUDA)': '^', 'GPU(MPS)': 's'}
+
+        for r in data:
+            if r['model_type'] != 'mobilenet_mnist':
+                continue
+            dev = r['device']
+            ax.scatter(r['total_params'], r['avg_train'],
+                       c=DEVICE_COLORS.get(dev, 'gray'),
+                       marker=markers.get(dev, 'o'),
+                       alpha=0.8, s=80, edgecolors='white', linewidth=0.5,
+                       label=dev if dev not in ax.get_legend_handles_labels()[1] else '')
+
+        ax.set_xlabel('파라미터 수', fontsize=12)
+        ax.set_ylabel('학습 시간 (초)', fontsize=12)
+        ax.set_title(f'MobileNet: 파라미터 vs 학습시간\n{title}', fontsize=12)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.grid(True, alpha=0.3)
+
+        # 범례 중복 제거
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys(), fontsize=10)
+
+    plt.tight_layout()
+    path = os.path.join(output_dir, 'fig9_depthwise_penalty.png')
+    plt.savefig(path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"  저장: {path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='벤치마크 결과 시각화')
     parser.add_argument('--input', type=str, default='results/benchmark_results.json')
+    parser.add_argument('--input-mac', type=str, default='results/benchmark_results_mac.json')
     parser.add_argument('--output-dir', type=str, default='results/figures')
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
     data = load_data(args.input)
 
+    # Mac 데이터 로드 (있으면)
+    mac_data = None
+    if os.path.exists(args.input_mac):
+        mac_data = load_data(args.input_mac)
+        print(f"Mac 데이터 로드: {len(mac_data)}개")
+
+    # 전체 데이터 (Desktop + Mac)
+    all_data = data + (mac_data if mac_data else [])
+
     # 1. 표 출력
-    print_summary_table(data)
+    print_summary_table(all_data)
     print_prediction_table()
 
-    # 2. 시각화
+    # 2. 시각화 (기존 7개: 전체 데이터 사용)
     print(f"\n시각화 생성 중... (저장 위치: {args.output_dir}/)")
-    fig1_params_vs_time(data, args.output_dir)
-    fig2_flops_vs_time(data, args.output_dir)
-    fig3_device_comparison(data, args.output_dir)
-    fig4_speedup_ratio(data, args.output_dir)
-    fig5_prediction_accuracy(data, args.output_dir)
-    fig6_feature_importance(data, args.output_dir)
-    fig7_model_complexity_heatmap(data, args.output_dir)
+    fig1_params_vs_time(all_data, args.output_dir)
+    fig2_flops_vs_time(all_data, args.output_dir)
+    fig3_device_comparison(all_data, args.output_dir)
+    fig4_speedup_ratio(all_data, args.output_dir)
+    fig5_prediction_accuracy(data, args.output_dir)      # 예측은 Desktop만
+    fig6_feature_importance(data, args.output_dir)        # 피처 중요도도 Desktop만
+    fig7_model_complexity_heatmap(all_data, args.output_dir)
 
-    print(f"\n완료! 총 7개 그래프 생성됨: {args.output_dir}/")
+    # 3. 크로스 플랫폼 시각화 (Mac 데이터 있을 때만)
+    if mac_data:
+        print(f"\n크로스 플랫폼 시각화 생성 중...")
+        fig8_cross_platform_comparison(data, mac_data, args.output_dir)
+        fig9_depthwise_penalty(data, mac_data, args.output_dir)
+        print(f"\n완료! 총 9개 그래프 생성됨: {args.output_dir}/")
+    else:
+        print(f"\n완료! 총 7개 그래프 생성됨: {args.output_dir}/")
 
 
 if __name__ == '__main__':

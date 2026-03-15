@@ -40,8 +40,9 @@ python run_benchmark.py --profile-ops
 python train_predictor.py
 python train_predictor.py --cv 10 --save-models
 
-# Generate 7 visualization figures
+# Generate 9 visualization figures (includes cross-platform if Mac data present)
 python visualize_results.py
+python visualize_results.py --input-mac results/benchmark_results_mac.json
 
 # ONNX pipeline
 python export_onnx.py                              # PyTorch → ONNX
@@ -98,7 +99,7 @@ Parallel ONNX path: `export_onnx.py` → `.onnx` files → `predict_from_onnx.py
 
 - `results/benchmark_results.json` / `.csv`: 330 benchmark samples (tracked in git despite .gitignore `*.json` — force-added)
 - `results/trained_models/`: Saved `.pkl` predictor models (joblib)
-- `results/figures/`: 7 visualization PNGs
+- `results/figures/`: 9 visualization PNGs (7 base + 2 cross-platform)
 - `data/`: Auto-downloaded MNIST/CIFAR-10 (gitignored)
 
 ## Language
