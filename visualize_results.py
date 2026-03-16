@@ -11,10 +11,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import platform as _platform
-if _platform.system() == 'Darwin':
+_os = _platform.system()
+if _os == 'Darwin':
     matplotlib.rcParams['font.family'] = 'AppleGothic'
-else:
+elif _os == 'Windows':
     matplotlib.rcParams['font.family'] = 'Malgun Gothic'
+else:  # Linux
+    from matplotlib.font_manager import FontProperties as _FP
+    for _f in ['NanumGothic', 'NanumBarunGothic', 'UnDotum', 'DejaVu Sans']:
+        if _FP(family=_f).get_name() == _f or _f == 'DejaVu Sans':
+            matplotlib.rcParams['font.family'] = _f
+            break
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 # 색상 팔레트
