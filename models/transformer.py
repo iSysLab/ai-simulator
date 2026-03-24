@@ -126,6 +126,10 @@ def create_transformer_variants(img_size=32, in_channels=3, num_classes=10):
         list: (model, config_dict) 튜플 리스트
     """
     # (embed_dim, num_layers, num_heads, patch_size)
+    # embed_dim  : 조각 1개를 숫자 몇 개로 표현 (클수록 풍부, 느림)
+    # num_layers : 트랜스포머 층 개수 (많을수록 정확, 느림)
+    # num_heads  : 몇 가지 관점으로 분석 (많을수록 다양, 느림)
+    # patch_size : 이미지 조각 크기 (작을수록 세밀, 느림)
     configs = [
         (64,  2, 4, 4),
         (64,  4, 4, 4),

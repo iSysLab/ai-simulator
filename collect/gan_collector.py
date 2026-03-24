@@ -29,20 +29,22 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.gan import create_gan_variants
 from features.extractor import extract_features
+from utils.device_utils import get_best_device, synchronize_device
 
 # ── 실험 설정 ─────────────────────────────────────────────
 BATCH_SIZE   = 64
 IMG_SIZE     = 28
 IMG_CHANNELS = 1
-WARMUP_RUNS  = 1
-MEASURE_RUNS = 1
+WARMUP_RUNS  = 5
+MEASURE_RUNS = 10
 
 INPUT_CONFIG = {
-    'batch_size':     BATCH_SIZE,
-    'input_channels': IMG_CHANNELS,
-    'input_height':   IMG_SIZE,
-    'input_width':    IMG_SIZE,
-    'num_classes':    1,   # GAN은 분류 클래스 없음 (1로 설정)
+    'batch_size':      BATCH_SIZE,
+    'input_channels':  IMG_CHANNELS,
+    'input_height':    IMG_SIZE,
+    'input_width':     IMG_SIZE,
+    'num_classes':     0,   # GAN은 분류 클래스 없음
+    'dataset_encoded': 0,   # MNIST=0
 }
 
 ROOT_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,15 +52,8 @@ OUTPUT_PATH = os.path.join(ROOT_DIR, 'data', 'gan_results.csv')
 
 
 def get_devices():
-    devices = ['cpu']
-    if torch.cuda.is_available():
-        devices.append('cuda')
-    return devices
-
-
-def sync(device_str):
-    if device_str == 'cuda':
-        torch.cuda.synchronize()
+    best = get_best_device()
+    return ['cpu'] if best == 'cpu' else ['cpu', best]
 
 
 def load_mnist():
@@ -87,14 +82,14 @@ def measure_times(model_fn, train_batches, device_str, latent_dim):
 
         # 학습 시간 측정 (1 epoch)
         gan.train()
-        sync(device_str)
+        synchronize_device(device_str)
         t0 = time.perf_counter()
         for real_imgs, _ in train_batches:
             bs = real_imgs.size(0)
             if bs < BATCH_SIZE:
                 continue
 
-            # Discriminator 학습
+            # Discriminator 학습 / 진짜 → 1, 가짜 → 0 맞추도록 업데이트
             d_optimizer.zero_grad()
             d_real = gan.discriminator(real_imgs)
             d_loss_real = criterion(d_real, real_label)
@@ -108,26 +103,26 @@ def measure_times(model_fn, train_batches, device_str, latent_dim):
             d_loss.backward()
             d_optimizer.step()
 
-            # Generator 학습
+            # Generator 학습 / 가짜를 진짜(1)로 속이도록 업데이트
             g_optimizer.zero_grad()
             noise  = torch.randn(bs, latent_dim, device=device)
             fake   = gan.generator(noise)
             g_loss = criterion(gan.discriminator(fake), real_label)
             g_loss.backward()
-            g_optimizer.step()
+            g_optimizer.step() # 여기서 G 파라미터 업데이트
 
-        sync(device_str)
+        synchronize_device(device_str)
         train_time = time.perf_counter() - t0
 
-        # 추론 시간 측정 (Generator forward만)
+        # 추론 시간 측정 (Generator forward만) / 이미지 생성
         gan.generator.eval()
-        sync(device_str)
+        synchronize_device(device_str)
         t0 = time.perf_counter()
         with torch.no_grad():
             for _ in train_batches:
                 noise = torch.randn(BATCH_SIZE, latent_dim, device=device)
                 gan.generator(noise)
-        sync(device_str)
+        synchronize_device(device_str)
         infer_time = time.perf_counter() - t0
 
         return train_time, infer_time
@@ -200,17 +195,17 @@ def run():
 
             result = {
                 **features,
-                'train_time_mean': round(float(np.mean(train_times)), 5),
-                'train_time_std':  round(float(np.std(train_times)),  5),
-                'infer_time_mean': round(float(np.mean(infer_times)), 5),
-                'infer_time_std':  round(float(np.std(infer_times)),  5),
+                'training_time_mean_sec':  round(float(np.mean(train_times)), 5),
+                'training_time_std_sec':   round(float(np.std(train_times)),  5),
+                'inference_time_mean_ms':  round(float(np.mean(infer_times)) * 1000, 4),
+                'inference_time_std_ms':   round(float(np.std(infer_times))  * 1000, 4),
             }
             results.append(result)
 
-            print(f"  학습: {result['train_time_mean']:.4f}s "
-                  f"(±{result['train_time_std']:.4f}) | "
-                  f"추론: {result['infer_time_mean']:.4f}s "
-                  f"(±{result['infer_time_std']:.4f})\n")
+            print(f"  학습: {result['training_time_mean_sec']:.4f}s "
+                  f"(±{result['training_time_std_sec']:.4f}) | "
+                  f"추론: {result['inference_time_mean_ms']:.2f}ms "
+                  f"(±{result['inference_time_std_ms']:.2f})\n")
 
         del train_batches
         if device_str == 'cuda':

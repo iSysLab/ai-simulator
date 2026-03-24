@@ -21,7 +21,7 @@ class Generator(nn.Module):
         self.img_size     = img_size
         self.img_channels = img_channels
         self.hidden_dims  = hidden_dims
-        self.output_dim   = img_size * img_size * img_channels
+        self.output_dim   = img_size * img_size * img_channels # 숫자 이미지를 한 줄로 표현
 
         layers = []
         in_dim = latent_dim
@@ -29,7 +29,7 @@ class Generator(nn.Module):
             layers += [nn.Linear(in_dim, h), nn.BatchNorm1d(h), nn.ReLU(inplace=True)]
             in_dim = h
         layers += [nn.Linear(in_dim, self.output_dim), nn.Tanh()]
-        self.model = nn.Sequential(*layers)
+        self.model = nn.Sequential(*layers) # 순서대로 묶음
 
     def forward(self, z):
         out = self.model(z)
@@ -86,7 +86,7 @@ class SimpleGAN(nn.Module):
         if d_hidden_dims is None:
             d_hidden_dims = list(reversed(g_hidden_dims))
 
-        self.latent_dim = latent_dim
+        self.latent_dim = latent_dim # 클수록 다양한 이미지 생성
         self.generator     = Generator(latent_dim, img_size, img_channels, g_hidden_dims)
         self.discriminator = Discriminator(img_size, img_channels, d_hidden_dims)
 
@@ -119,8 +119,8 @@ def create_gan_variants(img_size=28, img_channels=1):
             latent_dim=latent_dim,
             img_size=img_size,
             img_channels=img_channels,
-            g_hidden_dims=g_hidden_dims,
-            d_hidden_dims=d_hidden_dims,
+            g_hidden_dims=g_hidden_dims, # 이미지 생성
+            d_hidden_dims=d_hidden_dims, # 진짜/가짜 판별
         )
         config = {
             'latent_dim': latent_dim,

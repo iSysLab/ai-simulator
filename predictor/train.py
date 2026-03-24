@@ -15,6 +15,7 @@ import pandas as pd
 
 # joblib 임시 폴더를 한글 없는 경로로 설정 (UnicodeEncodeError 방지)
 os.environ.setdefault('JOBLIB_TEMP_FOLDER', 'C:/Temp/joblib')
+import joblib
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, GridSearchCV, cross_val_predict
@@ -22,6 +23,7 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import xgboost as xgb
 
 ROOT_DIR                  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_DIR                 = os.path.join(ROOT_DIR, 'predictor', 'models')
 ANN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
 CNN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
 TRANSFORMER_CSV_PATH      = os.path.join(ROOT_DIR, 'data', 'transformer_results.csv')
@@ -31,25 +33,37 @@ IMPORTANCE_CSV_PATH       = os.path.join(ROOT_DIR, 'data', 'feature_importance_r
 
 # ── Feature / Target 설정 ─────────────────────────────────
 FEATURE_COLUMNS = [
-    # 모델 구조 (공통)
-    'total_params', 'trainable_params', 'conv_params', 'linear_params',
-    'bn_params', 'other_params',
-    'flops', 'model_size_mb', 'total_layers', 'model_type_encoded',
-    # ANN 전용 (다른 모델은 0)
-    'hidden_size', 'num_hidden_layers',
-    # CNN 전용 (다른 모델은 0)
-    'num_conv_layers', 'num_filters', 'has_batch_norm',
-    'has_pooling', 'kernel_size', 'num_linear_layers',
-    # Transformer 전용 (다른 모델은 0)
-    'embed_dim', 'num_transformer_layers', 'num_heads', 'patch_size',
-    # GAN 전용 (다른 모델은 0)
-    'latent_dim', 'g_hidden_max',
-    # 하드웨어
-    'device', 'cpu_cores', 'cpu_freq_ghz', 'cpu_cache_l2_mb',
-    'ram_gb', 'gpu_memory_gb',
-    # 입력 데이터
-    'batch_size', 'img_channels', 'input_height', 'input_width', 'num_classes',
-    # op-level feature
+    # ── 공통 모델 구조 (hong 33개) ────────────────────────
+    'total_params', 'log_total_params', 'trainable_params',
+    'model_size_mb', 'log_model_size_mb',
+    'total_layers', 'num_hidden_layers', 'num_linear_layers', 'num_conv_layers',
+    'max_width', 'log_max_width', 'min_width', 'avg_width',
+    'base_channels', 'model_family_encoded',
+    'has_pooling', 'has_batch_norm', 'cnn_num_fc_layers', 'cnn_kernel_size',
+    'flops', 'has_residual', 'has_depthwise', 'has_attention', 'has_cls_token',
+    'num_blocks', 'num_mult_adds', 'activation_memory_mb',
+    'first_layer_width', 'last_layer_width', 'is_sequential', 'has_skip_connection',
+    'max_channels', 'min_channels',
+    # ── 모델 전용 (hong 18개) ─────────────────────────────
+    'ann_max_hidden', 'ann_min_hidden', 'ann_avg_hidden',
+    'cnn_num_filters', 'cnn_max_channels', 'cnn_has_residual', 'cnn_has_depthwise',
+    'embed_dim', 'num_heads', 'patch_size', 'ffn_dim', 'vit_has_cls_token',
+    'latent_dim', 'generator_params', 'discriminator_params',
+    'ann_num_layers', 'cnn_stem_channels', 'vit_num_encoder_layers',
+    # ── 입력 데이터 (hong 8개) ────────────────────────────
+    'input_height', 'input_width', 'input_channels', 'num_classes',
+    'batch_size', 'dataset_encoded', 'input_pixels', 'seq_length',
+    # ── 하드웨어 (hong 33개) ──────────────────────────────
+    'device_type', 'os_type', 'accelerator_brand', 'accelerator_name',
+    'cpu_cores_physical', 'cpu_cores_logical', 'cpu_perf_cores', 'cpu_efficiency_cores',
+    'cpu_freq_base_ghz', 'cpu_freq_boost_ghz', 'cpu_cache_l2_mb', 'cpu_cache_l3_mb',
+    'ram_total_gb', 'memory_type', 'memory_bandwidth_gbs', 'is_unified_memory',
+    'shared_memory_gb', 'dedicated_vram_gb', 'gpu_count', 'gpu_memory_gb',
+    'gpu_core_count', 'peak_bandwidth_gbs', 'tflops_fp32', 'tflops_fp16',
+    'fp16_support', 'bf16_support', 'interconnect_type', 'host_to_device_bandwidth_gbs',
+    'is_discrete_gpu', 'is_integrated_gpu', 'device_encoded', 'cpu_freq_ghz', 'memory_channels',
+    # ── dal 고유 (op-level 15개 + param types 4개) ────────
+    'conv_params', 'linear_params', 'bn_params', 'other_params',
     'num_ops', 'total_op_flops', 'total_op_memory_read', 'total_op_memory_write',
     'memory_bytes',
     'flops_ratio_Conv2d', 'flops_ratio_Linear', 'flops_ratio_BatchNorm2d',
@@ -57,8 +71,8 @@ FEATURE_COLUMNS = [
     'max_op_flops', 'avg_op_flops', 'std_op_flops',
 ]
 
-TARGET_TRAIN = 'train_time_mean'
-TARGET_INFER = 'infer_time_mean'
+TARGET_TRAIN = 'training_time_mean_sec'
+TARGET_INFER = 'inference_time_mean_ms'
 
 
 # ── 데이터 로드 ───────────────────────────────────────────
@@ -93,10 +107,10 @@ def load_data():
 
     print(f"  CPU 데이터: {(df['device'] == 0).sum()}개")
     print(f"  CUDA 데이터: {(df['device'] == 1).sum()}개")
-    print(f"  ANN 데이터: {(df['model_type_encoded'] == 0).sum()}개")
-    print(f"  CNN 데이터: {(df['model_type_encoded'] == 1).sum()}개")
-    print(f"  Transformer 데이터: {(df['model_type_encoded'] == 2).sum()}개")
-    print(f"  GAN 데이터: {(df['model_type_encoded'] == 3).sum()}개")
+    print(f"  ANN 데이터: {(df['model_family_encoded'] == 0).sum()}개")
+    print(f"  CNN 데이터: {(df['model_family_encoded'] == 1).sum()}개")
+    print(f"  Transformer 데이터: {(df['model_family_encoded'] == 4).sum()}개")
+    print(f"  GAN 데이터: {(df['model_family_encoded'] == 5).sum()}개")
     return df
 
 
@@ -291,6 +305,18 @@ def main():
             row['device'] = device_name; all_importances.append(row)
         for row in print_feature_importance(xgb_inf, f'추론시간 [{device_name}] - XGBoost'):
             row['device'] = device_name; all_importances.append(row)
+
+        # ── 모델 저장 ─────────────────────────────────────
+        save_dir = os.path.join(MODEL_DIR, device_name.lower())
+        os.makedirs(save_dir, exist_ok=True)
+        joblib.dump(xgb_tr,  os.path.join(save_dir, 'xgb_training.pkl'))
+        joblib.dump(xgb_inf, os.path.join(save_dir, 'xgb_inference.pkl'))
+        joblib.dump(rf_tr,   os.path.join(save_dir, 'rf_training.pkl'))
+        joblib.dump(rf_inf,  os.path.join(save_dir, 'rf_inference.pkl'))
+        print(f"\n  모델 저장 완료: predictor/models/{device_name.lower()}/")
+
+    # feature 컬럼 순서 저장 (predict_from_onnx.py에서 사용)
+    joblib.dump(FEATURE_COLUMNS, os.path.join(MODEL_DIR, 'feature_columns.pkl'))
 
     # ── 최종 결과 출력 ────────────────────────────────────
     print(f"\n{'='*60}")
