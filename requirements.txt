@@ -7,5 +7,3 @@ xgboost
 psutil
 onnx
 onnxruntime
-timm
-transformers

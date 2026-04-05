@@ -28,11 +28,6 @@ ANN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'ann_results.csv')
 CNN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'cnn_results.csv')
 TRANSFORMER_CSV_PATH      = os.path.join(ROOT_DIR, 'data', 'transformer_results.csv')
 GAN_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'gan_results.csv')
-MLP_MIXER_CSV_PATH        = os.path.join(ROOT_DIR, 'data', 'mlp_mixer_results.csv')
-VAE_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'vae_results.csv')
-SWIN_CSV_PATH             = os.path.join(ROOT_DIR, 'data', 'swin_results.csv')
-VIT_CSV_PATH              = os.path.join(ROOT_DIR, 'data', 'vit_results.csv')
-DCGAN_CSV_PATH            = os.path.join(ROOT_DIR, 'data', 'dcgan_results.csv')
 RESULT_CSV_PATH           = os.path.join(ROOT_DIR, 'data', 'predictor_results.csv')
 IMPORTANCE_CSV_PATH       = os.path.join(ROOT_DIR, 'data', 'feature_importance_results.csv')
 
@@ -68,7 +63,7 @@ FEATURE_COLUMNS = [
     'fp16_support', 'bf16_support', 'interconnect_type', 'host_to_device_bandwidth_gbs',
     'is_discrete_gpu', 'is_integrated_gpu', 'device_encoded', 'cpu_freq_ghz', 'memory_channels',
     # ── dal 고유 (op-level 15개 + param types 4개) ────────
-    'conv_params', 'linear_params', 'bn_params', 'other_params', 'memory_footprint_mb',
+    'conv_params', 'linear_params', 'bn_params', 'other_params',
     'num_ops', 'total_op_flops', 'total_op_memory_read', 'total_op_memory_write',
     'memory_bytes',
     'flops_ratio_Conv2d', 'flops_ratio_Linear', 'flops_ratio_BatchNorm2d',
@@ -95,11 +90,6 @@ def load_data():
         (CNN_CSV_PATH,         'CNN'),
         (TRANSFORMER_CSV_PATH, 'Transformer'),
         (GAN_CSV_PATH,         'GAN'),
-        (MLP_MIXER_CSV_PATH,   'MLP-Mixer'),
-        (VAE_CSV_PATH,         'VAE'),
-        (SWIN_CSV_PATH,        'Swin'),
-        (VIT_CSV_PATH,         'ViT'),
-        (DCGAN_CSV_PATH,       'DCGAN'),
     ]
     for path, name in sources:
         if os.path.exists(path):

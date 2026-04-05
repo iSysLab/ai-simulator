@@ -76,7 +76,6 @@ def extract_features(model, model_type, model_config, device_str, input_config):
     )
     flops    = _estimate_flops(model, input_shape) # 입력이 모델을 통과할 때 총 연산량
     op_feats = get_op_level_features(model, input_shape) # 층별 통계
-    memory_footprint_mb = _estimate_memory_footprint(model, input_shape) # forward 시 실제 메모리 사용량
 
     # ── 하드웨어 정보 ─────────────────────────────────────
     hw = get_hardware_info(device_str)
@@ -279,42 +278,8 @@ def extract_features(model, model_type, model_config, device_str, input_config):
         'linear_params':         linear_params,
         'bn_params':             bn_params,
         'other_params':          other_params,
-        'memory_footprint_mb':   memory_footprint_mb,
         **op_feats,
     }
-
-
-def _estimate_memory_footprint(model, input_shape):
-    """Forward pass 시 실제 메모리 사용량 측정 (MB)
-
-    파라미터 메모리 + 중간 activation 메모리를 합산.
-    forward hook으로 각 레이어 출력 텐서 크기를 누적해서 계산.
-    """
-    activation_bytes = [0]
-    hooks = []
-
-    def hook(module, input, output):
-        if isinstance(output, torch.Tensor):
-            activation_bytes[0] += output.numel() * 4  # float32 = 4 bytes
-
-    for module in model.modules():
-        if len(list(module.children())) == 0:  # 리프 모듈만
-            hooks.append(module.register_forward_hook(hook))
-
-    model.eval()
-    with torch.no_grad():
-        dummy = torch.zeros(*input_shape)
-        try:
-            model(dummy)
-        except Exception:
-            pass
-
-    for h in hooks:
-        h.remove()
-
-    param_bytes = sum(p.numel() * 4 for p in model.parameters())
-    total_mb    = round((param_bytes + activation_bytes[0]) / (1024 ** 2), 4)
-    return total_mb
 
 
 def _estimate_flops(model, input_shape):
