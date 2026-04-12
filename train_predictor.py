@@ -12,6 +12,7 @@ khg9859:   joblib 모델 저장 + 앙상블 예측
 import os
 import argparse
 import json
+import math
 import numpy as np
 
 from sklearn.model_selection import KFold, GridSearchCV, cross_val_predict
@@ -36,42 +37,45 @@ except ImportError:
     HAS_JOBLIB = False
 
 
-# === 통합 Feature Schema (v1.0) ===
-# extractor.py 출력 + config에서 주입 + 하드웨어 외부 주입
-
-# 1차 핵심 세트 + 2차 확장 (공통 모델 구조)
+# === 통합 Feature Schema v2.0 (dal-merge 111 + ijunsoo 벤치마크) ===
+# `features/extractor.py` (루트) 출력과 동일 순서 — collect / run_benchmark 공통
 FEATURE_COLUMNS = [
-    # 3-1. 파라미터 관련
-    'total_params', 'trainable_params', 'conv_params', 'linear_params',
-    'bn_params', 'other_params',
-    # 3-2. 레이어 수
-    'total_layers', 'num_hidden_layers', 'num_conv_layers', 'num_linear_layers',
-    'num_bn_layers', 'num_pool_layers', 'num_activation_layers',
-    # 3-3. 폭(Width)
-    'max_width', 'min_width', 'avg_width', 'max_channel_width',
-    # 3-4. 연산량
-    'flops', 'flops_per_sample', 'params_per_flop',
-    'model_size_mb', 'memory_bytes',
-    # 3-5. 구조 플래그
-    'has_residual', 'has_depthwise', 'has_attention',
-    'has_pooling', 'has_batch_norm', 'has_layer_norm', 'has_dropout',
-    # 3-6. 모델 분류
-    'model_family_encoded',
-    # 4. 모델 전용 피처
-    # ANN
-    'hidden_size',
-    # CNN
-    'num_filters', 'use_batchnorm',
-    # Transformer
-    'embed_dim', 'num_heads', 'patch_size',
-    # GAN
+    # 공통 모델 구조 (hong 33)
+    'total_params', 'log_total_params', 'trainable_params',
+    'model_size_mb', 'log_model_size_mb',
+    'total_layers', 'num_hidden_layers', 'num_linear_layers', 'num_conv_layers',
+    'max_width', 'log_max_width', 'min_width', 'avg_width',
+    'base_channels', 'model_family_encoded',
+    'has_pooling', 'has_batch_norm', 'cnn_num_fc_layers', 'cnn_kernel_size',
+    'flops', 'has_residual', 'has_depthwise', 'has_attention', 'has_cls_token',
+    'num_blocks', 'num_mult_adds', 'activation_memory_mb',
+    'first_layer_width', 'last_layer_width', 'is_sequential', 'has_skip_connection',
+    'max_channels', 'min_channels',
+    # 모델 전용 (hong 18)
+    'ann_max_hidden', 'ann_min_hidden', 'ann_avg_hidden',
+    'cnn_num_filters', 'cnn_max_channels', 'cnn_has_residual', 'cnn_has_depthwise',
+    'embed_dim', 'num_heads', 'patch_size', 'ffn_dim', 'vit_has_cls_token',
     'latent_dim', 'generator_params', 'discriminator_params',
-    # 5. 입력 데이터 피처
-    'batch_size', 'input_height', 'input_width', 'input_channels', 'num_classes',
-    # 6. 하드웨어 피처 (1차 핵심)
-    'device_type_encoded',
-    'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb',
-    'gpu_cores', 'gpu_memory_gb',
+    'ann_num_layers', 'cnn_stem_channels', 'vit_num_encoder_layers',
+    # 입력 데이터 (8)
+    'input_height', 'input_width', 'input_channels', 'num_classes',
+    'batch_size', 'dataset_encoded', 'input_pixels', 'seq_length',
+    # 하드웨어 (33)
+    'device_type', 'os_type', 'accelerator_brand', 'accelerator_name',
+    'cpu_cores_physical', 'cpu_cores_logical', 'cpu_perf_cores', 'cpu_efficiency_cores',
+    'cpu_freq_base_ghz', 'cpu_freq_boost_ghz', 'cpu_cache_l2_mb', 'cpu_cache_l3_mb',
+    'ram_total_gb', 'memory_type', 'memory_bandwidth_gbs', 'is_unified_memory',
+    'shared_memory_gb', 'dedicated_vram_gb', 'gpu_count', 'gpu_memory_gb',
+    'gpu_core_count', 'peak_bandwidth_gbs', 'tflops_fp32', 'tflops_fp16',
+    'fp16_support', 'bf16_support', 'interconnect_type', 'host_to_device_bandwidth_gbs',
+    'is_discrete_gpu', 'is_integrated_gpu', 'device_encoded', 'cpu_freq_ghz', 'memory_channels',
+    # dal 고유 (op-level + param 분해)
+    'conv_params', 'linear_params', 'bn_params', 'other_params',
+    'num_ops', 'total_op_flops', 'total_op_memory_read', 'total_op_memory_write',
+    'memory_bytes',
+    'flops_ratio_Conv2d', 'flops_ratio_Linear', 'flops_ratio_BatchNorm2d',
+    'flops_ratio_LayerNorm', 'flops_ratio_MaxPool2d', 'flops_ratio_ReLU', 'flops_ratio_GELU',
+    'max_op_flops', 'avg_op_flops', 'std_op_flops',
 ]
 
 # 예측 대상 (시간 + 공간 요구량)
@@ -114,55 +118,87 @@ def load_data(input_path):
 
 
 def enrich_result(r):
-    """벤치마크 결과 1건의 피처 보정 (하위 호환용)
-
-    extractor.py가 44개 피처를 모두 생성하므로, 여기서는
-    구버전 JSON 데이터에 누락된 필드만 fallback으로 채움.
-    """
-    model_type = r['model_type']
+    """벤치마크 JSON 1건을 111차원 스키마에 맞게 보정 (구버전·부분 필드 호환)."""
+    model_type = r.get('model_type', '')
     config = r.get('config', {})
     enriched = dict(r)
+    tp = float(r.get('total_params', 0) or 0)
+    ms = float(r.get('model_size_mb', 0) or 0)
 
-    # extractor v2 이전 데이터 호환: 누락 필드 보정
+    enriched.setdefault('log_total_params', round(math.log1p(tp), 6))
+    enriched.setdefault('log_model_size_mb', round(math.log1p(ms), 6))
     enriched.setdefault('num_hidden_layers',
-                        r.get('num_conv_layers', 0) + r.get('num_linear_layers', 0))
-
-    enriched.setdefault('max_width', r.get('max_channel_width', 0))
-    enriched.setdefault('min_width', 0)
-    enriched.setdefault('avg_width', 0)
-
-    flops = r.get('flops', 0)
-    enriched.setdefault('flops_per_sample', flops)
-    enriched.setdefault('params_per_flop',
-                        r.get('total_params', 0) / flops if flops > 0 else 0)
-
-    enriched.setdefault('has_pooling', 1 if r.get('num_pool_layers', 0) > 0 else 0)
-    enriched.setdefault('has_batch_norm', 1 if r.get('num_bn_layers', 0) > 0 else 0)
-    enriched.setdefault('has_layer_norm', 1 if model_type == 'transformer' else 0)
-    enriched.setdefault('has_dropout', 0)
+                        r.get('num_hidden_layers',
+                              r.get('num_conv_layers', 0) + r.get('num_linear_layers', 0)))
+    mw = r.get('max_width', r.get('max_channel_width', 0))
+    enriched.setdefault('max_width', mw)
+    enriched.setdefault('log_max_width', round(math.log1p(float(mw or 0)), 6))
+    enriched.setdefault('min_width', r.get('min_width', 0))
+    enriched.setdefault('avg_width', r.get('avg_width', mw or 0))
+    enriched.setdefault('base_channels', r.get('base_channels', r.get('num_filters', 0)))
 
     enriched.setdefault('model_family_encoded', MODEL_FAMILY_MAP.get(model_type, -1))
 
-    # 모델 전용 피처 (구버전 호환)
-    enriched.setdefault('hidden_size', config.get('hidden_size', 0))
-    enriched.setdefault('num_filters', config.get('num_filters', 0))
-    enriched.setdefault('use_batchnorm', 1 if config.get('use_batchnorm', False) else 0)
-    enriched.setdefault('embed_dim', config.get('embed_dim', 0))
+    enriched.setdefault('has_pooling', 1 if r.get('num_pool_layers', 0) > 0 else r.get('has_pooling', 0))
+    enriched.setdefault('has_batch_norm', 1 if r.get('num_bn_layers', 0) > 0 else r.get('has_batch_norm', 0))
+    enriched.setdefault('cnn_num_fc_layers', r.get('cnn_num_fc_layers', 1))
+    enriched.setdefault('cnn_kernel_size', r.get('cnn_kernel_size', 3))
+    enriched.setdefault('num_mult_adds', r.get('num_mult_adds', r.get('flops', 0) // 2))
+    enriched.setdefault('activation_memory_mb', r.get('activation_memory_mb', 0))
+    enriched.setdefault('first_layer_width', r.get('first_layer_width', mw or 0))
+    enriched.setdefault('last_layer_width', r.get('last_layer_width', mw or 0))
+    enriched.setdefault('is_sequential', r.get('is_sequential', 1))
+    enriched.setdefault('has_skip_connection', r.get('has_skip_connection', r.get('has_residual', 0)))
+    enriched.setdefault('max_channels', r.get('max_channels', r.get('max_channel_width', 0)))
+    enriched.setdefault('min_channels', r.get('min_channels', 0))
+
+    enriched.setdefault('ann_max_hidden', config.get('hidden_size', 0) if model_type == 'simple_ann' else 0)
+    enriched.setdefault('ann_min_hidden', enriched['ann_max_hidden'])
+    enriched.setdefault('ann_avg_hidden', float(enriched['ann_max_hidden']))
+    enriched.setdefault('ann_num_layers', config.get('num_layers', 0) if model_type == 'simple_ann' else 0)
+
+    nf = config.get('num_filters', 0)
+    enriched.setdefault('cnn_num_filters', nf if 'cnn' in model_type or model_type in ('simple_cnn', 'resnet_mnist', 'mobilenet_mnist') else 0)
+    enriched.setdefault('cnn_max_channels', r.get('cnn_max_channels', enriched['cnn_num_filters']))
+    enriched.setdefault('cnn_has_residual', r.get('cnn_has_residual', 1 if model_type == 'resnet_mnist' else 0))
+    enriched.setdefault('cnn_has_depthwise', r.get('cnn_has_depthwise', 1 if model_type == 'mobilenet_mnist' else 0))
+    enriched.setdefault('cnn_stem_channels', r.get('cnn_stem_channels', nf))
+
+    ed = config.get('embed_dim', 0)
+    enriched.setdefault('embed_dim', ed)
     enriched.setdefault('num_heads', config.get('num_heads', 0))
     enriched.setdefault('patch_size', config.get('patch_size', 0))
+    enriched.setdefault('ffn_dim', r.get('ffn_dim', ed * 4 if model_type == 'transformer' else 0))
+    enriched.setdefault('vit_has_cls_token', r.get('vit_has_cls_token', 1 if model_type == 'transformer' else 0))
+    enriched.setdefault('vit_num_encoder_layers', r.get('vit_num_encoder_layers', config.get('num_layers', 0)))
+
     enriched.setdefault('latent_dim', config.get('latent_dim', 0))
-    enriched.setdefault('generator_params', 0)
-    enriched.setdefault('discriminator_params', 0)
+    enriched.setdefault('generator_params', r.get('generator_params', 0))
+    enriched.setdefault('discriminator_params', r.get('discriminator_params', 0))
 
-    # 입력 데이터 피처
     ds_info = DATASET_INFO.get(model_type, {})
-    for k, v in ds_info.items():
-        enriched.setdefault(k, v)
+    enriched.setdefault('input_height', r.get('input_height', ds_info.get('input_height', 28)))
+    enriched.setdefault('input_width', r.get('input_width', ds_info.get('input_width', 28)))
+    enriched.setdefault('input_channels', r.get('input_channels', ds_info.get('input_channels', 1)))
+    enriched.setdefault('num_classes', r.get('num_classes', ds_info.get('num_classes', 10)))
+    enriched.setdefault('batch_size', r.get('batch_size', ds_info.get('batch_size', 64)))
+    de = 1 if model_type in ('transformer', 'gan') else 0
+    enriched.setdefault('dataset_encoded', r.get('dataset_encoded', de))
+    ih, iw, ic = enriched['input_height'], enriched['input_width'], enriched['input_channels']
+    enriched.setdefault('input_pixels', r.get('input_pixels', ih * iw * ic))
+    ps = enriched.get('patch_size', 0)
+    enriched.setdefault('seq_length', r.get('seq_length', (ih // ps) ** 2 if model_type == 'transformer' and ps else 0))
 
-    # 하드웨어 피처
-    enriched.setdefault('device_type_encoded',
-                        DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0))
-    enriched.setdefault('gpu_cores', 0)
+    # 하드웨어: 구 JSON에는 일부만 있음 → 나머지 0
+    dev = r.get('device', 'CPU')
+    enriched.setdefault('device_type', r.get('device_type', 1 if dev != 'CPU' else 0))
+    enriched.setdefault('device_encoded', r.get('device_encoded', 1 if dev != 'CPU' else 0))
+    enriched.setdefault('cpu_freq_ghz', r.get('cpu_freq_ghz', 0))
+    enriched.setdefault('cpu_cores_physical', r.get('cpu_cores_physical', r.get('cpu_cores', 0)))
+    enriched.setdefault('cpu_cores_logical', r.get('cpu_cores_logical', r.get('cpu_cores', 0)))
+
+    for col in FEATURE_COLUMNS:
+        enriched.setdefault(col, 0.0)
 
     return enriched
 
