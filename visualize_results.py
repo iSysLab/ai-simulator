@@ -8,20 +8,58 @@ import os
 import json
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
+
+# Headless 서버 지원: GUI 없으면 Agg backend
 import matplotlib
+try:
+    import matplotlib.pyplot as plt
+    # display 없으면 Agg backend 자동 설정
+    plt.figure()
+    plt.close()
+except Exception:
+    matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# 크로스 플랫폼 한글 폰트 (hong-0311 패턴 통합)
 import platform as _platform
+import warnings
 _os = _platform.system()
-if _os == 'Darwin':
-    matplotlib.rcParams['font.family'] = 'AppleGothic'
-elif _os == 'Windows':
-    matplotlib.rcParams['font.family'] = 'Malgun Gothic'
-else:  # Linux
-    from matplotlib.font_manager import FontProperties as _FP
-    for _f in ['NanumGothic', 'NanumBarunGothic', 'UnDotum', 'DejaVu Sans']:
-        if _FP(family=_f).get_name() == _f or _f == 'DejaVu Sans':
-            matplotlib.rcParams['font.family'] = _f
-            break
+
+def _setup_font():
+    """3단계 폰트 감지 체인"""
+    if _os == 'Darwin':
+        # macOS: AppleGothic → Apple SD Gothic Neo
+        for font in ['AppleGothic', 'Apple SD Gothic Neo']:
+            try:
+                matplotlib.rcParams['font.family'] = font
+                return
+            except Exception:
+                continue
+    elif _os == 'Windows':
+        # Windows: Malgun Gothic → NanumGothic → 영문 fallback (hong-0311)
+        from matplotlib.font_manager import FontProperties as _FP
+        for font in ['Malgun Gothic', 'NanumGothic', 'NanumBarunGothic']:
+            try:
+                if _FP(family=font).get_name() == font:
+                    matplotlib.rcParams['font.family'] = font
+                    return
+            except Exception:
+                continue
+        warnings.warn("한글 폰트를 찾을 수 없습니다. 영문 폰트로 대체합니다.")
+    else:
+        # Linux: NanumGothic → DejaVu Sans fallback
+        from matplotlib.font_manager import FontProperties as _FP
+        for font in ['NanumGothic', 'NanumBarunGothic', 'UnDotum', 'DejaVu Sans']:
+            try:
+                if _FP(family=font).get_name() == font or font == 'DejaVu Sans':
+                    matplotlib.rcParams['font.family'] = font
+                    return
+            except Exception:
+                continue
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    _setup_font()
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 # 색상 팔레트
@@ -297,8 +335,8 @@ def fig4_speedup_ratio(data, output_dir):
 def fig5_prediction_accuracy(data, output_dir):
     """그림 5: 예측 모델 실제 vs 예측 (XGBoost CV 결과)"""
     from train_predictor import (
-        prepare_features, enrich_result, FEATURE_COLUMNS,
-        MODEL_FAMILY_MAP, DEVICE_TYPE_MAP, DATASET_INFO
+        prepare_features, enrich_result, get_numeric_features,
+        MODEL_FAMILY_MAP, DEVICE_LABEL_MAP, DATASET_INFO
     )
     from sklearn.model_selection import KFold, cross_val_predict
 
@@ -376,7 +414,7 @@ def fig5_prediction_accuracy(data, output_dir):
 
 def fig6_feature_importance(data, output_dir):
     """그림 6: 피처 중요도 Top 15 (학습/추론 시간)"""
-    from train_predictor import prepare_features, FEATURE_COLUMNS
+    from train_predictor import prepare_features, get_numeric_features
 
     try:
         import xgboost as xgb
@@ -409,7 +447,8 @@ def fig6_feature_importance(data, output_dir):
             importances = model.feature_importances_
             indices = np.argsort(importances)[::-1][:15]
 
-            top_names = [FEATURE_COLUMNS[i] for i in indices]
+            numeric_cols = get_numeric_features('core')
+            top_names = [numeric_cols[i] for i in indices]
             top_vals = [importances[i] for i in indices]
 
             colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(top_names)))

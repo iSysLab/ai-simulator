@@ -1,15 +1,20 @@
-"""모델 구조 피처 추출기
+"""모델 구조 피처 추출기 — Feature Schema v1.0 완전 구현
 
-train_predictor.py의 FEATURE_COLUMNS (44개)를 모두 직접 생성.
+Feature_Schema.docx(통합 피처 스키마 v1.0)의 ~80개 피처를 모두 직접 생성.
 extractor가 피처의 단일 소스(single source of truth)가 되도록 통합.
+
+기존 44개 피처 + 신규 ~36개 = 총 ~80개 피처
+하위 호환: 기존 피처 이름/순서 유지, 신규 피처는 뒤에 추가
 """
 import torch
 import torch.nn as nn
 import platform
-import subprocess
+
+from benchmark.platform import PlatformInfo
 
 
-# 모델 계열 인코딩 (train_predictor.py와 동일)
+# === 인코딩 맵 ===
+
 MODEL_FAMILY_MAP = {
     'simple_ann': 0,
     'simple_cnn': 1,
@@ -19,195 +24,143 @@ MODEL_FAMILY_MAP = {
     'gan': 5,
 }
 
-# 장치 인코딩
+MODEL_ARCH_MAP = {
+    'simple_ann': 'ann',
+    'simple_cnn': 'cnn',
+    'resnet_mnist': 'resnet',
+    'mobilenet_mnist': 'mobilenet',
+    'transformer': 'vit',
+    'gan': 'dcgan',
+}
+
 DEVICE_TYPE_MAP = {
     'cpu': 0,
     'cuda': 1,
     'mps': 2,
 }
 
+OS_TYPE_MAP = {
+    'macos': 0,
+    'windows': 1,
+    'linux': 2,
+}
+
+DATASET_TYPE_MAP = {
+    'mnist': 0,
+    'cifar10': 1,
+}
+
 # 데이터셋 → 입력 정보 매핑
 DATASET_INFO = {
-    'simple_ann':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10},
-    'simple_cnn':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10},
-    'resnet_mnist':     {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10},
-    'mobilenet_mnist':  {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10},
-    'transformer':      {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10},
-    'gan':              {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10},
+    'simple_ann':       {'input_height': 28, 'input_width': 28, 'input_channels': 1,
+                         'num_classes': 10, 'dataset_type': 'mnist'},
+    'simple_cnn':       {'input_height': 28, 'input_width': 28, 'input_channels': 1,
+                         'num_classes': 10, 'dataset_type': 'mnist'},
+    'resnet_mnist':     {'input_height': 28, 'input_width': 28, 'input_channels': 1,
+                         'num_classes': 10, 'dataset_type': 'mnist'},
+    'mobilenet_mnist':  {'input_height': 28, 'input_width': 28, 'input_channels': 1,
+                         'num_classes': 10, 'dataset_type': 'mnist'},
+    'transformer':      {'input_height': 32, 'input_width': 32, 'input_channels': 3,
+                         'num_classes': 10, 'dataset_type': 'cifar10'},
+    'gan':              {'input_height': 32, 'input_width': 32, 'input_channels': 3,
+                         'num_classes': 10, 'dataset_type': 'cifar10'},
 }
 
 
+# === FEATURE_COLUMNS 정의 (단계적 도입) ===
+
+# 1차 핵심 세트 (기존 44개 호환)
+CORE_FEATURE_COLUMNS = [
+    # 3-1. 파라미터 관련
+    'total_params', 'trainable_params', 'conv_params', 'linear_params',
+    'bn_params', 'other_params',
+    # 3-2. 레이어 수
+    'total_layers', 'num_hidden_layers', 'num_conv_layers', 'num_linear_layers',
+    'num_bn_layers', 'num_pool_layers', 'num_activation_layers',
+    # 3-3. 폭(Width)
+    'max_width', 'min_width', 'avg_width', 'max_channel_width',
+    # 3-4. 연산량
+    'flops', 'flops_per_sample', 'params_per_flop',
+    'model_size_mb', 'memory_bytes',
+    # 3-5. 구조 플래그
+    'has_residual', 'has_depthwise', 'has_attention',
+    'has_pooling', 'has_batch_norm', 'has_layer_norm', 'has_dropout',
+    # 3-6. 모델 분류
+    'model_family_encoded',
+    # 4. 모델 전용 피처 (기존)
+    'hidden_size',
+    'num_filters', 'use_batchnorm',
+    'embed_dim', 'num_heads', 'patch_size',
+    'latent_dim', 'generator_params', 'discriminator_params',
+    # 5. 입력 데이터 피처 (기존)
+    'batch_size', 'input_height', 'input_width', 'input_channels', 'num_classes',
+    # 6. 하드웨어 피처 (기존 6개)
+    'device_type_encoded',
+    'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb',
+    'gpu_cores', 'gpu_memory_gb',
+]
+
+# 2차 확장 세트 (Feature Schema v1.0 신규)
+EXTENDED_FEATURE_COLUMNS = [
+    # 3-5. 구조 플래그 (신규)
+    'has_skip_connection',
+    # 3-6. 모델 분류 (신규 raw 범주형)
+    'model_family', 'model_arch',
+    # 4. 모델 전용 피처 (신규)
+    # CNN
+    'kernel_size', 'stride', 'padding', 'max_channels',
+    # Transformer
+    'ffn_dim', 'num_attention_layers', 'sequence_length', 'has_cls_token',
+    # GAN
+    'generator_layers', 'discriminator_layers',
+    # 5. 입력 데이터 피처 (신규)
+    'dataset_type', 'input_dtype', 'input_elements',
+    # 6-1. 디바이스 일반 (신규)
+    'os_type', 'accelerator_brand', 'accelerator_name',
+    # 6-2. CPU 상세 (신규)
+    'cpu_cores_physical', 'cpu_cores_logical',
+    'cpu_perf_cores', 'cpu_efficiency_cores',
+    'cpu_freq_base_ghz', 'cpu_freq_boost_ghz',
+    'cpu_cache_l2_mb', 'cpu_cache_l3_mb',
+    # 6-3. 메모리 구조 (신규)
+    'memory_type', 'memory_bandwidth_gbs',
+    'is_unified_memory', 'shared_memory_gb', 'dedicated_vram_gb',
+    # 6-4. GPU 상세 (신규)
+    'gpu_count', 'gpu_core_count',
+    'gpu_tensor_core_count', 'gpu_compute_capability',
+    'gpu_clock_ghz', 'peak_bandwidth_gbs',
+    'tflops_fp32', 'tflops_fp16',
+    'fp16_support', 'bf16_support',
+    # 6-5. 인터커넥트 (신규)
+    'interconnect_type',
+    'host_to_device_bandwidth_gbs',
+    'is_discrete_gpu', 'is_integrated_gpu',
+]
+
+# 전체 피처 (1차 + 2차)
+FEATURE_COLUMNS = CORE_FEATURE_COLUMNS + EXTENDED_FEATURE_COLUMNS
+
+
 def get_hardware_info(device_str='cpu'):
-    """실행 환경 하드웨어 정보 수집
+    """실행 환경 하드웨어 정보 수집 (하위 호환 API)
 
     Returns:
-        dict: cpu_cores, cpu_freq_ghz, ram_total_gb, gpu_memory_gb
+        dict: 기존 6개 + Feature Schema 33개 하드웨어 피처
     """
-    hw = {
-        'cpu_cores': 0,
-        'cpu_freq_ghz': 0.0,
-        'ram_total_gb': 0.0,
-        'gpu_cores': 0,
-        'gpu_memory_gb': 0.0,
-    }
+    hw = PlatformInfo.detect(device_str)
+    info = hw.to_dict()
 
-    os_name = platform.system()  # 'Darwin', 'Windows', 'Linux'
+    # 하위 호환 필드 (기존 코드에서 사용하는 이름)
+    info['cpu_cores'] = info['cpu_cores_logical']
+    info['cpu_freq_ghz'] = info['cpu_freq_boost_ghz']
+    info['gpu_cores'] = info['gpu_core_count']
 
-    try:
-        import psutil
-        hw['cpu_cores'] = psutil.cpu_count(logical=True)
-        hw['ram_total_gb'] = round(
-            psutil.virtual_memory().total / (1024 ** 3), 1)
-
-        # CPU 주파수: OS별 분기
-        freq = psutil.cpu_freq()
-        if freq and freq.max > 0:
-            hw['cpu_freq_ghz'] = round(freq.max / 1000, 2)
-        elif os_name == 'Darwin':
-            hw['cpu_freq_ghz'] = _get_macos_cpu_freq()
-        elif os_name == 'Windows':
-            hw['cpu_freq_ghz'] = _get_windows_cpu_freq()
-    except ImportError:
-        # psutil 없을 때도 OS 기본 명령으로 시도
-        if os_name == 'Darwin':
-            hw['cpu_cores'] = _get_macos_cpu_cores()
-            hw['cpu_freq_ghz'] = _get_macos_cpu_freq()
-            hw['ram_total_gb'] = _get_macos_ram_gb()
-        elif os_name == 'Windows':
-            hw['cpu_freq_ghz'] = _get_windows_cpu_freq()
-
-    # GPU 정보: 장치별 분기
-    if device_str == 'cuda' and torch.cuda.is_available():
-        props = torch.cuda.get_device_properties(0)
-        hw['gpu_memory_gb'] = round(props.total_memory / (1024 ** 3), 1)
-        hw['gpu_cores'] = props.multi_processor_count
-    elif device_str == 'mps' and os_name == 'Darwin':
-        hw['gpu_memory_gb'] = round(hw['ram_total_gb'] * 0.75, 1)
-        hw['gpu_cores'] = _get_macos_gpu_cores()
-    elif os_name == 'Windows' and device_str != 'cpu':
-        hw['gpu_cores'] = _get_windows_gpu_cores()
-
-    return hw
-
-
-def _get_macos_cpu_freq():
-    """macOS: sysctl로 CPU 최대 주파수 조회 (GHz)"""
-    # Apple Silicon은 hw.cpufrequency_max가 없을 수 있음
-    for key in ['hw.cpufrequency_max', 'hw.cpufrequency']:
-        try:
-            result = subprocess.run(
-                ['sysctl', '-n', key],
-                capture_output=True, text=True, timeout=5)
-            if result.returncode == 0 and result.stdout.strip():
-                return round(int(result.stdout.strip()) / 1e9, 2)
-        except Exception:
-            continue
-    # Apple Silicon 칩 감지 후 알려진 주파수 반환
-    try:
-        result = subprocess.run(
-            ['sysctl', '-n', 'machdep.cpu.brand_string'],
-            capture_output=True, text=True, timeout=5)
-        brand = result.stdout.strip().lower()
-        if 'apple' in brand:
-            return 3.5  # Apple Silicon P-core 평균
-    except Exception:
-        pass
-    return 0.0
-
-
-def _get_macos_cpu_cores():
-    """macOS: sysctl로 CPU 코어 수 조회"""
-    try:
-        result = subprocess.run(
-            ['sysctl', '-n', 'hw.logicalcpu'],
-            capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            return int(result.stdout.strip())
-    except Exception:
-        pass
-    return 0
-
-
-def _get_macos_ram_gb():
-    """macOS: sysctl로 총 RAM 조회 (GB)"""
-    try:
-        result = subprocess.run(
-            ['sysctl', '-n', 'hw.memsize'],
-            capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            return round(int(result.stdout.strip()) / (1024 ** 3), 1)
-    except Exception:
-        pass
-    return 0.0
-
-
-def _get_windows_cpu_freq():
-    """Windows: wmic 또는 레지스트리로 CPU 주파수 조회 (GHz)"""
-    try:
-        result = subprocess.run(
-            ['wmic', 'cpu', 'get', 'MaxClockSpeed', '/value'],
-            capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            for line in result.stdout.strip().split('\n'):
-                if 'MaxClockSpeed' in line:
-                    mhz = int(line.split('=')[1].strip())
-                    return round(mhz / 1000, 2)
-    except Exception:
-        pass
-    return 0.0
-
-
-def _get_macos_gpu_cores():
-    """macOS: system_profiler로 Apple GPU 코어 수 조회"""
-    try:
-        result = subprocess.run(
-            ['system_profiler', 'SPDisplaysDataType'],
-            capture_output=True, text=True, timeout=10)
-        if result.returncode == 0:
-            for line in result.stdout.split('\n'):
-                if 'Total Number of Cores' in line:
-                    return int(line.split(':')[1].strip())
-    except Exception:
-        pass
-    return 0
-
-
-def _get_windows_gpu_cores():
-    """Windows: wmic으로 NVIDIA/AMD GPU 코어 수 조회
-
-    NVIDIA → nvidia-smi 우선, wmic fallback
-    AMD → wmic VideoController
-    """
-    # nvidia-smi 시도 (가장 정확)
-    try:
-        result = subprocess.run(
-            ['nvidia-smi', '--query-gpu=count', '--format=csv,noheader,nounits'],
-            capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            # nvidia-smi는 SM(Streaming Multiprocessor) 수를 직접 안 줌
-            # CUDA props로 이미 처리되므로 여기선 wmic fallback
-            pass
-    except Exception:
-        pass
-
-    # wmic VideoController (범용)
-    try:
-        result = subprocess.run(
-            ['wmic', 'path', 'Win32_VideoController', 'get',
-             'AdapterRAM,Name', '/value'],
-            capture_output=True, text=True, timeout=5)
-        if result.returncode == 0:
-            # wmic은 코어 수를 직접 제공하지 않음 → 0 반환
-            # CUDA 장치일 경우 get_hardware_info()에서 props.multi_processor_count 사용
-            pass
-    except Exception:
-        pass
-    return 0
+    return info
 
 
 def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
                      device_str='cpu', config=None, batch_size=64):
-    """모델 구조에서 FEATURE_COLUMNS 44개 피처를 모두 추출
+    """모델 구조에서 Feature Schema v1.0 전체 피처 추출
 
     Args:
         model: PyTorch 모델
@@ -218,7 +171,7 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
         batch_size: 배치 크기
 
     Returns:
-        dict: FEATURE_COLUMNS에 맞는 44개 피처
+        dict: FEATURE_COLUMNS에 맞는 전체 피처
     """
     if config is None:
         config = {}
@@ -245,11 +198,22 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
     has_batch_norm = 0
     has_layer_norm = 0
     has_dropout = 0
+    has_skip_connection = 0
     max_channel_width = 0
+
+    # CNN 전용 피처 수집
+    kernel_sizes = []
+    strides = []
+    paddings = []
+
+    # Transformer 전용
+    num_attention_layers = 0
 
     # GAN generator/discriminator 파라미터 분리
     generator_params = 0
     discriminator_params = 0
+    generator_layers = 0
+    discriminator_layers = 0
 
     for name, module in model.named_modules():
         if isinstance(module, nn.Conv2d):
@@ -259,6 +223,10 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
             max_channel_width = max(max_channel_width, module.out_channels)
             if module.groups > 1 and module.groups == module.in_channels:
                 has_depthwise = 1
+            # CNN 전용 피처
+            kernel_sizes.append(module.kernel_size[0])
+            strides.append(module.stride[0])
+            paddings.append(module.padding[0])
 
         elif isinstance(module, nn.Linear):
             p = sum(param.numel() for param in module.parameters())
@@ -281,6 +249,7 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
 
         elif isinstance(module, nn.MultiheadAttention):
             has_attention = 1
+            num_attention_layers += 1
 
         elif isinstance(module, nn.LayerNorm):
             has_layer_norm = 1
@@ -299,16 +268,30 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
     # 잔차 연결 감지
     if model_type in ('resnet_mnist', 'mobilenet_mnist', 'transformer'):
         has_residual = 1
+        has_skip_connection = 1
 
-    # === GAN generator/discriminator 파라미터 실제 분리 ===
+    # custom attention (비 nn.MultiheadAttention)
+    if model_type == 'transformer' and num_attention_layers == 0:
+        for name, module in model.named_modules():
+            if hasattr(module, 'num_heads') and hasattr(module, 'head_dim'):
+                num_attention_layers += 1
+                has_attention = 1
+
+    # === GAN generator/discriminator 실제 분리 ===
     if model_type == 'gan' and hasattr(model, 'generator') and hasattr(model, 'discriminator'):
         generator_params = sum(p.numel() for p in model.generator.parameters())
         discriminator_params = sum(p.numel() for p in model.discriminator.parameters())
+        for _, m in model.generator.named_modules():
+            if isinstance(m, nn.Linear):
+                generator_layers += 1
+        for _, m in model.discriminator.named_modules():
+            if isinstance(m, nn.Linear):
+                discriminator_layers += 1
 
     # === num_hidden_layers ===
     num_hidden_layers = num_conv_layers + num_linear_layers
 
-    # === 폭(Width) 관련 (config 기반) ===
+    # === 폭(Width) 관련 ===
     widths = []
     if model_type == 'simple_ann':
         hs = config.get('hidden_size', 0)
@@ -331,18 +314,23 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
 
     # === FLOPs 추정 ===
     flops = _estimate_flops(model, input_shape)
-    flops_per_sample = flops  # batch=1이므로 동일
+    flops_per_sample = flops
     params_per_flop = total_params / flops if flops > 0 else 0
 
     # === 메모리 크기 ===
     memory_bytes = sum(p.nelement() * p.element_size() for p in model.parameters())
     model_size_mb = round(total_params * 4 / (1024 ** 2), 4)
 
-    # === 하드웨어 피처 ===
+    # === 하드웨어 피처 (PlatformInfo 통합) ===
     hw = get_hardware_info(device_str)
 
     # === 입력 데이터 피처 ===
     ds_info = DATASET_INFO.get(model_type, {})
+    input_h = ds_info.get('input_height', input_shape[2] if len(input_shape) >= 4 else 0)
+    input_w = ds_info.get('input_width', input_shape[3] if len(input_shape) >= 4 else 0)
+    input_c = ds_info.get('input_channels', input_shape[1] if len(input_shape) >= 4 else 0)
+    num_classes = ds_info.get('num_classes', 10)
+    dataset_type = ds_info.get('dataset_type', 'mnist')
 
     # === 모델 전용 피처 ===
     hidden_size = config.get('hidden_size', 0)
@@ -353,7 +341,25 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
     patch_size = config.get('patch_size', 0)
     latent_dim = config.get('latent_dim', 0)
 
+    # CNN 전용
+    avg_kernel = round(sum(kernel_sizes) / len(kernel_sizes)) if kernel_sizes else 0
+    avg_stride = round(sum(strides) / len(strides)) if strides else 0
+    avg_padding = round(sum(paddings) / len(paddings)) if paddings else 0
+    max_channels = max_channel_width
+
+    # Transformer 전용
+    ffn_dim = config.get('ffn_dim', embed_dim * 4 if embed_dim > 0 else 0)
+    if model_type == 'transformer' and patch_size > 0:
+        img_size = config.get('img_size', input_h)
+        sequence_length = (img_size // patch_size) ** 2 + 1  # +1 for CLS token
+        has_cls_token = 1
+    else:
+        sequence_length = 0
+        has_cls_token = 0
+
+    # === 피처 dict 구성 ===
     features = {
+        # ===== 1차 핵심 (기존 44개 호환) =====
         # 3-1. 파라미터 관련
         'total_params': total_params,
         'trainable_params': trainable_params,
@@ -380,7 +386,7 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
         'params_per_flop': params_per_flop,
         'model_size_mb': model_size_mb,
         'memory_bytes': memory_bytes,
-        # 3-5. 구조 플래그
+        # 3-5. 구조 플래그 (기존)
         'has_residual': has_residual,
         'has_depthwise': has_depthwise,
         'has_attention': has_attention,
@@ -388,9 +394,9 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
         'has_batch_norm': has_batch_norm,
         'has_layer_norm': has_layer_norm,
         'has_dropout': has_dropout,
-        # 3-6. 모델 분류
+        # 3-6. 모델 분류 (기존 encoded)
         'model_family_encoded': MODEL_FAMILY_MAP.get(model_type, -1),
-        # 4. 모델 전용 피처
+        # 4. 모델 전용 (기존)
         'hidden_size': hidden_size,
         'num_filters': num_filters,
         'use_batchnorm': use_batchnorm,
@@ -400,19 +406,78 @@ def extract_features(model, model_type, input_shape=(1, 1, 28, 28),
         'latent_dim': latent_dim,
         'generator_params': generator_params,
         'discriminator_params': discriminator_params,
-        # 5. 입력 데이터 피처
+        # 5. 입력 데이터 (기존)
         'batch_size': batch_size,
-        'input_height': ds_info.get('input_height', input_shape[2] if len(input_shape) >= 4 else 0),
-        'input_width': ds_info.get('input_width', input_shape[3] if len(input_shape) >= 4 else 0),
-        'input_channels': ds_info.get('input_channels', input_shape[1] if len(input_shape) >= 4 else 0),
-        'num_classes': ds_info.get('num_classes', 10),
-        # 6. 하드웨어 피처
+        'input_height': input_h,
+        'input_width': input_w,
+        'input_channels': input_c,
+        'num_classes': num_classes,
+        # 6. 하드웨어 (기존 6개)
         'device_type_encoded': DEVICE_TYPE_MAP.get(device_str, 0),
         'cpu_cores': hw['cpu_cores'],
         'cpu_freq_ghz': hw['cpu_freq_ghz'],
         'ram_total_gb': hw['ram_total_gb'],
         'gpu_cores': hw['gpu_cores'],
         'gpu_memory_gb': hw['gpu_memory_gb'],
+
+        # ===== 2차 확장 (Feature Schema v1.0 신규) =====
+        # 3-5. 구조 플래그 (신규)
+        'has_skip_connection': has_skip_connection,
+        # 3-6. 모델 분류 (신규 raw)
+        'model_family': MODEL_FAMILY_MAP.get(model_type, -1),  # 숫자 (ML 학습용)
+        'model_arch': MODEL_ARCH_MAP.get(model_type, 'unknown'),
+        # 4. CNN 전용 (신규)
+        'kernel_size': avg_kernel,
+        'stride': avg_stride,
+        'padding': avg_padding,
+        'max_channels': max_channels,
+        # 4. Transformer 전용 (신규)
+        'ffn_dim': ffn_dim,
+        'num_attention_layers': num_attention_layers,
+        'sequence_length': sequence_length,
+        'has_cls_token': has_cls_token,
+        # 4. GAN 전용 (신규)
+        'generator_layers': generator_layers,
+        'discriminator_layers': discriminator_layers,
+        # 5. 입력 데이터 (신규)
+        'dataset_type': dataset_type,
+        'input_dtype': 'float32',
+        'input_elements': input_h * input_w * input_c,
+        # 6-1. 디바이스 일반 (신규)
+        'os_type': hw['os_type'],
+        'accelerator_brand': hw['accelerator_brand'],
+        'accelerator_name': hw['accelerator_name'],
+        # 6-2. CPU 상세 (신규)
+        'cpu_cores_physical': hw['cpu_cores_physical'],
+        'cpu_cores_logical': hw['cpu_cores_logical'],
+        'cpu_perf_cores': hw['cpu_perf_cores'],
+        'cpu_efficiency_cores': hw['cpu_efficiency_cores'],
+        'cpu_freq_base_ghz': hw['cpu_freq_base_ghz'],
+        'cpu_freq_boost_ghz': hw['cpu_freq_boost_ghz'],
+        'cpu_cache_l2_mb': hw['cpu_cache_l2_mb'],
+        'cpu_cache_l3_mb': hw['cpu_cache_l3_mb'],
+        # 6-3. 메모리 구조 (신규)
+        'memory_type': hw['memory_type'],
+        'memory_bandwidth_gbs': hw['memory_bandwidth_gbs'],
+        'is_unified_memory': hw['is_unified_memory'],
+        'shared_memory_gb': hw['shared_memory_gb'],
+        'dedicated_vram_gb': hw['dedicated_vram_gb'],
+        # 6-4. GPU 상세 (신규)
+        'gpu_count': hw['gpu_count'],
+        'gpu_core_count': hw['gpu_core_count'],
+        'gpu_tensor_core_count': hw['gpu_tensor_core_count'],
+        'gpu_compute_capability': hw['gpu_compute_capability'],
+        'gpu_clock_ghz': hw['gpu_clock_ghz'],
+        'peak_bandwidth_gbs': hw['peak_bandwidth_gbs'],
+        'tflops_fp32': hw['tflops_fp32'],
+        'tflops_fp16': hw['tflops_fp16'],
+        'fp16_support': hw['fp16_support'],
+        'bf16_support': hw['bf16_support'],
+        # 6-5. 인터커넥트 (신규)
+        'interconnect_type': hw['interconnect_type'],
+        'host_to_device_bandwidth_gbs': hw['host_to_device_bandwidth_gbs'],
+        'is_discrete_gpu': hw['is_discrete_gpu'],
+        'is_integrated_gpu': hw['is_integrated_gpu'],
     }
 
     return features

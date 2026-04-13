@@ -1,13 +1,14 @@
 """예측 모델 학습: 모델 구조 피처 → 실행 시간 예측
 
-dal-merge: XGBoost + GridSearchCV + log 변환
-khg9859:   joblib 모델 저장 + 앙상블 예측
+Feature Schema v1.0 통합 — 96개 피처 지원, 하위 호환 유지.
 
 사용법:
     python train_predictor.py                                    # 기본 실행
     python train_predictor.py --input results/benchmark_results.json
     python train_predictor.py --cv 10                            # 10-fold CV
     python train_predictor.py --save-models                      # 학습된 모델 저장
+    python train_predictor.py --features core                    # 1차 핵심 피처만 사용
+    python train_predictor.py --features full                    # 전체 피처 사용
 """
 import os
 import argparse
@@ -21,14 +22,12 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-# XGBoost (선택적)
 try:
     import xgboost as xgb
     HAS_XGBOOST = True
 except ImportError:
     HAS_XGBOOST = False
 
-# joblib (모델 저장용)
 try:
     import joblib
     HAS_JOBLIB = True
@@ -36,73 +35,37 @@ except ImportError:
     HAS_JOBLIB = False
 
 
-# === 통합 Feature Schema (v1.0) ===
-# extractor.py 출력 + config에서 주입 + 하드웨어 외부 주입
+# === Feature Schema v1.0 피처 정의 (extractor.py에서 import) ===
+from benchmark.features.extractor import (
+    CORE_FEATURE_COLUMNS, EXTENDED_FEATURE_COLUMNS, FEATURE_COLUMNS,
+    MODEL_FAMILY_MAP, DEVICE_TYPE_MAP, DATASET_INFO,
+)
 
-# 1차 핵심 세트 + 2차 확장 (공통 모델 구조)
-FEATURE_COLUMNS = [
-    # 3-1. 파라미터 관련
-    'total_params', 'trainable_params', 'conv_params', 'linear_params',
-    'bn_params', 'other_params',
-    # 3-2. 레이어 수
-    'total_layers', 'num_hidden_layers', 'num_conv_layers', 'num_linear_layers',
-    'num_bn_layers', 'num_pool_layers', 'num_activation_layers',
-    # 3-3. 폭(Width)
-    'max_width', 'min_width', 'avg_width', 'max_channel_width',
-    # 3-4. 연산량
-    'flops', 'flops_per_sample', 'params_per_flop',
-    'model_size_mb', 'memory_bytes',
-    # 3-5. 구조 플래그
-    'has_residual', 'has_depthwise', 'has_attention',
-    'has_pooling', 'has_batch_norm', 'has_layer_norm', 'has_dropout',
-    # 3-6. 모델 분류
-    'model_family_encoded',
-    # 4. 모델 전용 피처
-    # ANN
-    'hidden_size',
-    # CNN
-    'num_filters', 'use_batchnorm',
-    # Transformer
-    'embed_dim', 'num_heads', 'patch_size',
-    # GAN
-    'latent_dim', 'generator_params', 'discriminator_params',
-    # 5. 입력 데이터 피처
-    'batch_size', 'input_height', 'input_width', 'input_channels', 'num_classes',
-    # 6. 하드웨어 피처 (1차 핵심)
-    'device_type_encoded',
-    'cpu_cores', 'cpu_freq_ghz', 'ram_total_gb',
-    'gpu_cores', 'gpu_memory_gb',
-]
-
-# 예측 대상 (시간 + 공간 요구량)
-TARGET_COLUMNS = ['avg_train', 'avg_infer', 'memory_bytes']
-
-# 모델 계열 인코딩
-MODEL_FAMILY_MAP = {
-    'simple_ann': 0,
-    'simple_cnn': 1,
-    'resnet_mnist': 2,
-    'mobilenet_mnist': 3,
-    'transformer': 4,
-    'gan': 5,
+# 수치형 피처만 (문자열 피처는 ML 학습에서 제외)
+STRING_FEATURES = {
+    'model_arch', 'dataset_type', 'input_dtype',
+    'os_type', 'accelerator_brand', 'accelerator_name',
+    'memory_type', 'interconnect_type', 'model_family',
 }
 
-# 장치 인코딩
-DEVICE_TYPE_MAP = {
+# 예측 대상
+TARGET_COLUMNS = ['avg_train', 'avg_infer', 'memory_bytes']
+
+# 장치 인코딩 (표시 이름 → 숫자)
+DEVICE_LABEL_MAP = {
     'CPU': 0,
     'GPU(CUDA)': 1,
     'GPU(MPS)': 2,
 }
 
-# 데이터셋 → 입력 정보 매핑
-DATASET_INFO = {
-    'simple_ann':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
-    'simple_cnn':       {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
-    'resnet_mnist':     {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
-    'mobilenet_mnist':  {'input_height': 28, 'input_width': 28, 'input_channels': 1, 'num_classes': 10, 'batch_size': 64},
-    'transformer':      {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10, 'batch_size': 64},
-    'gan':              {'input_height': 32, 'input_width': 32, 'input_channels': 3, 'num_classes': 10, 'batch_size': 64},
-}
+
+def get_numeric_features(feature_set='core'):
+    """수치형 피처 목록 반환 (문자열 피처 제외)"""
+    if feature_set == 'core':
+        cols = CORE_FEATURE_COLUMNS
+    else:
+        cols = FEATURE_COLUMNS
+    return [c for c in cols if c not in STRING_FEATURES]
 
 
 def load_data(input_path):
@@ -116,17 +79,16 @@ def load_data(input_path):
 def enrich_result(r):
     """벤치마크 결과 1건의 피처 보정 (하위 호환용)
 
-    extractor.py가 44개 피처를 모두 생성하므로, 여기서는
+    extractor.py가 전체 피처를 생성하므로, 여기서는
     구버전 JSON 데이터에 누락된 필드만 fallback으로 채움.
     """
     model_type = r['model_type']
     config = r.get('config', {})
     enriched = dict(r)
 
-    # extractor v2 이전 데이터 호환: 누락 필드 보정
+    # === 기존 호환 (1차 핵심) ===
     enriched.setdefault('num_hidden_layers',
                         r.get('num_conv_layers', 0) + r.get('num_linear_layers', 0))
-
     enriched.setdefault('max_width', r.get('max_channel_width', 0))
     enriched.setdefault('min_width', 0)
     enriched.setdefault('avg_width', 0)
@@ -143,7 +105,7 @@ def enrich_result(r):
 
     enriched.setdefault('model_family_encoded', MODEL_FAMILY_MAP.get(model_type, -1))
 
-    # 모델 전용 피처 (구버전 호환)
+    # 모델 전용 (기존)
     enriched.setdefault('hidden_size', config.get('hidden_size', 0))
     enriched.setdefault('num_filters', config.get('num_filters', 0))
     enriched.setdefault('use_batchnorm', 1 if config.get('use_batchnorm', False) else 0)
@@ -154,24 +116,67 @@ def enrich_result(r):
     enriched.setdefault('generator_params', 0)
     enriched.setdefault('discriminator_params', 0)
 
-    # 입력 데이터 피처
+    # 입력 데이터 (기존)
     ds_info = DATASET_INFO.get(model_type, {})
     for k, v in ds_info.items():
         enriched.setdefault(k, v)
+    enriched.setdefault('batch_size', 64)
 
-    # 하드웨어 피처
+    # 하드웨어 (기존)
     enriched.setdefault('device_type_encoded',
-                        DEVICE_TYPE_MAP.get(r.get('device', 'CPU'), 0))
+                        DEVICE_LABEL_MAP.get(r.get('device', 'CPU'), 0))
     enriched.setdefault('gpu_cores', 0)
+    enriched.setdefault('cpu_cores', enriched.get('cpu_cores_logical', 0))
+    enriched.setdefault('cpu_freq_ghz', enriched.get('cpu_freq_boost_ghz', 0))
+
+    # === 신규 호환 (2차 확장) ===
+    enriched.setdefault('has_skip_connection',
+                        1 if model_type in ('resnet_mnist', 'mobilenet_mnist', 'transformer') else 0)
+    enriched.setdefault('model_family', MODEL_FAMILY_MAP.get(model_type, -1))
+    enriched.setdefault('model_arch', 'unknown')
+
+    # CNN 전용 (신규)
+    enriched.setdefault('kernel_size', 3 if model_type in ('simple_cnn', 'resnet_mnist', 'mobilenet_mnist') else 0)
+    enriched.setdefault('stride', 1)
+    enriched.setdefault('padding', 1 if model_type in ('simple_cnn', 'resnet_mnist', 'mobilenet_mnist') else 0)
+    enriched.setdefault('max_channels', enriched.get('max_channel_width', 0))
+
+    # Transformer 전용 (신규)
+    embed_dim = enriched.get('embed_dim', 0)
+    enriched.setdefault('ffn_dim', embed_dim * 4 if embed_dim > 0 else 0)
+    enriched.setdefault('num_attention_layers', config.get('num_layers', 0) if model_type == 'transformer' else 0)
+    ps = enriched.get('patch_size', 0)
+    if model_type == 'transformer' and ps > 0:
+        img_size = config.get('img_size', 32)
+        enriched.setdefault('sequence_length', (img_size // ps) ** 2 + 1)
+        enriched.setdefault('has_cls_token', 1)
+    else:
+        enriched.setdefault('sequence_length', 0)
+        enriched.setdefault('has_cls_token', 0)
+
+    # GAN 전용 (신규)
+    enriched.setdefault('generator_layers', 0)
+    enriched.setdefault('discriminator_layers', 0)
+
+    # 입력 데이터 (신규)
+    enriched.setdefault('input_dtype', 'float32')
+    ih = enriched.get('input_height', 0)
+    iw = enriched.get('input_width', 0)
+    ic = enriched.get('input_channels', 0)
+    enriched.setdefault('input_elements', ih * iw * ic)
+
+    # 하드웨어 (신규 — 구버전 데이터는 0으로)
+    for col in EXTENDED_FEATURE_COLUMNS:
+        if col not in STRING_FEATURES:
+            enriched.setdefault(col, 0)
 
     return enriched
 
 
-def prepare_features(results):
-    """결과에서 피처 행렬(X)과 타겟 벡터(Y) 추출
+def prepare_features(results, feature_set='core'):
+    """결과에서 피처 행렬(X)과 타겟 벡터(Y) 추출"""
+    numeric_cols = get_numeric_features(feature_set)
 
-    Schema v1.0에 맞춰 config/하드웨어/입력 피처를 주입한 후 추출.
-    """
     X = []
     y_train = []
     y_infer = []
@@ -182,11 +187,14 @@ def prepare_features(results):
     for r in results:
         enriched = enrich_result(r)
         row = []
-        for col in FEATURE_COLUMNS:
+        for col in numeric_cols:
             val = enriched.get(col)
             if val is None:
                 val = 0
-            row.append(float(val))
+            try:
+                row.append(float(val))
+            except (ValueError, TypeError):
+                row.append(0.0)
 
         X.append(row)
         y_train.append(r['avg_train'])
@@ -200,7 +208,7 @@ def prepare_features(results):
 
 
 def evaluate(y_true_log, y_pred_log, model_name, target_name):
-    """log 공간 예측값을 원래 단위로 변환 후 성능 평가 (dal-merge 방식)"""
+    """log 공간 예측값을 원래 단위로 변환 후 성능 평가"""
     y_true = np.expm1(y_true_log)
     y_pred = np.expm1(y_pred_log)
 
@@ -224,14 +232,7 @@ def evaluate(y_true_log, y_pred_log, model_name, target_name):
 
 
 def train_and_evaluate(X, y_log, target_name, cv_folds=5):
-    """여러 회귀 모델 학습 + GridSearchCV + K-Fold 교차 검증
-
-    dal-merge: XGBoost + GridSearchCV
-    khg9859:   log 변환 + 교차 검증 예측값 수집
-
-    Returns:
-        tuple: (결과 목록, 최적 모델 dict)
-    """
+    """여러 회귀 모델 학습 + GridSearchCV + K-Fold 교차 검증"""
     kf = KFold(n_splits=cv_folds, shuffle=True, random_state=42)
     results = []
     best_models = {}
@@ -277,7 +278,7 @@ def train_and_evaluate(X, y_log, target_name, cv_folds=5):
     results.append(r)
     best_models['gb'] = gb
 
-    # 4. XGBoost + GridSearchCV (선택적, dal-merge에서 병합)
+    # 4. XGBoost + GridSearchCV
     if HAS_XGBOOST:
         print(f"\n  XGBoost + GridSearchCV 학습 중...")
         xgb_base = xgb.XGBRegressor(random_state=42, verbosity=0)
@@ -301,7 +302,7 @@ def train_and_evaluate(X, y_log, target_name, cv_folds=5):
 
 
 def feature_importance(model, feature_names, target_name, top_n=10):
-    """피처 중요도 분석 (RandomForest/XGBoost)"""
+    """피처 중요도 분석"""
     if not hasattr(model, 'feature_importances_'):
         return
 
@@ -316,7 +317,7 @@ def feature_importance(model, feature_names, target_name, top_n=10):
 
 
 def save_models(models_dict, target_name, output_dir):
-    """학습된 모델을 joblib으로 저장 (khg9859에서 병합)"""
+    """학습된 모델을 joblib으로 저장"""
     if not HAS_JOBLIB:
         print("  joblib 미설치 -모델 저장 건너뜀")
         return
@@ -348,7 +349,12 @@ def main():
     parser.add_argument('--model-dir', type=str,
                         default='results/trained_models',
                         help='모델 저장 디렉토리')
+    parser.add_argument('--features', type=str, default='core',
+                        choices=['core', 'full'],
+                        help='피처 세트 선택 (core=기존 호환, full=전체)')
     args = parser.parse_args()
+
+    numeric_cols = get_numeric_features(args.features)
 
     print("=" * 60)
     print("  DNN 실행 시간 예측 모델 학습")
@@ -356,21 +362,20 @@ def main():
     if HAS_XGBOOST:
         models_used += " + XGBoost"
     print(f"  모델: {models_used}")
+    print(f"  피처: {args.features} ({len(numeric_cols)}개 수치형)")
     print(f"  평가: {args.cv}-Fold CV + GridSearchCV")
-    print(f"  타겟 변환: log1p (dal-merge/khg9859 병합)")
+    print(f"  타겟 변환: log1p")
     print("=" * 60)
 
-    # 데이터 로딩
     results = load_data(args.input)
 
-    # 피처 준비
-    X, y_train, y_infer, y_memory, devices, names = prepare_features(results)
+    X, y_train, y_infer, y_memory, devices, names = prepare_features(
+        results, feature_set=args.features)
     print(f"피처 행렬: {X.shape[0]}개 샘플 × {X.shape[1]}개 피처")
     print(f"학습 시간 범위: {y_train.min():.5f}s ~ {y_train.max():.5f}s")
     print(f"추론 시간 범위: {y_infer.min():.5f}s ~ {y_infer.max():.5f}s")
     print(f"메모리 범위: {y_memory.min():.0f}B ~ {y_memory.max():.0f}B\n")
 
-    # 장치별 분리 (dal-merge 방식: CPU와 GPU 관계가 다르므로)
     unique_devices = sorted(set(devices))
     all_results = []
 
@@ -389,28 +394,23 @@ def main():
         print(f"[{dev}] 데이터: {len(X_dev)}개")
         print(f"{'='*60}")
 
-        # log 변환 (dal-merge + khg9859 핵심 기법)
         y_train_log = np.log1p(y_train_dev)
         y_infer_log = np.log1p(y_infer_dev)
 
-        # 학습 시간 예측
         print(f"\n--- 학습 시간 예측 ---")
         train_results, train_models = train_and_evaluate(
             X_dev, y_train_log, f'학습시간 [{dev}]', cv_folds=args.cv)
         all_results.extend(train_results)
 
-        # 피처 중요도 (최적 모델)
         for key in ['rf', 'xgb']:
             if key in train_models:
                 feature_importance(
-                    train_models[key], FEATURE_COLUMNS,
+                    train_models[key], numeric_cols,
                     f'학습시간 [{dev}] -{key.upper()}')
 
-        # 모델 저장
         if args.save_models:
             save_models(train_models, 'training', args.model_dir)
 
-        # 추론 시간 예측
         print(f"\n--- 추론 시간 예측 ---")
         infer_results, infer_models = train_and_evaluate(
             X_dev, y_infer_log, f'추론시간 [{dev}]', cv_folds=args.cv)
@@ -419,13 +419,12 @@ def main():
         for key in ['rf', 'xgb']:
             if key in infer_models:
                 feature_importance(
-                    infer_models[key], FEATURE_COLUMNS,
+                    infer_models[key], numeric_cols,
                     f'추론시간 [{dev}] -{key.upper()}')
 
         if args.save_models:
             save_models(infer_models, 'inference', args.model_dir)
 
-        # 메모리/공간 요구량 예측
         if y_memory_dev.max() > 0:
             print(f"\n--- 메모리 요구량 예측 ---")
             y_memory_log = np.log1p(y_memory_dev)
@@ -436,7 +435,7 @@ def main():
             for key in ['rf', 'xgb']:
                 if key in mem_models:
                     feature_importance(
-                        mem_models[key], FEATURE_COLUMNS,
+                        mem_models[key], numeric_cols,
                         f'메모리 [{dev}] -{key.upper()}')
 
             if args.save_models:

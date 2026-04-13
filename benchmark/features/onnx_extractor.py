@@ -1,9 +1,12 @@
 """ONNX 모델 파싱 → 피처 추출 유틸리티
 
-ONNX 파일을 읽어서 FEATURE_COLUMNS 44개 피처를 모두 생성.
+ONNX 파일을 읽어서 Feature Schema v1.0 전체 피처를 생성.
 extractor.py와 동일한 피처 스키마를 따름.
 """
-from .extractor import get_hardware_info, MODEL_FAMILY_MAP, DEVICE_TYPE_MAP, DATASET_INFO
+from .extractor import (
+    get_hardware_info, MODEL_FAMILY_MAP, MODEL_ARCH_MAP,
+    DEVICE_TYPE_MAP, DATASET_INFO, DATASET_TYPE_MAP,
+)
 
 
 # ONNX 모델 이름 → 내부 model_type 매핑
@@ -22,22 +25,16 @@ def extract_features_from_onnx(onnx_path, device='cpu',
                                 patch_size=0, latent_dim=0,
                                 batch_size=64, hidden_size=0,
                                 num_filters=0, use_batchnorm=0):
-    """ONNX 파일에서 FEATURE_COLUMNS 44개 피처 추출
+    """ONNX 파일에서 Feature Schema v1.0 전체 피처 추출
 
     Args:
         onnx_path: ONNX 파일 경로
-        device: 예측 대상 장치 ('cpu', 'cuda', 'mps')
-        embed_dim: Transformer 임베딩 차원 (0이면 비-Transformer)
-        num_heads: Transformer Attention Head 수
-        patch_size: ViT 패치 크기
-        latent_dim: GAN 노이즈 벡터 차원 (0이면 비-GAN)
-        batch_size: 배치 크기
-        hidden_size: ANN 히든 크기
-        num_filters: CNN 필터 수
-        use_batchnorm: BatchNorm 사용 여부
+        device: 예측 대상 장치
+        embed_dim, num_heads, patch_size, latent_dim: 모델 전용 힌트
+        batch_size, hidden_size, num_filters, use_batchnorm: 설정 힌트
 
     Returns:
-        dict: FEATURE_COLUMNS에 맞는 44개 피처
+        dict: FEATURE_COLUMNS에 맞는 전체 피처
     """
     try:
         import onnx
@@ -65,6 +62,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
                           for k in ['MaxPool', 'GlobalAveragePool', 'AveragePool'])
     num_activation_layers = sum(op_counter.get(k, 0)
                                  for k in ['Relu', 'LeakyRelu', 'Gelu', 'Sigmoid', 'Tanh'])
+    num_attention_layers_val = op_counter.get('MultiHeadAttention', 0) + op_counter.get('Attention', 0)
 
     # 3. 모델 타입 자동 판별
     if latent_dim > 0:
@@ -98,6 +96,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
     input_height = ds_info.get('input_height', 28)
     input_width = ds_info.get('input_width', 28)
     num_classes = ds_info.get('num_classes', 10)
+    dataset_type = ds_info.get('dataset_type', 'mnist')
 
     try:
         input_tensor = model.graph.input[0]
@@ -110,18 +109,18 @@ def extract_features_from_onnx(onnx_path, device='cpu',
     except Exception:
         pass
 
-    # 6. Conv/Linear 파라미터 분리 (근사)
+    # 6. Conv/Linear 파라미터 분리
     conv_params = 0
     linear_params = 0
     for init in model.graph.initializer:
         arr = onp.to_array(init)
-        if arr.ndim == 4:  # Conv weight
+        if arr.ndim == 4:
             conv_params += arr.size
-        elif arr.ndim == 2:  # Linear weight
+        elif arr.ndim == 2:
             linear_params += arr.size
 
     bn_params = max(0, total_params - conv_params - linear_params)
-    other_params = max(0, total_params - conv_params - linear_params - bn_params)
+    other_params = 0
 
     # 7. 구조 플래그
     has_batch_norm = 1 if num_bn_layers > 0 else 0
@@ -131,13 +130,14 @@ def extract_features_from_onnx(onnx_path, device='cpu',
     has_attention = 1 if model_type == 'transformer' else 0
     has_layer_norm = 1 if op_counter.get('LayerNormalization', 0) > 0 else 0
     has_dropout = 1 if op_counter.get('Dropout', 0) > 0 else 0
+    has_skip_connection = has_residual
 
     total_layers = num_conv_layers + num_linear_layers + num_bn_layers
     num_hidden_layers = num_conv_layers + num_linear_layers
     memory_bytes = total_params * 4
     model_size_mb = round(total_params * 4 / (1024 * 1024), 4)
 
-    # 8. FLOPs 계산
+    # 8. FLOPs
     flops = _estimate_onnx_flops(model, op_counter,
                                   input_height, input_width, input_channels)
     flops_per_sample = flops
@@ -149,26 +149,30 @@ def extract_features_from_onnx(onnx_path, device='cpu',
     min_width = min(widths) if widths else 0
     avg_width = (sum(widths) / len(widths)) if widths else 0
 
-    # 10. GAN generator/discriminator 파라미터 (ONNX에서는 근사)
-    generator_params = 0
+    # 10. GAN
+    generator_params = total_params if model_type == 'gan' else 0
     discriminator_params = 0
-    if model_type == 'gan':
-        # ONNX는 보통 generator만 export하므로 전체를 generator로 간주
-        generator_params = total_params
-        discriminator_params = 0
+
+    # Transformer 전용
+    ffn_dim = embed_dim * 4 if embed_dim > 0 else 0
+    if model_type == 'transformer' and patch_size > 0:
+        sequence_length = (input_height // patch_size) ** 2 + 1
+        has_cls_token = 1
+    else:
+        sequence_length = 0
+        has_cls_token = 0
 
     # 하드웨어 피처
     hw = get_hardware_info(device)
 
     features = {
-        # 3-1. 파라미터 관련
+        # === 1차 핵심 (기존 호환) ===
         'total_params': total_params,
         'trainable_params': total_params,
         'conv_params': conv_params,
         'linear_params': linear_params,
         'bn_params': bn_params,
         'other_params': other_params,
-        # 3-2. 레이어 수
         'total_layers': total_layers,
         'num_hidden_layers': num_hidden_layers,
         'num_conv_layers': num_conv_layers,
@@ -176,18 +180,15 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         'num_bn_layers': num_bn_layers,
         'num_pool_layers': num_pool_layers,
         'num_activation_layers': num_activation_layers,
-        # 3-3. 폭(Width)
         'max_width': max_width,
         'min_width': min_width,
         'avg_width': avg_width,
         'max_channel_width': max_channel_width,
-        # 3-4. 연산량
         'flops': flops,
         'flops_per_sample': flops_per_sample,
         'params_per_flop': params_per_flop,
         'model_size_mb': model_size_mb,
         'memory_bytes': memory_bytes,
-        # 3-5. 구조 플래그
         'has_residual': has_residual,
         'has_depthwise': has_depthwise,
         'has_attention': has_attention,
@@ -195,9 +196,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         'has_batch_norm': has_batch_norm,
         'has_layer_norm': has_layer_norm,
         'has_dropout': has_dropout,
-        # 3-6. 모델 분류
         'model_family_encoded': MODEL_FAMILY_MAP.get(model_type, -1),
-        # 4. 모델 전용 피처
         'hidden_size': hidden_size,
         'num_filters': num_filters,
         'use_batchnorm': use_batchnorm,
@@ -207,19 +206,65 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         'latent_dim': latent_dim,
         'generator_params': generator_params,
         'discriminator_params': discriminator_params,
-        # 5. 입력 데이터 피처
         'batch_size': batch_size,
         'input_height': input_height,
         'input_width': input_width,
         'input_channels': input_channels,
         'num_classes': num_classes,
-        # 6. 하드웨어 피처
         'device_type_encoded': DEVICE_TYPE_MAP.get(device, 0),
         'cpu_cores': hw['cpu_cores'],
         'cpu_freq_ghz': hw['cpu_freq_ghz'],
-        'gpu_cores': hw['gpu_cores'],
         'ram_total_gb': hw['ram_total_gb'],
+        'gpu_cores': hw['gpu_cores'],
         'gpu_memory_gb': hw['gpu_memory_gb'],
+
+        # === 2차 확장 (신규) ===
+        'has_skip_connection': has_skip_connection,
+        'model_family': MODEL_FAMILY_MAP.get(model_type, -1),
+        'model_arch': MODEL_ARCH_MAP.get(model_type, 'unknown'),
+        'kernel_size': 3 if num_conv_layers > 0 else 0,
+        'stride': 1,
+        'padding': 1 if num_conv_layers > 0 else 0,
+        'max_channels': max_channel_width,
+        'ffn_dim': ffn_dim,
+        'num_attention_layers': num_attention_layers_val,
+        'sequence_length': sequence_length,
+        'has_cls_token': has_cls_token,
+        'generator_layers': 0,
+        'discriminator_layers': 0,
+        'dataset_type': dataset_type,
+        'input_dtype': 'float32',
+        'input_elements': input_height * input_width * input_channels,
+        'os_type': hw['os_type'],
+        'accelerator_brand': hw['accelerator_brand'],
+        'accelerator_name': hw['accelerator_name'],
+        'cpu_cores_physical': hw['cpu_cores_physical'],
+        'cpu_cores_logical': hw['cpu_cores_logical'],
+        'cpu_perf_cores': hw['cpu_perf_cores'],
+        'cpu_efficiency_cores': hw['cpu_efficiency_cores'],
+        'cpu_freq_base_ghz': hw['cpu_freq_base_ghz'],
+        'cpu_freq_boost_ghz': hw['cpu_freq_boost_ghz'],
+        'cpu_cache_l2_mb': hw['cpu_cache_l2_mb'],
+        'cpu_cache_l3_mb': hw['cpu_cache_l3_mb'],
+        'memory_type': hw['memory_type'],
+        'memory_bandwidth_gbs': hw['memory_bandwidth_gbs'],
+        'is_unified_memory': hw['is_unified_memory'],
+        'shared_memory_gb': hw['shared_memory_gb'],
+        'dedicated_vram_gb': hw['dedicated_vram_gb'],
+        'gpu_count': hw['gpu_count'],
+        'gpu_core_count': hw['gpu_core_count'],
+        'gpu_tensor_core_count': hw['gpu_tensor_core_count'],
+        'gpu_compute_capability': hw['gpu_compute_capability'],
+        'gpu_clock_ghz': hw['gpu_clock_ghz'],
+        'peak_bandwidth_gbs': hw['peak_bandwidth_gbs'],
+        'tflops_fp32': hw['tflops_fp32'],
+        'tflops_fp16': hw['tflops_fp16'],
+        'fp16_support': hw['fp16_support'],
+        'bf16_support': hw['bf16_support'],
+        'interconnect_type': hw['interconnect_type'],
+        'host_to_device_bandwidth_gbs': hw['host_to_device_bandwidth_gbs'],
+        'is_discrete_gpu': hw['is_discrete_gpu'],
+        'is_integrated_gpu': hw['is_integrated_gpu'],
     }
 
     print(f"  ONNX 피처 추출 완료: {model_type_name}, "
