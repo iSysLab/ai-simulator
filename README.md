@@ -231,6 +231,190 @@ Feature_Schema.docx(v1.0) 문서를 100% 구현하여 기존 44개에서 **96개
 | **기존 호환** | 6 | cpu_cores, cpu_freq_ghz, gpu_cores, gpu_memory_gb, ram_total_gb | v1.0 하위 호환 |
 | **총합** | **96** | | |
 
+### 피처 상세 설명
+
+#### 1. 파라미터 관련 (6개)
+
+| 피처 | 타입 | 단위 | 설명 | 예시 (ResNet-18) |
+|---|---|---|---|---|
+| `total_params` | int | 개 | 모델 전체 파라미터 수 | 11,173,962 |
+| `trainable_params` | int | 개 | 학습 가능한 파라미터 수 (frozen 제외) | 11,173,962 |
+| `conv_params` | int | 개 | Conv2d 레이어 파라미터 합계 | 10,950,144 |
+| `linear_params` | int | 개 | Linear(FC) 레이어 파라미터 합계 | 5,130 |
+| `bn_params` | int | 개 | BatchNorm 레이어 파라미터 합계 | 18,688 |
+| `other_params` | int | 개 | 위 3종에 포함되지 않는 파라미터 | 200,000 |
+
+#### 2. 레이어 수 (7개)
+
+| 피처 | 설명 | ANN 예시 | CNN 예시 | Transformer 예시 |
+|---|---|---|---|---|
+| `total_layers` | Conv + Linear + BN 레이어 총합 | 3 | 12 | 26 |
+| `num_hidden_layers` | Conv + Linear 레이어 수 | 3 | 8 | 20 |
+| `num_conv_layers` | Conv2d 레이어 수 | 0 | 5 | 0 |
+| `num_linear_layers` | Linear(FC) 레이어 수 | 3 | 3 | 20 |
+| `num_bn_layers` | BatchNorm 레이어 수 | 0 | 4 | 0 |
+| `num_pool_layers` | Pooling(Max/Avg/Adaptive) 레이어 수 | 0 | 2 | 0 |
+| `num_activation_layers` | 활성화 함수(ReLU/GELU 등) 수 | 2 | 7 | 12 |
+
+#### 3. 폭 (4개)
+
+| 피처 | 설명 | 예시 |
+|---|---|---|
+| `max_width` | config 기반 최대 레이어 폭 | ANN hidden_size=512 → 512 |
+| `min_width` | config 기반 최소 레이어 폭 | CNN [32,64,128] → 32 |
+| `avg_width` | config 기반 평균 레이어 폭 | CNN [32,64,128] → 74.7 |
+| `max_channel_width` | 모델 introspection 기반 최대 채널/뉴런 수 | ResNet out_channels=512 → 512 |
+
+#### 4. 연산량 (5개)
+
+| 피처 | 단위 | 설명 | 예시 |
+|---|---|---|---|
+| `flops` | 회 | Forward hook 기반 FLOPs 추정치 (batch=1) | 37,748,736 |
+| `flops_per_sample` | 회 | = flops (batch=1이므로 동일) | 37,748,736 |
+| `params_per_flop` | ratio | total_params / flops (파라미터 효율) | 0.296 |
+| `model_size_mb` | MB | 모델 파라미터 크기 (FP32 기준) | 42.6 |
+| `memory_bytes` | bytes | 파라미터 실제 메모리 점유 | 44,695,848 |
+
+#### 5. 구조 플래그 (8개) — 모두 0 또는 1
+
+| 피처 | =1 조건 | 해당 모델 |
+|---|---|---|
+| `has_residual` | Residual connection 있음 | ResNet, MobileNet, Transformer |
+| `has_depthwise` | Depthwise separable conv 있음 | MobileNet |
+| `has_attention` | Attention 메커니즘 있음 | Transformer |
+| `has_pooling` | Pooling 레이어 있음 | CNN, ResNet, MobileNet |
+| `has_batch_norm` | BatchNorm 있음 | CNN, ResNet, MobileNet, GAN |
+| `has_layer_norm` | LayerNorm 있음 | Transformer |
+| `has_dropout` | Dropout 있음 | (현재 모델에 미사용) |
+| `has_skip_connection` | Skip connection 있음 (has_residual과 동일 대상) | ResNet, MobileNet, Transformer |
+
+#### 6. 모델 분류 (3개)
+
+| 피처 | 설명 | 예시 |
+|---|---|---|
+| `model_family_encoded` | 모델 계열 정수 인코딩 (0~5) | simple_ann→0, transformer→4 |
+| `model_family` | 모델 계열 숫자 (ML 학습용, encoded와 동일) | 0~5 |
+| `model_arch` | 세부 아키텍처 문자열 | ann, cnn, resnet, mobilenet, vit, dcgan |
+
+#### 7. ANN 전용 (1개)
+
+| 피처 | 설명 | 비해당 시 |
+|---|---|---|
+| `hidden_size` | FC 레이어 뉴런 수 | 0 |
+
+#### 8. CNN 전용 (5개)
+
+| 피처 | 설명 | 비해당 시 |
+|---|---|---|
+| `num_filters` | 첫 번째 Conv 필터 수 | 0 |
+| `use_batchnorm` | BN 사용 여부 (0/1) | 0 |
+| `kernel_size` | Conv 커널 크기 평균 | 0 |
+| `stride` | Conv stride 평균 | 0 |
+| `padding` | Conv padding 평균 | 0 |
+| `max_channels` | 최대 채널 수 (= max_channel_width) | 0 |
+
+#### 9. Transformer 전용 (6개)
+
+| 피처 | 설명 | 비해당 시 |
+|---|---|---|
+| `embed_dim` | 임베딩 차원 | 0 |
+| `num_heads` | Attention Head 수 | 0 |
+| `patch_size` | ViT 패치 크기 | 0 |
+| `ffn_dim` | FFN 은닉층 차원 (= embed_dim × 4) | 0 |
+| `num_attention_layers` | Attention 레이어 수 | 0 |
+| `sequence_length` | 시퀀스 길이 (패치 수 + CLS 토큰) | 0 |
+| `has_cls_token` | CLS 토큰 사용 여부 (0/1) | 0 |
+
+#### 10. GAN 전용 (5개)
+
+| 피처 | 설명 | 비해당 시 |
+|---|---|---|
+| `latent_dim` | 노이즈 벡터 차원 | 0 |
+| `generator_params` | Generator 실제 파라미터 수 | 0 |
+| `discriminator_params` | Discriminator 실제 파라미터 수 | 0 |
+| `generator_layers` | Generator Linear 레이어 수 | 0 |
+| `discriminator_layers` | Discriminator Linear 레이어 수 | 0 |
+
+#### 11. 입력 데이터 (8개)
+
+| 피처 | MNIST 모델 | CIFAR-10 모델 | 설명 |
+|---|---|---|---|
+| `batch_size` | 64 | 64 | 배치 크기 |
+| `input_height` | 28 | 32 | 입력 이미지 높이 |
+| `input_width` | 28 | 32 | 입력 이미지 너비 |
+| `input_channels` | 1 | 3 | 입력 채널 수 |
+| `num_classes` | 10 | 10 | 출력 클래스 수 |
+| `dataset_type` | mnist (0) | cifar10 (1) | 데이터셋 종류 |
+| `input_dtype` | float32 | float32 | 입력 텐서 자료형 |
+| `input_elements` | 784 | 3072 | 입력 원소 수 (H×W×C) |
+
+#### 12. HW: 디바이스 일반 (4개)
+
+| 피처 | macOS 예시 | Windows 예시 | 설명 |
+|---|---|---|---|
+| `device_type_encoded` | 0(CPU) / 2(MPS) | 0(CPU) / 1(CUDA) | 장치 타입 정수 인코딩 |
+| `os_type` | 0 (macos) | 1 (windows) | OS 종류 정수 인코딩 |
+| `accelerator_brand` | apple | nvidia | 가속기 제조사 |
+| `accelerator_name` | Apple M4 | RTX 4060 Ti | 가속기 모델명 |
+
+#### 13. HW: CPU (8개)
+
+| 피처 | 단위 | 설명 | M4 예시 | Ryzen 예시 |
+|---|---|---|---|---|
+| `cpu_cores_physical` | 개 | 물리 코어 수 | 10 | 8 |
+| `cpu_cores_logical` | 개 | 논리 코어 수 | 10 | 16 |
+| `cpu_perf_cores` | 개 | 성능(P) 코어 수 | 4 | 8 |
+| `cpu_efficiency_cores` | 개 | 효율(E) 코어 수 | 6 | 0 |
+| `cpu_freq_base_ghz` | GHz | 기본 클럭 | 2.0 | 3.4 |
+| `cpu_freq_boost_ghz` | GHz | 부스트 클럭 | 3.5 | 5.0 |
+| `cpu_cache_l2_mb` | MB | L2 캐시 크기 | 16 | 8 |
+| `cpu_cache_l3_mb` | MB | L3 캐시 크기 | 16 | 96 |
+
+#### 14. HW: 메모리 구조 (5개) — Mac/Windows 핵심 차이
+
+| 피처 | 단위 | 설명 | Mac (unified) | Windows (discrete) |
+|---|---|---|---|---|
+| `memory_type` | str | 메모리 타입 | lpddr5 | ddr5 |
+| `memory_bandwidth_gbs` | GB/s | 메모리 대역폭 | 120 | 89.6 |
+| `is_unified_memory` | 0/1 | 통합 메모리 여부 | 1 | 0 |
+| `shared_memory_gb` | GB | CPU/GPU 공유 메모리 | 24.0 | 0.0 |
+| `dedicated_vram_gb` | GB | 전용 GPU 메모리 | 0.0 | 15.6 |
+
+#### 15. HW: GPU (11개)
+
+| 피처 | 단위 | 설명 | MPS (M4) | CUDA (4060 Ti) |
+|---|---|---|---|---|
+| `gpu_count` | 개 | GPU 수 | 1 | 1 |
+| `gpu_core_count` | 개 | GPU 코어 수 | 10 | 4352 |
+| `gpu_tensor_core_count` | 개 | 텐서 코어 수 | 0 | 136 |
+| `gpu_compute_capability` | str | CUDA Compute Capability | - | 8.9 |
+| `gpu_clock_ghz` | GHz | GPU 클럭 | 1.4 | 2.31 |
+| `peak_bandwidth_gbs` | GB/s | 최대 메모리 대역폭 | 120 | 288 |
+| `tflops_fp32` | TFLOPS | FP32 연산 성능 | 5.0 | 22.1 |
+| `tflops_fp16` | TFLOPS | FP16 연산 성능 | 10.0 | 44.2 |
+| `fp16_support` | 0/1 | FP16 지원 여부 | 1 | 1 |
+| `bf16_support` | 0/1 | BF16 지원 여부 | 0 | 1 |
+
+#### 16. HW: 인터커넥트 (4개)
+
+| 피처 | 설명 | Mac 예시 | Windows 예시 |
+|---|---|---|---|
+| `interconnect_type` | CPU↔GPU 연결 방식 | unified | pcie |
+| `host_to_device_bandwidth_gbs` | 호스트→디바이스 대역폭 (GB/s) | 120 | 32 |
+| `is_discrete_gpu` | 외장 GPU 여부 (0/1) | 0 | 1 |
+| `is_integrated_gpu` | 내장 GPU 여부 (0/1) | 1 | 0 |
+
+#### 17. 기존 호환 (6개)
+
+| 피처 | 설명 | 매핑 원본 |
+|---|---|---|
+| `cpu_cores` | 논리 코어 수 (v1.0 호환) | = cpu_cores_logical |
+| `cpu_freq_ghz` | 부스트 클럭 (v1.0 호환) | = cpu_freq_boost_ghz |
+| `gpu_cores` | GPU 코어 수 (v1.0 호환) | = gpu_core_count |
+| `gpu_memory_gb` | GPU 메모리 (v1.0 호환) | unified 추정 또는 CUDA props |
+| `ram_total_gb` | 전체 RAM | psutil / sysctl |
+| `device_type_encoded` | 장치 타입 인코딩 | cpu→0, cuda→1, mps→2 |
+
 ### 단계적 피처 도입 (Feature Schema 문서 7절)
 
 ```python
