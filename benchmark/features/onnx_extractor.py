@@ -1,6 +1,6 @@
 """ONNX 모델 파싱 → 피처 추출 유틸리티
 
-ONNX 파일을 읽어서 FEATURE_COLUMNS 44개 피처를 모두 생성.
+ONNX 파일을 읽어 train_predictor / feature_columns.pkl 과 정렬된 피처 dict 생성(누락 키는 예측 시 0).
 extractor.py와 동일한 피처 스키마를 따름.
 """
 from .extractor import get_hardware_info, MODEL_FAMILY_MAP, DEVICE_TYPE_MAP, DATASET_INFO
@@ -22,7 +22,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
                                 patch_size=0, latent_dim=0,
                                 batch_size=64, hidden_size=0,
                                 num_filters=0, use_batchnorm=0):
-    """ONNX 파일에서 FEATURE_COLUMNS 44개 피처 추출
+    """ONNX 파일에서 피처 추출 (학습 시 사용한 feature_columns.pkl 순서와 정렬)
 
     Args:
         onnx_path: ONNX 파일 경로
@@ -37,7 +37,7 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         use_batchnorm: BatchNorm 사용 여부
 
     Returns:
-        dict: FEATURE_COLUMNS에 맞는 44개 피처
+        dict: ONNX에서 추정 가능한 피처(나머지는 predict 시 0 패딩)
     """
     try:
         import onnx
@@ -157,8 +157,10 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         generator_params = total_params
         discriminator_params = 0
 
-    # 하드웨어 피처
+    # 하드웨어 피처 (구 스키마 키명과 33차원 스키마 병용)
     hw = get_hardware_info(device)
+    cpu_c = hw.get("cpu_cores", hw.get("cpu_cores_logical", 0))
+    gpu_c = hw.get("gpu_cores", hw.get("gpu_core_count", 0))
 
     features = {
         # 3-1. 파라미터 관련
@@ -215,11 +217,11 @@ def extract_features_from_onnx(onnx_path, device='cpu',
         'num_classes': num_classes,
         # 6. 하드웨어 피처
         'device_type_encoded': DEVICE_TYPE_MAP.get(device, 0),
-        'cpu_cores': hw['cpu_cores'],
-        'cpu_freq_ghz': hw['cpu_freq_ghz'],
-        'gpu_cores': hw['gpu_cores'],
-        'ram_total_gb': hw['ram_total_gb'],
-        'gpu_memory_gb': hw['gpu_memory_gb'],
+        'cpu_cores': cpu_c,
+        'cpu_freq_ghz': hw.get('cpu_freq_ghz', 0),
+        'gpu_cores': gpu_c,
+        'ram_total_gb': hw.get('ram_total_gb', 0),
+        'gpu_memory_gb': hw.get('gpu_memory_gb', 0),
     }
 
     print(f"  ONNX 피처 추출 완료: {model_type_name}, "
