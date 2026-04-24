@@ -17,11 +17,17 @@ class ExperimentRunner:
       Generator/Discriminator 적대적 학습 시간 + Generator 추론 시간 측정
     """
 
-    def __init__(self, device_manager, epochs=1, repeats=10, lr=0.01):
+    def __init__(self, device_manager, epochs=1, repeats=10, lr=0.01,
+                 adaptive_training=False, max_adaptive_epochs=10,
+                 target_accuracy=65.0):
         self.dm = device_manager
         self.epochs = epochs
         self.repeats = repeats
         self.lr = lr
+        # 선택: 정확도 목표에 도달하거나 max_adaptive_epochs까지 에폭 추가
+        self.adaptive_training = adaptive_training
+        self.max_adaptive_epochs = max(1, int(max_adaptive_epochs))
+        self.target_accuracy = float(target_accuracy)
 
     def run(self, model_fn, device, train_batches, test_batches,
             num_test_samples, config_name=""):
@@ -33,6 +39,7 @@ class ExperimentRunner:
         train_times = []
         infer_times = []
         accuracies = []
+        epochs_per_repeat = []
 
         for i in range(self.repeats):
             model = model_fn().to(device)
@@ -44,13 +51,38 @@ class ExperimentRunner:
             self.dm.sync(device)
             start = time.perf_counter()
 
-            for _ in range(self.epochs):
-                for data, target in train_batches:
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    optimizer.step()
+            if self.adaptive_training:
+                epochs_done = 0
+                accuracy = 0.0
+                while epochs_done < self.max_adaptive_epochs:
+                    for data, target in train_batches:
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        optimizer.step()
+                    epochs_done += 1
+                    model.eval()
+                    correct = 0
+                    with torch.no_grad():
+                        for data, target in test_batches:
+                            output = model(data)
+                            pred = output.argmax(dim=1, keepdim=True)
+                            correct += pred.eq(target.view_as(pred)).sum().item()
+                    accuracy = 100. * correct / num_test_samples
+                    model.train()
+                    if accuracy >= self.target_accuracy:
+                        break
+                epochs_per_repeat.append(epochs_done)
+            else:
+                for _ in range(self.epochs):
+                    for data, target in train_batches:
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        optimizer.step()
+                epochs_per_repeat.append(self.epochs)
 
             self.dm.sync(device)
             train_time = time.perf_counter() - start
@@ -75,21 +107,36 @@ class ExperimentRunner:
             infer_times.append(infer_time)
             accuracies.append(accuracy)
 
+            ep_info = ""
+            if self.adaptive_training:
+                ep_info = f" | 에폭: {epochs_per_repeat[-1]}"
+
             print(f"    [{i+1}/{self.repeats}] "
                   f"학습: {train_time:.4f}s | "
                   f"추론: {infer_time:.4f}s | "
-                  f"정확도: {accuracy:.2f}%")
+                  f"정확도: {accuracy:.2f}%{ep_info}")
 
             del model
             self.dm.clear_cache(device)
 
-        return {
+        out = {
             'avg_train': round(float(np.mean(train_times)), 5),
             'std_train': round(float(np.std(train_times)), 5),
             'avg_infer': round(float(np.mean(infer_times)), 5),
             'std_infer': round(float(np.std(infer_times)), 5),
             'avg_accuracy': round(float(np.mean(accuracies)), 2),
         }
+        if self.adaptive_training:
+            out['avg_benchmark_epochs'] = round(float(np.mean(epochs_per_repeat)), 2)
+            out['std_benchmark_epochs'] = round(float(np.std(epochs_per_repeat)), 2)
+            out['benchmark_adaptive'] = True
+            out['benchmark_target_accuracy'] = self.target_accuracy
+            out['benchmark_max_epochs'] = self.max_adaptive_epochs
+        else:
+            out['avg_benchmark_epochs'] = float(self.epochs)
+            out['std_benchmark_epochs'] = 0.0
+            out['benchmark_adaptive'] = False
+        return out
 
     def run_gan(self, model_fn, device, train_batches, batch_size=64,
                 config_name=""):

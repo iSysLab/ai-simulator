@@ -1,0 +1,5 @@
+﻿model_name,target,RMSE,MAE,R2
+Random Forest,추론 시간(ms),114.8428,45.7172,0.4176
+XGBoost,추론 시간(ms),153.3234,58.2722,-0.0381
+Random Forest,학습 시간(sec),1919.9624,620.0255,-0.0286
+XGBoost,학습 시간(sec),1976.8615,632.9917,-0.0905

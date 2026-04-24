@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="460.0" y="36" text-anchor="middle" font-size="14" font-weight="600" font-family="Malgun Gothic, sans-serif">그림7: 모델 복잡도 (CPU 평균, 열 정규화)</text>
+<text x="220.0" y="62.0" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif">파라미터</text>
+<text x="340.0" y="62.0" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif">FLOPs</text>
+<text x="460.0" y="62.0" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif">레이어</text>
+<text x="580.0" y="62.0" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif">학습(s)</text>
+<text x="700.0" y="62.0" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif">추론(s)</text>
+<text x="150.0" y="99.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">ANN</text>
+<rect x="160.0" y="70.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="99.0" text-anchor="middle" font-size="11" fill="#222">0.07</text>
+<rect x="280.0" y="70.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="99.0" text-anchor="middle" font-size="11" fill="#222">0.00</text>
+<rect x="400.0" y="70.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="99.0" text-anchor="middle" font-size="11" fill="#222">0.13</text>
+<rect x="520.0" y="70.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="99.0" text-anchor="middle" font-size="11" fill="#222">0.00</text>
+<rect x="640.0" y="70.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="99.0" text-anchor="middle" font-size="11" fill="#222">0.00</text>
+<text x="150.0" y="149.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">CNN</text>
+<rect x="160.0" y="120.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="149.0" text-anchor="middle" font-size="11" fill="#222">0.18</text>
+<rect x="280.0" y="120.0" width="116.0" height="46.0" fill="#f03b20" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="149.0" text-anchor="middle" font-size="11" fill="#fff">0.91</text>
+<rect x="400.0" y="120.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="149.0" text-anchor="middle" font-size="11" fill="#222">0.17</text>
+<rect x="520.0" y="120.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="149.0" text-anchor="middle" font-size="11" fill="#fff">0.69</text>
+<rect x="640.0" y="120.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="149.0" text-anchor="middle" font-size="11" fill="#fff">0.79</text>
+<text x="150.0" y="199.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">ResNet</text>
+<rect x="160.0" y="170.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="199.0" text-anchor="middle" font-size="11" fill="#fff">0.79</text>
+<rect x="280.0" y="170.0" width="116.0" height="46.0" fill="#bd0026" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="199.0" text-anchor="middle" font-size="11" fill="#fff">1.00</text>
+<rect x="400.0" y="170.0" width="116.0" height="46.0" fill="#f03b20" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="199.0" text-anchor="middle" font-size="11" fill="#fff">0.91</text>
+<rect x="520.0" y="170.0" width="116.0" height="46.0" fill="#bd0026" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="199.0" text-anchor="middle" font-size="11" fill="#fff">1.00</text>
+<rect x="640.0" y="170.0" width="116.0" height="46.0" fill="#bd0026" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="199.0" text-anchor="middle" font-size="11" fill="#fff">1.00</text>
+<text x="150.0" y="249.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">MobileNet</text>
+<rect x="160.0" y="220.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="249.0" text-anchor="middle" font-size="11" fill="#222">0.12</text>
+<rect x="280.0" y="220.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="249.0" text-anchor="middle" font-size="11" fill="#222">0.18</text>
+<rect x="400.0" y="220.0" width="116.0" height="46.0" fill="#bd0026" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="249.0" text-anchor="middle" font-size="11" fill="#fff">1.00</text>
+<rect x="520.0" y="220.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="249.0" text-anchor="middle" font-size="11" fill="#fff">0.63</text>
+<rect x="640.0" y="220.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="249.0" text-anchor="middle" font-size="11" fill="#fff">0.80</text>
+<text x="150.0" y="299.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">Transformer</text>
+<rect x="160.0" y="270.0" width="116.0" height="46.0" fill="#fed976" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="299.0" text-anchor="middle" font-size="11" fill="#222">0.25</text>
+<rect x="280.0" y="270.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="299.0" text-anchor="middle" font-size="11" fill="#222">0.02</text>
+<rect x="400.0" y="270.0" width="116.0" height="46.0" fill="#fed976" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="299.0" text-anchor="middle" font-size="11" fill="#222">0.38</text>
+<rect x="520.0" y="270.0" width="116.0" height="46.0" fill="#fd8d3c" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="299.0" text-anchor="middle" font-size="11" fill="#fff">0.65</text>
+<rect x="640.0" y="270.0" width="116.0" height="46.0" fill="#f03b20" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="299.0" text-anchor="middle" font-size="11" fill="#fff">0.94</text>
+<text x="150.0" y="349.0" text-anchor="end" font-size="11" font-family="Malgun Gothic, sans-serif">GAN</text>
+<rect x="160.0" y="320.0" width="116.0" height="46.0" fill="#bd0026" stroke="#fff" stroke-width="1"/>
+<text x="218.0" y="349.0" text-anchor="middle" font-size="11" fill="#fff">1.00</text>
+<rect x="280.0" y="320.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="338.0" y="349.0" text-anchor="middle" font-size="11" fill="#222">0.00</text>
+<rect x="400.0" y="320.0" width="116.0" height="46.0" fill="#fed976" stroke="#fff" stroke-width="1"/>
+<text x="458.0" y="349.0" text-anchor="middle" font-size="11" fill="#222">0.27</text>
+<rect x="520.0" y="320.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="578.0" y="349.0" text-anchor="middle" font-size="11" fill="#222">0.12</text>
+<rect x="640.0" y="320.0" width="116.0" height="46.0" fill="#ffffcc" stroke="#fff" stroke-width="1"/>
+<text x="698.0" y="349.0" text-anchor="middle" font-size="11" fill="#222">0.14</text>
+<text x="460.0" y="472" text-anchor="middle" font-size="10" fill="#555" font-family="Malgun Gothic, sans-serif">[실험 환경]</text>
+<text x="460.0" y="486.0" text-anchor="middle" font-size="9" fill="#333" font-family="Malgun Gothic, sans-serif">GPU: GPU(CUDA) — 벤치마크 JSON 기준 (모델명은 torch 필요) · VRAM 8.0GB · SM 0</text>
+<text x="460.0" y="499.0" text-anchor="middle" font-size="9" fill="#333" font-family="Malgun Gothic, sans-serif">CPU 16코어 · 4.2GHz · RAM 31.1GB · Windows 11</text>
+</svg>

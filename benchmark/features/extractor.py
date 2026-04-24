@@ -1,19 +1,22 @@
-"""111차원 피처 추출 — repo 루트 `features/extractor.py`(dal-merge)에 위임.
+"""111차원 피처 추출 — `benchmark.dal.extractor`(구 루트 features/)에 위임.
 
-`run_benchmark.py`는 ijunsoo 스타일 인자
+`scripts/run_benchmark.py`는 ijunsoo 스타일 인자
 `(model, model_type, input_shape, device_str, config, batch_size)`를 사용한다.
-collect 스크립트는 루트 `features.extractor.extract_features` 직접 호출.
 """
 from __future__ import annotations
 
-import os
-import sys
+from benchmark.support.hardware_info import get_hardware_info
 
-_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if _ROOT not in sys.path:
-    sys.path.insert(0, _ROOT)
-
-from features.extractor import extract_features as extract_features_dal  # noqa: E402
+# ONNX 추출기 호환: 모델 타입별 기본 입력 형상
+DATASET_INFO = {
+    "simple_ann": {"input_channels": 1, "input_height": 28, "input_width": 28, "num_classes": 10},
+    "simple_cnn": {"input_channels": 1, "input_height": 28, "input_width": 28, "num_classes": 10},
+    "resnet_mnist": {"input_channels": 1, "input_height": 28, "input_width": 28, "num_classes": 10},
+    "mobilenet_mnist": {"input_channels": 1, "input_height": 28, "input_width": 28, "num_classes": 10},
+    "transformer": {"input_channels": 3, "input_height": 32, "input_width": 32, "num_classes": 10},
+    "gan": {"input_channels": 3, "input_height": 32, "input_width": 32, "num_classes": 10},
+}
+DEVICE_TYPE_MAP = {"cpu": 0, "cuda": 1, "mps": 2}
 
 # ijunsoo 벤치마크 6종 → model_family_encoded (train_predictor와 동일)
 MODEL_FAMILY_MAP = {
@@ -117,6 +120,13 @@ def _build_input_config(model_type: str, input_shape: tuple, batch_size: int) ->
     }
 
 
+def extract_features_dal(*args, **kwargs):
+    """dal 추출기 — import 시 torch를 로드하지 않도록 지연 import (ONNX 전용 경로 등)."""
+    from benchmark.dal.extractor import extract_features as _dal_extract
+
+    return _dal_extract(*args, **kwargs)
+
+
 def extract_features(
     model,
     model_type: str,
@@ -159,4 +169,7 @@ __all__ = [
     "extract_features_collect",
     "extract_features_dal",
     "MODEL_FAMILY_MAP",
+    "get_hardware_info",
+    "DATASET_INFO",
+    "DEVICE_TYPE_MAP",
 ]

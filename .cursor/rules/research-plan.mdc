@@ -9,12 +9,12 @@ alwaysApply: true
 
 이 프로젝트에서 코드를 작성하기 전에 **반드시** 아래 파일을 먼저 읽어라:
 
-- `/Users/honggeunkim/Desktop/research/dnn/reports/final_report.md`
+- `past/reports/final_report.md` (서술형 연구 본문; 통합 문서는 `docs/PROJECT.md`, 장문 원본은 `past/reports/README_original.md`)
 
 읽고 다음을 확인한 후 작업을 시작하라:
 1. 현재 완료 단계 확인 (Stage 1~5 모두 완료)
 2. 교수님 유의사항 (3번 섹션) 준수
-3. Feature 전체 목록 (11번 섹션) 확인 — 총 33개, 임의로 추가/삭제 금지
+3. Feature 전체 목록 (`docs/FEATURES.md` 또는 `docs/PROJECT.md` §4 링크, `scripts/train_predictor.FEATURE_COLUMNS`) 확인 — **111개**, 임의로 추가/삭제 금지
 
 ## 교수님 유의사항 (반드시 준수)
 
@@ -28,22 +28,23 @@ alwaysApply: true
 ## 현재 프로젝트 상태
 
 - **완료**: Stage 1 (ANN 52개) + Stage 2 (CNN 22개) + Stage 3 v3 (예측 모델, R²_log ≈ 0.93) + Stage 4 (Transformer 24개, GAN 16개) + Stage 5 (ONNX 예측 시스템)
-- **Feature 수**: 33개 (`FEATURE_COLUMNS` in `train_predictor.py` 기준)
-- **학습된 모델 경로**: `models/trained/*.pkl`
+- **Feature 수**: **111개** (`FEATURE_COLUMNS` in `scripts/train_predictor.py`; 단일 소스 `benchmark/dal/extractor.py`)
+- **학습된 모델 경로**: `results/trained_models/*.pkl`
 
 ## 실행 순서 체크리스트
 
 ```
-1. python experiments/train_predictor.py   → models/trained/*.pkl 생성
-2. python experiments/export_to_onnx.py   → data/stage5/onnx_samples/*.onnx 생성
-3. python experiments/predict_from_onnx.py → 데모 예측 실행
+1. python scripts/train_predictor.py       → results/trained_models/*.pkl
+2. python scripts/export_onnx.py           → results/onnx_samples/*.onnx
+3. python scripts/predict_from_onnx.py / python scripts/test.py model.onnx
 ```
+(구 Stage 스크립트는 `past/experiments/` 참고)
 
 ## Feature 수 불일치 주의
 
-- `train_predictor.py`의 `FEATURE_COLUMNS`를 변경하면 **반드시** `utils/onnx_feature_extractor.py`도 함께 수정
+- `scripts/train_predictor.py`의 `FEATURE_COLUMNS`를 변경하면 **반드시** ONNX 경로(`benchmark/features/onnx_extractor.py`, `benchmark/support/onnx_feature_extractor.py`)와 동기화
 - 불일치 시 `ValueError: feature names mismatch` 에러 발생
-- `feature_columns.pkl`은 `train_predictor.py` 실행 시 자동 재생성됨
+- `feature_columns.pkl`은 `scripts/train_predictor.py` 실행 시 자동 재생성됨
 
 ## 응답 언어
 
@@ -72,5 +73,5 @@ alwaysApply: true
 ### 새로운 문제 발생 시
 
 1. 위 표에서 유사 문제 먼저 검색
-2. 해결 후 위 표에 새 행으로 추가 (이 파일과 `reports/final_report.md` 15번 섹션도 함께 업데이트)
+2. 해결 후 위 표에 새 행으로 추가 (이 파일과 `past/reports/final_report.md` 15번 섹션도 함께 업데이트)
 3. 문제 원인, 해결법, 재현 가능한 명령어를 구체적으로 기록

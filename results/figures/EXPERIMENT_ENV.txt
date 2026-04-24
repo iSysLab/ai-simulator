@@ -1,0 +1,10 @@
+=== 실험 환경 (자동 요약) ===
+GPU 이름: GPU(CUDA) — 벤치마크 JSON 기준 (모델명은 torch 필요)
+GPU VRAM: 8.0 GB
+GPU SM(멀티프로세서) 수: 0
+CPU: 16 논리 코어, 최대 약 4.2 GHz
+시스템 RAM: 31.1 GB
+OS: Windows 11
+
+※ GPU 모델 문자열은 torch.cuda.get_device_name(0) 으로 읽습니다.
+※ CPU/RAM 일부는 benchmark_results.json 의 GPU 행 스냅샷과 병합됩니다.
