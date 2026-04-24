@@ -115,7 +115,7 @@ ai-simulator/
 ├── past/                # 레거시 실험·구 CSV·구 보고서
 ├── requirements.txt
 ├── CLAUDE.md            # AI 어시스턴트용 요약
-└── REPORT.md            # 본 문서 (통합 보고서)
+└── README.md            # 본 문서 (통합 보고서·논문형)
 ```
 
 | 경로 | 역할 |
@@ -669,7 +669,7 @@ CPU <n>코어 · <f>GHz · RAM <n>GB · OS <...>
 |---|---|
 | **ijunsoo** | `benchmark/` 패키지(160 config, 레지스트리, `DeviceManager`/`ExperimentRunner`, `ResultsManager`), `scripts/`, `results/` |
 | **dal-merge** | `benchmark/dal/`, `benchmark/support/` — 111차원 피처·하드웨어 33차원; 레거시 ONNX는 `benchmark/support/onnx_feature_extractor.py` |
-| **hong-0311** | Stage별 서술·데이터 → `past/`, 장문 보고 → `past/reports/final_report.md` |
+| **hong-0311** | Stage별 서술·데이터 → `past/` (종전 장문 보고는 본 README로 흡수) |
 
 **피처 차원 일관성**: 최종 **111차원** — `scripts/train_predictor.py`의 `FEATURE_COLUMNS`와 `benchmark/dal/extractor.py` 출력 일치. `benchmark/features/extractor.py`는 ijunsoo의 `model_type` → dal 매핑 후 `benchmark.dal.extractor`를 호출한다.
 
@@ -779,4 +779,4 @@ python scripts/test.py path/to/model.onnx --device cpu
 
 ---
 
-*본 보고서는 저장소의 이전 `README.md`, `docs/PROJECT.md`, `docs/REPORT.md`, `docs/RESEARCH_REPORT.md`, `docs/FEATURES.md`, `docs/DNN_YAML_SCHEMA.md`, `past/README.md`, `past/reports/*.md`를 하나의 문서로 통합하고 중복을 제거한 것이다. 수치 표는 `scripts/generate_research_report.py`, 그림은 `scripts/plot_report_figures.py` / `scripts/visualize_results.py`로 주기적으로 갱신한다.*
+*본 문서(`README.md`)는 저장소의 이전 루트 `README.md`, `docs/PROJECT.md`, `docs/REPORT.md`, `docs/RESEARCH_REPORT.md`, `docs/FEATURES.md`, `docs/DNN_YAML_SCHEMA.md`, `past/README.md`, `past/reports/*.md`를 하나로 통합하고 중복을 제거한 것이다. 수치 표는 `scripts/generate_research_report.py`, 그림은 `scripts/plot_report_figures.py` / `scripts/visualize_results.py`로 주기적으로 갱신한다.*
