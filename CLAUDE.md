@@ -10,7 +10,7 @@ PyTorch-based DNN benchmarking and execution time/memory prediction framework. B
 
 | File | Purpose |
 |------|---------|
-| `REPORT.md` (root) | **Single unified report** — overview, repo layout, quick start, 111-dim feature schema, methodology, results, ONNX path, YAML schema draft, Stage 1–5 history, branch merge, troubleshooting |
+| `README.md` (root) | **Single unified report** — overview, repo layout, quick start, 111-dim feature schema, methodology, results, ONNX path, YAML schema draft, Stage 1–5 history, branch merge, troubleshooting |
 | `CLAUDE.md` (this file) | Short English cheat-sheet for AI assistants |
 
 ## Setup
@@ -114,7 +114,7 @@ Parallel ONNX path: `scripts/export_onnx.py` → `.onnx` → `scripts/predict_fr
 
 ## Legacy archive
 
-- **`past/`**: Stage별 `experiments/`, `collect/`, `data/stage*`, `reports/`(figures only), 루트 구 `models/` 등. Stage 1–5 narrative is now summarized in `REPORT.md` §10. 메인 코드는 여기를 import하지 않음.
+- **`past/`**: Stage별 `experiments/`, `collect/`, `data/stage*`, `reports/`(figures only), 루트 구 `models/` 등. Stage 1–5 narrative is now summarized in `README.md` §10. 메인 코드는 여기를 import하지 않음.
 - To run a legacy script from `past/`, add the folder to `PYTHONPATH` (from the repo root):
   - PowerShell: `$env:PYTHONPATH = "$PWD\past"; python past/collect/ann_collector.py`
   - bash: `export PYTHONPATH="$(pwd)/past" && python past/collect/ann_collector.py`
