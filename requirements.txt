@@ -1,0 +1,15 @@
+# DNN 실행 시간 예측 — final 브랜치 통합 의존성
+# Python 3.10+ 권장
+
+torch>=2.0
+torchvision
+numpy
+pandas
+scikit-learn
+xgboost
+matplotlib
+joblib
+onnx
+onnxscript
+onnxruntime
+psutil

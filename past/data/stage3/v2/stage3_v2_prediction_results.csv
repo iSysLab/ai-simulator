@@ -1,0 +1,5 @@
+﻿model_name,target,RMSE,MAE,R2,R2_log,best_params,cv_r2_log
+Random Forest (K-Fold CV),추론 시간(ms),96.856,18.4329,0.2087,0.8855,"{'max_depth': 5, 'min_samples_leaf': 1, 'min_samples_split': 2, 'n_estimators': 50}",0.8714
+XGBoost (K-Fold CV),추론 시간(ms),55.1696,10.6444,0.7432,0.9466,"{'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200, 'subsample': 0.8}",0.9426
+Random Forest (K-Fold CV),학습 시간(sec),735.8418,105.7586,0.0127,0.7872,"{'max_depth': None, 'min_samples_leaf': 2, 'min_samples_split': 2, 'n_estimators': 50}",0.794
+XGBoost (K-Fold CV),학습 시간(sec),734.1589,101.9909,0.0173,0.7786,"{'learning_rate': 0.05, 'max_depth': 4, 'n_estimators': 50, 'subsample': 0.8}",0.8335
