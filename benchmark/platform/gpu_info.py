@@ -59,13 +59,28 @@ def detect_gpu_info(device_str='cpu'):
     return info
 
 
+def _cuda_cores_per_sm(cc):
+    """NVIDIA Compute Capability → SM당 CUDA(shader) 코어 수."""
+    if cc >= 8.9:      # Ada Lovelace (RTX 40xx)
+        return 128
+    if cc >= 8.0:      # Ampere (RTX 30xx / A100)
+        return 128
+    if cc >= 7.5:      # Turing (RTX 20xx)
+        return 64
+    if cc >= 7.0:      # Volta (V100)
+        return 64
+    if cc >= 6.0:      # Pascal (GTX 10xx)
+        return 128 if cc == 6.1 else 64
+    return 128         # Maxwell 등 근사
+
+
 def _detect_cuda_gpu(info):
     """NVIDIA CUDA GPU 감지 — torch.cuda API + nvidia-smi fallback"""
     props = torch.cuda.get_device_properties(0)
+    sm_count = props.multi_processor_count  # SM(멀티프로세서) 수
 
     info['gpu_count'] = torch.cuda.device_count()
     info['gpu_memory_gb'] = round(props.total_memory / (1024 ** 3), 1)
-    info['gpu_core_count'] = props.multi_processor_count
     info['is_discrete_gpu'] = 1
     info['is_integrated_gpu'] = 0
 
@@ -73,15 +88,19 @@ def _detect_cuda_gpu(info):
     cc = float(f"{props.major}.{props.minor}")
     info['gpu_compute_capability'] = cc
 
-    # fp16/bf16 지원 + 텐서코어 추정
+    # 실제 CUDA(shader) 코어 수 = SM 수 × SM당 코어 수
+    # (예: RTX 4060 Ti = 34 SM × 128 = 4352 CUDA 코어)
+    # Apple GPU 코어 수와 의미를 맞추기 위해 SM 수가 아닌 실제 코어 수를 기록.
+    info['gpu_core_count'] = sm_count * _cuda_cores_per_sm(cc)
+
+    # fp16/bf16 지원 + 텐서코어(=SM 기준)
     cc_key = cc
     if cc_key not in _NVIDIA_CC_INFO:
-        # 가장 가까운 CC 찾기
         cc_key = max((k for k in _NVIDIA_CC_INFO if k <= cc), default=0)
 
     if cc_key > 0:
         tc_per_sm, fp16, bf16, _ = _NVIDIA_CC_INFO[cc_key]
-        info['gpu_tensor_core_count'] = props.multi_processor_count * tc_per_sm
+        info['gpu_tensor_core_count'] = sm_count * tc_per_sm
         info['fp16_support'] = fp16
         info['bf16_support'] = bf16
     else:
@@ -119,18 +138,11 @@ def _detect_cuda_gpu(info):
         except ValueError:
             pass
 
-    # TFLOPS 추정: cores × clock × 2 (FMA) / 1e12
+    # TFLOPS 추정: CUDA 코어 × clock × 2 (FMA) / 1e3
+    # (gpu_core_count가 이미 실제 CUDA 코어 수이므로 그대로 사용)
     if info['gpu_clock_ghz'] > 0 and info['gpu_core_count'] > 0:
-        # CUDA 코어 = SM × 코어/SM (근사: RTX 40xx = 128/SM)
-        cuda_cores_per_sm = 128  # Ada Lovelace
-        if cc < 8.0:
-            cuda_cores_per_sm = 64  # Turing/Volta
-        elif cc < 8.9:
-            cuda_cores_per_sm = 128  # Ampere
-
-        total_cuda_cores = info['gpu_core_count'] * cuda_cores_per_sm
         info['tflops_fp32'] = round(
-            total_cuda_cores * info['gpu_clock_ghz'] * 2 / 1000, 2)
+            info['gpu_core_count'] * info['gpu_clock_ghz'] * 2 / 1000, 2)
         if info['fp16_support']:
             info['tflops_fp16'] = round(info['tflops_fp32'] * 2, 2)
 
