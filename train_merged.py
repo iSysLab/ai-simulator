@@ -57,6 +57,9 @@ def enrich(r):
         "simple_ann": 0, "simple_cnn": 1, "resnet_mnist": 2,
         "mobilenet_mnist": 3, "transformer": 4, "gan": 5,
     }.get(e.get("model_type", ""), -1))
+    # 디바이스 인코딩을 device 라벨에서 채움(모든 행 보장) — CPU/CUDA/MPS 구분용
+    e["device_type_encoded"] = {"CPU": 0, "GPU(CUDA)": 1, "GPU(MPS)": 2}.get(
+        e.get("device", "CPU"), 0)
     return e
 
 

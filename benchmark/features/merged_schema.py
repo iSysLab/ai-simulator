@@ -10,12 +10,13 @@
 
   결과 = 111 + 20 = 131.
 
-제외한 중복 (v3 이름 → 유지한 v2 이름):
-  num_filters→cnn_num_filters, kernel_size→cnn_kernel_size,
-  max_channel_width→cnn_max_channels, device_type_encoded→device_encoded,
-  num_attention_layers→vit_num_encoder_layers, sequence_length→seq_length,
-  gpu_cores→gpu_core_count, cpu_cores→cpu_cores_physical,
-  use_batchnorm→has_batch_norm
+중복 정리 원칙: **데이터에 실제 값이 있는 이름을 유지**한다. 벤치 데이터는
+v3.0 파이프라인으로 수집되어 v3.0 키가 채워져 있으므로, 아래 5개는 v3.0 이름을 채택:
+  num_filters, max_channel_width, device_type_encoded, gpu_cores, cpu_cores
+  (버린 빈 v2.0 이름: cnn_num_filters, cnn_max_channels, device_encoded,
+   gpu_core_count, cpu_cores_physical)
+둘 다 비어 유지한 v2.0 이름(kernel_size/num_attention_layers/sequence_length →
+cnn_kernel_size/vit_num_encoder_layers/seq_length)과 v2.0이 더 많은 has_batch_norm은 그대로.
 
 주의:
   - 문자열 피처(STRING_FEATURES)는 수치 학습에서 제외하거나 인코딩 필요.
@@ -38,7 +39,7 @@ MERGED_FEATURE_COLUMNS = [
     "max_channels", "min_channels",
     # --- [B] 모델 전용 (v2.0) ---
     "ann_max_hidden", "ann_min_hidden", "ann_avg_hidden",
-    "cnn_num_filters", "cnn_max_channels", "cnn_has_residual",
+    "num_filters", "max_channel_width", "cnn_has_residual",
     "cnn_has_depthwise", "embed_dim", "num_heads", "patch_size", "ffn_dim",
     "vit_has_cls_token", "latent_dim", "generator_params",
     "discriminator_params", "ann_num_layers", "cnn_stem_channels",
@@ -48,14 +49,14 @@ MERGED_FEATURE_COLUMNS = [
     "batch_size", "dataset_encoded", "input_pixels", "seq_length",
     # --- [D] 하드웨어 (v2.0, 33종) ---
     "device_type", "os_type", "accelerator_brand", "accelerator_name",
-    "cpu_cores_physical", "cpu_cores_logical", "cpu_perf_cores",
+    "cpu_cores", "cpu_cores_logical", "cpu_perf_cores",
     "cpu_efficiency_cores", "cpu_freq_base_ghz", "cpu_freq_boost_ghz",
     "cpu_cache_l2_mb", "cpu_cache_l3_mb", "ram_total_gb", "memory_type",
     "memory_bandwidth_gbs", "is_unified_memory", "shared_memory_gb",
-    "dedicated_vram_gb", "gpu_count", "gpu_memory_gb", "gpu_core_count",
+    "dedicated_vram_gb", "gpu_count", "gpu_memory_gb", "gpu_cores",
     "peak_bandwidth_gbs", "tflops_fp32", "tflops_fp16", "fp16_support",
     "bf16_support", "interconnect_type", "host_to_device_bandwidth_gbs",
-    "is_discrete_gpu", "is_integrated_gpu", "device_encoded",
+    "is_discrete_gpu", "is_integrated_gpu", "device_type_encoded",
     "cpu_freq_ghz", "memory_channels",
     # --- [E] Op-level 분해 (v2.0) — 메모리바운드 분석 핵심 ---
     "conv_params", "linear_params", "bn_params", "other_params",
