@@ -281,4 +281,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/windows,python,data,images
+# End of https://www.toptal.com/developers/gitignore/api/windows,python,data,images.DS_Store

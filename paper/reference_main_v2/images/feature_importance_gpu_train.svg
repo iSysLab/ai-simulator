@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="380.0" y="32" text-anchor="middle" font-size="15" font-weight="600" font-family="Malgun Gothic, sans-serif">RF 피처 중요도 (GPU · 학습 시간)</text>
+<text x="380.0" y="52" text-anchor="middle" font-size="11" fill="#333" font-family="Malgun Gothic, sans-serif">1위: total_op_memory_write — 0.6424  ·  아래: 2~10위 (막대만 확대)</text>
+<text x="232.0" y="90.4" text-anchor="end" font-size="10" font-family="Consolas, monospace">conv_params</text>
+<rect x="240.0" y="72.0" width="34.19" height="28.9" fill="#440154" fill-opacity="0.9"/>
+<text x="280.2" y="90.4" font-size="9" font-family="Malgun Gothic, sans-serif">0.0085</text>
+<text x="232.0" y="124.3" text-anchor="end" font-size="10" font-family="Consolas, monospace">model_family_encoded</text>
+<rect x="240.0" y="105.9" width="68.93" height="28.9" fill="#440154" fill-opacity="0.9"/>
+<text x="314.9" y="124.3" font-size="9" font-family="Malgun Gothic, sans-serif">0.0172</text>
+<text x="232.0" y="158.2" text-anchor="end" font-size="10" font-family="Consolas, monospace">total_layers</text>
+<rect x="240.0" y="139.8" width="76.66" height="28.9" fill="#31688e" fill-opacity="0.9"/>
+<text x="322.7" y="158.2" font-size="9" font-family="Malgun Gothic, sans-serif">0.0192</text>
+<text x="232.0" y="192.1" text-anchor="end" font-size="10" font-family="Consolas, monospace">total_op_flops</text>
+<rect x="240.0" y="173.7" width="77.59" height="28.9" fill="#31688e" fill-opacity="0.9"/>
+<text x="323.6" y="192.1" font-size="9" font-family="Malgun Gothic, sans-serif">0.0194</text>
+<text x="232.0" y="226.0" text-anchor="end" font-size="10" font-family="Consolas, monospace">num_ops</text>
+<rect x="240.0" y="207.6" width="89.90" height="28.9" fill="#35b779" fill-opacity="0.9"/>
+<text x="335.9" y="226.0" font-size="9" font-family="Malgun Gothic, sans-serif">0.0225</text>
+<text x="232.0" y="259.9" text-anchor="end" font-size="10" font-family="Consolas, monospace">num_mult_adds</text>
+<rect x="240.0" y="241.4" width="101.53" height="28.9" fill="#35b779" fill-opacity="0.9"/>
+<text x="347.5" y="259.9" font-size="9" font-family="Malgun Gothic, sans-serif">0.0254</text>
+<text x="232.0" y="293.8" text-anchor="end" font-size="10" font-family="Consolas, monospace">flops</text>
+<rect x="240.0" y="275.3" width="114.46" height="28.9" fill="#fde725" fill-opacity="0.9"/>
+<text x="360.5" y="293.8" font-size="9" font-family="Malgun Gothic, sans-serif">0.0286</text>
+<text x="232.0" y="327.7" text-anchor="end" font-size="10" font-family="Consolas, monospace">flops_ratio_Linear</text>
+<rect x="240.0" y="309.2" width="267.23" height="28.9" fill="#fde725" fill-opacity="0.9"/>
+<text x="513.2" y="327.7" font-size="9" font-family="Malgun Gothic, sans-serif">0.0668</text>
+<text x="232.0" y="361.6" text-anchor="end" font-size="10" font-family="Consolas, monospace">total_op_memory_read</text>
+<rect x="240.0" y="343.1" width="420.00" height="28.9" fill="#fde725" fill-opacity="0.9"/>
+<text x="666.0" y="361.6" font-size="9" font-family="Malgun Gothic, sans-serif">0.1050</text>
+<text x="450.0" y="404.0" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">중요도 (상대 비교)</text>
+</svg>

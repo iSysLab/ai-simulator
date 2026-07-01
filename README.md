@@ -1,7 +1,7 @@
 # DNN 실행 시간/공간 예측 시뮬레이션 프레임워크
 
 PyTorch 기반 DNN 모델의 **실행 시간(학습/추론)** 및 **메모리 요구량**을 예측하는 벤치마크 프레임워크입니다.
-6종의 모델 아키텍처(ANN, CNN, ResNet, MobileNet, Transformer, GAN)를 벤치마킹하고, **96개 모델 구조 + 하드웨어 피처**로부터 실행 시간을 예측하는 ML 회귀 모델을 학습합니다.
+6종의 모델 아키텍처(ANN, CNN, ResNet, MobileNet, Transformer, GAN)를 벤치마킹하고, **130개 모델 구조 + 하드웨어 + op-level 피처**(통합 Feature Schema v4.0)로부터 실행 시간을 예측하는 ML 회귀 모델을 학습합니다. CPU · CUDA · Apple MPS 세 이종 백엔드를 하나의 메타모델로 예측합니다.
 
 **v2.0 — Zero-Config Cross-Platform**: `python run_benchmark.py` 한 줄로 macOS/Windows/Linux 어디서든 자동으로 하드웨어를 감지하고 벤치마크를 실행합니다.
 
@@ -63,16 +63,35 @@ python run_benchmark.py --full-pipeline
 
 > **주요 발견**: MobileNet의 depthwise separable convolution은 Mac ARM CPU에서 14배 느림 (PyTorch ARM 빌드에 MKLDNN/oneDNN 미포함). MPS(GPU)에서는 35배 가속되어 정상 성능 발휘.
 
-### 예측 모델 성능 (XGBoost, 5-Fold CV)
+### 예측 모델 성능 — 통합 Feature Schema v4.0 (130차원), 5-Fold CV
 
-| 예측 타겟 | 디바이스 | R² | R²(log) | RMSE | MAE |
-|---|---|---|---|---|---|
-| 학습 시간 | CPU | 0.9465 | **0.9865** | 25.354s | 10.103s |
-| 학습 시간 | CUDA | 0.9391 | **0.9724** | 1.561s | 0.663s |
-| 추론 시간 | CPU | 0.9345 | **0.9772** | 1.686s | 0.642s |
-| 추론 시간 | CUDA | 0.9520 | **0.9659** | 0.084s | 0.038s |
-| 메모리 | CPU | 0.9445 | **0.9974** | 2.2MB | 0.4MB |
-| 메모리 | CUDA | 0.9430 | **0.9979** | 2.3MB | 0.5MB |
+**Feature Schema v4.0**은 v3.0(96) + v2.0(111)을 병합해 **op-level 메모리 트래픽 피처**(`total_op_memory_write/read`, `flops_ratio_*`)를 포함한 **130차원**이다(§ 통합 Feature Schema 참고). 이 피처로 재학습한 **이종 4개 백엔드**의 예측 성능:
+
+| 예측 타겟 | 플랫폼·백엔드 | 최적 모델 | R² | R²(log) |
+|---|---|---|---|---|
+| 학습 시간 | Desktop CPU (Ryzen) | LinearRegression | 0.9146 | **0.9909** |
+| 학습 시간 | Desktop CUDA (RTX 4060 Ti) | GradientBoosting | 0.9534 | **0.9788** |
+| 학습 시간 | Mac CPU (M4) | GradientBoosting | 0.8460 | **0.9905** |
+| 학습 시간 | **Mac MPS (M4)** | GradientBoosting | 0.9647 | **0.9921** |
+| 추론 시간 | Desktop CPU | GradientBoosting | 0.9405 | **0.9873** |
+| 추론 시간 | Desktop CUDA | GradientBoosting | 0.9608 | **0.9736** |
+| 추론 시간 | Mac CPU (M4) | GradientBoosting | 0.8736 | **0.9800** |
+| 추론 시간 | **Mac MPS (M4)** | GradientBoosting | 0.9622 | **0.9795** |
+
+> **메모리 타깃**: 본 데이터의 `memory_bytes`는 `total_params × 4`(float32 파라미터 메모리)로 **구조에서 결정적**이라 예측이 자명하다(R²≈1.0). 런타임 피크 메모리 측정이 아니므로 성능 지표에서 제외하고 향후 실측 피크 메모리로 대체 예정.
+
+#### 피처 중요도 — "실행 시간은 FLOPs가 아니라 메모리 트래픽이 지배" (3개 백엔드 공통)
+
+학습 시간 예측의 1위 피처는 **모든 백엔드에서 메모리 쓰기 트래픽**이었고, 순수 연산량(`flops`)의 기여는 미미했다.
+
+| 순위 | Desktop CPU | CUDA | Mac MPS |
+|---|---|---|---|
+| 1 | total_op_memory_write **0.792** | total_op_memory_write **0.670** | total_op_memory_write **0.802** |
+| 2 | total_op_memory_read 0.077 | total_op_memory_read 0.077 | total_op_memory_read 0.064 |
+| 3 | flops_ratio_Linear 0.052 | flops_ratio_Linear 0.055 | flops_ratio_Linear 0.049 |
+| `flops` 순위 | 8위 (0.003) | 6위 (0.020) | 6위 (0.009) |
+
+이는 현대 가속기의 실행 시간이 **메모리 바운드** 특성에 좌우된다는 roofline 통설을 CPU·CUDA·Apple MPS **세 이종 백엔드**에서 실증한 결과다.
 
 ## 시각화 결과
 
@@ -203,12 +222,19 @@ python predict_from_onnx.py --onnx model.onnx      # ONNX → 실행 시간 예�
 python predict_from_onnx.py --demo                  # 전체 샘플 예측
 ```
 
-## 통합 Feature Schema v3.0 — 96개 피처
+## 통합 Feature Schema v4.0 — 130개 피처 (v3.0 96 + v2.0 111 병합)
 
-Feature_Schema.docx(v1.0) 문서를 100% 구현하여 기존 44개에서 **96개**로 확장했습니다.
-`extractor.py`가 단일 소스(single source of truth)로 모든 피처를 직접 생성합니다.
+**v4.0 (130차원)**은 두 계보를 병합한 최신 스키마다. 정의는 `benchmark/features/merged_schema.py`의 `MERGED_FEATURE_COLUMNS`.
 
-### 피처 카테고리 요약
+- **v2.0(111) 전량 유지** — 특히 **op-level 메모리 트래픽 피처**(`total_op_memory_write/read`, `flops_ratio_Conv2d/Linear/...`, `total_op_flops`, `num_ops`)가 "실행 시간 = 메모리 바운드" 분석의 핵심.
+- **v3.0(96) 고유 피처 중 20개 추가** — 크로스플랫폼 하드웨어(`gpu_tensor_core_count`, `gpu_clock_ghz`, `is_unified_memory` 등), 레이어 카운트, GAN 층수.
+- **이름 중복 9개 제외** (num_filters=cnn_num_filters 등), **`memory_bytes`는 타깃이라 피처에서 제외**(누수 방지). → 111 + 20 − (0) = **130**.
+
+op-level 피처는 벤치 JSON에 저장돼 있지 않으므로 학습 전 `python enrich_oplevel.py`로 모델을 재구성해 채운다(`results/*_enriched.json`). 학습은 `python train_merged.py --input results/benchmark_results_enriched.json`.
+
+> 아래 표는 **v3.0(96)** 카테고리 요약이다. v4.0은 여기에 v2.0의 op-level 블록(19)과 하드웨어 확장을 더한 것이다.
+
+### 피처 카테고리 요약 (v3.0 96 기준)
 
 | 카테고리 | 수 | 대표 피처 | 설명 |
 |---|---|---|---|

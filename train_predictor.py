@@ -40,6 +40,8 @@ from benchmark.features.extractor import (
     CORE_FEATURE_COLUMNS, EXTENDED_FEATURE_COLUMNS, FEATURE_COLUMNS,
     MODEL_FAMILY_MAP, DEVICE_TYPE_MAP, DATASET_INFO,
 )
+# 통합 스키마 (v2.0 111 + v3.0 신규 20 = 131차원). op-level 메모리 피처 포함.
+from benchmark.features.merged_schema import MERGED_FEATURE_COLUMNS
 
 # 수치형 피처만 (문자열 피처는 ML 학습에서 제외)
 STRING_FEATURES = {
@@ -63,6 +65,8 @@ def get_numeric_features(feature_set='core'):
     """수치형 피처 목록 반환 (문자열 피처 제외)"""
     if feature_set == 'core':
         cols = CORE_FEATURE_COLUMNS
+    elif feature_set == 'merged':
+        cols = MERGED_FEATURE_COLUMNS
     else:
         cols = FEATURE_COLUMNS
     return [c for c in cols if c not in STRING_FEATURES]
@@ -350,8 +354,8 @@ def main():
                         default='results/trained_models',
                         help='모델 저장 디렉토리')
     parser.add_argument('--features', type=str, default='core',
-                        choices=['core', 'full'],
-                        help='피처 세트 선택 (core=기존 호환, full=전체)')
+                        choices=['core', 'full', 'merged'],
+                        help='피처 세트 선택 (core=기존 호환, full=96, merged=131 통합)')
     args = parser.parse_args()
 
     numeric_cols = get_numeric_features(args.features)
