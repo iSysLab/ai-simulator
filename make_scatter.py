@@ -1,91 +1,90 @@
-"""실측 vs 예측 산점도(log-log)를 순수 Python SVG로 생성 (matplotlib 불필요).
+"""그림 1: 통합 단일 메타모델의 실측 vs 예측 산점도 (2패널, 4백엔드).
 
-통합 단일 메타모델의 5-겹 CV 예측을 백엔드별 색으로 그려 그림 1로 사용.
+- 좌: 학습시간(XGBoost), 우: 추론시간(GradientBoosting) — 각 타깃의 최적 모델
+- 5-겹 CV 예측(cross_val_predict), 색은 4개 백엔드 (Desktop CPU/CUDA/Mac CPU/MPS)
+- 출력: paper/figures/fig1_scatter.png (300dpi, HWP용) + .svg (미리보기용)
 """
 import json
-import math
+import os
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.metrics import r2_score
 from sklearn.model_selection import KFold, cross_val_predict
 from xgboost import XGBRegressor
 
 import train_merged as tm
 
-BACKEND_COLOR = {
-    "GPU(CUDA)": "#d62728",
-    "GPU(MPS)": "#1f77b4",
-    "CPU": "#2ca02c",
-}
-BACKEND_LABEL = {"GPU(CUDA)": "Desktop CUDA", "GPU(MPS)": "Mac MPS", "CPU": "CPU"}
+plt.rcParams["font.family"] = "AppleGothic"
+plt.rcParams["axes.unicode_minus"] = False
 
-W, H, PAD = 460, 440, 60
+BACKENDS = ["Desktop CPU", "CUDA", "Mac CPU", "MPS"]
+COLOR = {"Desktop CPU": "#2ca02c", "CUDA": "#d62728",
+         "Mac CPU": "#ff7f0e", "MPS": "#1f77b4"}
+MARKER = {"Desktop CPU": "o", "CUDA": "s", "Mac CPU": "^", "MPS": "D"}
 
 
 def main():
-    data = []
-    for f in ["results/benchmark_results_enriched.json",
-              "results/benchmark_results_mac_enriched.json"]:
-        data += json.load(open(f))
+    desk = json.load(open("results/benchmark_results_enriched.json"))
+    mac = json.load(open("results/benchmark_results_mac_enriched.json"))
+    data = desk + mac
+    backends = []
+    for i, r in enumerate(data):
+        if r["device"] == "CPU":
+            backends.append("Desktop CPU" if i < len(desk) else "Mac CPU")
+        else:
+            backends.append({"GPU(CUDA)": "CUDA", "GPU(MPS)": "MPS"}[r["device"]])
+    backends = np.array(backends)
 
-    X, y = tm.build_xy(data, "avg_train")
-    ylog = np.log1p(y)
     kf = KFold(5, shuffle=True, random_state=42)
-    est = XGBRegressor(n_estimators=400, max_depth=6, random_state=42,
-                       n_jobs=1, verbosity=0)
-    pred = np.expm1(cross_val_predict(est, X, ylog, cv=kf, n_jobs=1))
-    devices = [r["device"] for r in data]
+    panels = [
+        ("avg_train", "학습시간",
+         XGBRegressor(n_estimators=400, max_depth=6, random_state=42,
+                      n_jobs=1, verbosity=0)),
+        ("avg_infer", "추론시간", GradientBoostingRegressor(random_state=42)),
+    ]
 
-    # log10 좌표 범위 (0.01s ~ 1000s)
-    lo, hi = math.log10(0.05), math.log10(1000)
+    # 2단 조판의 단 폭(약 8cm)에 맞도록 세로 스택, 지면 절약형 높이
+    fig, axes = plt.subplots(2, 1, figsize=(4.7, 5.0))
+    for ax, (target, tlabel, est) in zip(axes, panels):
+        X, y = tm.build_xy(data, target)
+        ylog = np.log1p(y)
+        pred_log = cross_val_predict(est, X, ylog, cv=kf, n_jobs=1)
+        pred = np.expm1(pred_log)
+        r2l = r2_score(ylog, pred_log)
 
-    def sx(v):
-        return PAD + (math.log10(max(v, 0.01)) - lo) / (hi - lo) * (W - 2 * PAD)
+        lo = min(y[y > 0].min(), pred[pred > 0].min()) * 0.5
+        hi = max(y.max(), pred.max()) * 2
+        ax.plot([lo, hi], [lo, hi], ls="--", c="#999", lw=1, zorder=1)
+        for b in BACKENDS:
+            m = backends == b
+            ax.scatter(y[m], pred[m], s=14, c=COLOR[b], marker=MARKER[b],
+                       alpha=0.55, linewidths=0, label=b, zorder=2)
+        ax.set_xscale("log"); ax.set_yscale("log")
+        ax.set_xlim(lo, hi); ax.set_ylim(lo, hi)
+        # AppleGothic에 U+2212 글리프가 없어 mathtext 지수 대신 일반 숫자 표기
+        plain = FuncFormatter(lambda v, _: f"{v:g}")
+        ax.xaxis.set_major_formatter(plain)
+        ax.yaxis.set_major_formatter(plain)
+        ax.set_xlabel(f"실측 {tlabel} (s)")
+        ax.set_ylabel(f"예측 {tlabel} (s)")
+        ax.set_title(f"{tlabel}  R²(log)={r2l:.3f}", fontsize=11)
+        ax.grid(True, which="major", ls=":", lw=0.5, alpha=0.6)
+        print(f"{tlabel}: R2(log)={r2l:.4f}  n={len(y)}")
 
-    def sy(v):
-        return H - PAD - (math.log10(max(v, 0.01)) - lo) / (hi - lo) * (H - 2 * PAD)
+    axes[0].legend(loc="upper left", fontsize=8, framealpha=0.9,
+                   handletextpad=0.3, borderpad=0.4)
+    fig.tight_layout()
 
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
-             f'font-family="sans-serif" font-size="12">',
-             f'<rect width="{W}" height="{H}" fill="white"/>']
-
-    # 축·격자
-    for e in range(-1, 4):
-        v = 10 ** e
-        x, yy = sx(v), sy(v)
-        parts.append(f'<line x1="{x:.1f}" y1="{PAD}" x2="{x:.1f}" y2="{H-PAD}" stroke="#eee"/>')
-        parts.append(f'<line x1="{PAD}" y1="{yy:.1f}" x2="{W-PAD}" y2="{yy:.1f}" stroke="#eee"/>')
-        parts.append(f'<text x="{x:.1f}" y="{H-PAD+16:.1f}" text-anchor="middle" fill="#555">{v:g}s</text>')
-        parts.append(f'<text x="{PAD-8:.1f}" y="{yy+4:.1f}" text-anchor="end" fill="#555">{v:g}</text>')
-
-    # y=x 기준선
-    parts.append(f'<line x1="{sx(10**lo):.1f}" y1="{sy(10**lo):.1f}" '
-                 f'x2="{sx(10**hi):.1f}" y2="{sy(10**hi):.1f}" '
-                 f'stroke="#999" stroke-dasharray="5,4"/>')
-
-    # 점
-    for d, yt, yp in zip(devices, y, pred):
-        c = BACKEND_COLOR.get(d, "#888")
-        parts.append(f'<circle cx="{sx(yt):.1f}" cy="{sy(yp):.1f}" r="2.6" '
-                     f'fill="{c}" fill-opacity="0.55"/>')
-
-    # 라벨·범례
-    parts.append(f'<text x="{W/2:.0f}" y="{H-18}" text-anchor="middle">실측 학습시간 (s, log)</text>')
-    parts.append(f'<text x="18" y="{H/2:.0f}" text-anchor="middle" '
-                 f'transform="rotate(-90 18 {H/2:.0f})">예측 학습시간 (s, log)</text>')
-    parts.append(f'<text x="{W/2:.0f}" y="24" text-anchor="middle" font-weight="bold">'
-                 f'통합 단일 메타모델: 실측 vs 예측 (R²log=0.985)</text>')
-    ly = PAD + 6
-    for d in ["GPU(CUDA)", "GPU(MPS)", "CPU"]:
-        parts.append(f'<circle cx="{W-PAD-88}" cy="{ly-4}" r="4" fill="{BACKEND_COLOR[d]}"/>')
-        parts.append(f'<text x="{W-PAD-78}" y="{ly}" fill="#333">{BACKEND_LABEL[d]}</text>')
-        ly += 18
-    parts.append("</svg>")
-
-    out = "paper/figures/fig1_scatter_train.svg"
-    import os
     os.makedirs("paper/figures", exist_ok=True)
-    open(out, "w").write("\n".join(parts))
-    print(f"저장: {out}  (점 {len(y)}개)")
+    for ext in ["png", "svg"]:
+        out = f"paper/figures/fig1_scatter.{ext}"
+        fig.savefig(out, dpi=300, bbox_inches="tight")
+        print(f"저장: {out}")
 
 
 if __name__ == "__main__":
