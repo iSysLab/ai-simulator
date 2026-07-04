@@ -23,7 +23,12 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 
 HW_PAT = re.compile(r"cpu_|gpu_|memory_bandwidth|unified|shared_memory"
                     r"|memory_channels|device_type")
-HW_COLS = [c for c in NUMERIC if HW_PAT.search(c)]
+# 기기에서 유래하는 값 전부 제거 (batch_size도 기기 설정이 결정하므로 포함)
+HW_EXTRA = ["ram_total_gb", "dedicated_vram_gb", "peak_bandwidth_gbs",
+            "tflops_fp32", "tflops_fp16", "host_to_device_bandwidth_gbs",
+            "batch_size"]
+HW_COLS = [c for c in NUMERIC if HW_PAT.search(c)] + \
+          [c for c in HW_EXTRA if c in NUMERIC]
 
 FEATURE_SETS = {
     "전체(130)": NUMERIC,
