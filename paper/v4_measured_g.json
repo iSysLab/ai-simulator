@@ -1,0 +1,52 @@
+{
+ "t5": {
+  "full_random": {
+   "avg_train": 0.988,
+   "avg_infer": 0.99
+  },
+  "full_group": {
+   "avg_train": 0.988,
+   "avg_infer": 0.989
+  },
+  "no_hw_group": {
+   "avg_train": 0.794,
+   "avg_infer": 0.681
+  },
+  "flops_group": {
+   "avg_train": 0.56,
+   "avg_infer": 0.463
+  },
+  "params_group": {
+   "avg_train": 0.185,
+   "avg_infer": 0.304
+  }
+ },
+ "lobo": {
+  "Desktop CPU": {
+   "avg_train": 0.765,
+   "avg_infer": 0.849
+  },
+  "CUDA": {
+   "avg_train": -3.19,
+   "avg_infer": -17.099
+  },
+  "Mac CPU": {
+   "avg_train": 0.811,
+   "avg_infer": 0.87
+  },
+  "MPS": {
+   "avg_train": 0.627,
+   "avg_infer": 0.573
+  }
+ },
+ "lodo": {
+  "desktop→mac": {
+   "avg_train": 0.776,
+   "avg_infer": 0.831
+  },
+  "mac→desktop": {
+   "avg_train": -0.227,
+   "avg_infer": -0.324
+  }
+ }
+}

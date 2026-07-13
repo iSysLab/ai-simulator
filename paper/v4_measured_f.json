@@ -1,0 +1,228 @@
+{
+ "t3_model_comparison": {
+  "avg_train": {
+   "LinearRegression": 0.855,
+   "RandomForest": 0.976,
+   "GradientBoosting": 0.978,
+   "XGBoost": 0.988
+  },
+  "avg_infer": {
+   "LinearRegression": 0.776,
+   "RandomForest": 0.974,
+   "GradientBoosting": 0.983,
+   "XGBoost": 0.99
+  }
+ },
+ "t4_backend_breakdown": {
+  "avg_train": {
+   "Desktop CPU": 0.984,
+   "CUDA": 0.959,
+   "Mac CPU": 0.993,
+   "MPS": 0.983
+  },
+  "avg_infer": {
+   "Desktop CPU": 0.989,
+   "CUDA": 0.947,
+   "Mac CPU": 0.992,
+   "MPS": 0.977
+  }
+ },
+ "mape": {
+  "avg_train": {
+   "mape_all": 18.4,
+   "w20_all": 66.3,
+   "mape_ge10ms": 18.4,
+   "w20_ge10ms": 66.3
+  },
+  "avg_infer": {
+   "mape_all": 62.2,
+   "w20_all": 52.4,
+   "mape_ge10ms": 23.7,
+   "w20_ge10ms": 63.0
+  }
+ },
+ "t5_protocols": {
+  "full_random": {
+   "avg_train": 0.978,
+   "avg_infer": 0.978
+  },
+  "full_group": {
+   "avg_train": 0.982,
+   "avg_infer": 0.985
+  },
+  "no_hw_group": {
+   "avg_train": 0.792,
+   "avg_infer": 0.678
+  },
+  "flops_group": {
+   "avg_train": 0.539,
+   "avg_infer": 0.441
+  },
+  "params_group": {
+   "avg_train": 0.071,
+   "avg_infer": 0.215
+  },
+  "analytic": {
+   "avg_train": 0.77,
+   "avg_infer": 0.82
+  }
+ },
+ "lobo": {
+  "Desktop CPU": {
+   "avg_train": 0.766,
+   "avg_infer": 0.85
+  },
+  "CUDA": {
+   "avg_train": -3.19,
+   "avg_infer": -17.052
+  },
+  "Mac CPU": {
+   "avg_train": 0.812,
+   "avg_infer": 0.87
+  },
+  "MPS": {
+   "avg_train": 0.652,
+   "avg_infer": 0.568
+  }
+ },
+ "lodo": {
+  "desktop→mac": {
+   "avg_train": 0.773,
+   "avg_infer": 0.83
+  },
+  "mac→desktop": {
+   "avg_train": -0.227,
+   "avg_infer": -0.324
+  }
+ },
+ "t6_importance": {
+  "Desktop CPU": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.839
+    ],
+    [
+     "total_op_memory_read",
+     0.04
+    ],
+    [
+     "max_op_flops",
+     0.026
+    ]
+   ],
+   "flops_rank": 8,
+   "flops_imp": 0.003
+  },
+  "CUDA": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.698
+    ],
+    [
+     "model_family_encoded",
+     0.09
+    ],
+    [
+     "total_op_memory_read",
+     0.047
+    ]
+   ],
+   "flops_rank": 5,
+   "flops_imp": 0.018
+  },
+  "Mac CPU": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.52
+    ],
+    [
+     "conv_params",
+     0.281
+    ],
+    [
+     "flops_ratio_Linear",
+     0.051
+    ]
+   ],
+   "flops_rank": 21,
+   "flops_imp": 0.002
+  },
+  "MPS": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.853
+    ],
+    [
+     "total_op_memory_read",
+     0.046
+    ],
+    [
+     "max_op_flops",
+     0.024
+    ]
+   ],
+   "flops_rank": 6,
+   "flops_imp": 0.006
+  }
+ },
+ "t7_ablation": {
+  "Desktop CPU": {
+   "full": 0.9853,
+   "ablate_a": 0.9867,
+   "ablate_b": 0.9864,
+   "perm_write": 0.941,
+   "perm_flops": 0.002
+  },
+  "CUDA": {
+   "full": 0.9703,
+   "ablate_a": 0.9566,
+   "ablate_b": 0.9568,
+   "perm_write": 0.667,
+   "perm_flops": 0.005
+  },
+  "Mac CPU": {
+   "full": 0.9825,
+   "ablate_a": 0.9797,
+   "ablate_b": 0.9796,
+   "perm_write": 0.392,
+   "perm_flops": 0.001
+  },
+  "MPS": {
+   "full": 0.9823,
+   "ablate_a": 0.9664,
+   "ablate_b": 0.9669,
+   "perm_write": 0.971,
+   "perm_flops": 0.002
+  }
+ },
+ "t8_lofo": {
+  "simple_ann": {
+   "avg_train": -17.3,
+   "avg_infer": -253.75
+  },
+  "simple_cnn": {
+   "avg_train": 0.89,
+   "avg_infer": 0.94
+  },
+  "resnet_mnist": {
+   "avg_train": 0.68,
+   "avg_infer": 0.94
+  },
+  "mobilenet_mnist": {
+   "avg_train": 0.66,
+   "avg_infer": 0.9
+  },
+  "transformer": {
+   "avg_train": 0.47,
+   "avg_infer": 0.5
+  },
+  "gan": {
+   "avg_train": -3.05,
+   "avg_infer": -2.72
+  }
+ }
+}

@@ -1,0 +1,172 @@
+{
+ "t4_nested": {
+  "avg_train": {
+   "LinearRegression": 0.855,
+   "GradientBoosting": 0.977,
+   "RandomForest": 0.981,
+   "XGBoost": 0.988
+  },
+  "avg_infer": {
+   "LinearRegression": 0.782,
+   "GradientBoosting": 0.979,
+   "RandomForest": 0.976,
+   "XGBoost": 0.989
+  }
+ },
+ "t5_backend": {
+  "avg_train": {
+   "Desktop CPU": 0.988,
+   "CUDA": 0.961,
+   "Mac CPU": 0.99,
+   "MPS": 0.983
+  },
+  "avg_infer": {
+   "Desktop CPU": 0.989,
+   "CUDA": 0.951,
+   "Mac CPU": 0.988,
+   "MPS": 0.979
+  }
+ },
+ "errors": {
+  "avg_train": {
+   "all": {
+    "n": 632,
+    "mape": 18.9,
+    "w20": 63.3
+   },
+   "ge10ms": {
+    "n": 632,
+    "mape": 18.9,
+    "w20": 63.3
+   },
+   "ge10ms_nogan": {
+    "n": 600,
+    "mape": 19.2,
+    "w20": 62.7
+   },
+   "gan_only": {
+    "n": 32,
+    "mape": 13.5,
+    "w20": 75.0
+   }
+  },
+  "avg_infer": {
+   "all": {
+    "n": 632,
+    "mape": 54.1,
+    "w20": 51.4
+   },
+   "ge10ms": {
+    "n": 515,
+    "mape": 23.4,
+    "w20": 62.3
+   },
+   "ge10ms_nogan": {
+    "n": 483,
+    "mape": 23.7,
+    "w20": 62.9
+   },
+   "gan_only": {
+    "n": 32,
+    "mape": 19.2,
+    "w20": 53.1
+   }
+  }
+ },
+ "t6_protocols": {
+  "full_random": {
+   "avg_train": 0.988,
+   "avg_infer": 0.989
+  },
+  "full_group": {
+   "avg_train": 0.991,
+   "avg_infer": 0.99
+  },
+  "no_hw_group": {
+   "avg_train": 0.784,
+   "avg_infer": 0.672
+  },
+  "flops_group": {
+   "avg_train": 0.558,
+   "avg_infer": 0.468
+  },
+  "params_group": {
+   "avg_train": 0.171,
+   "avg_infer": 0.296
+  },
+  "analytic_foldwise": {
+   "avg_train": 0.78,
+   "avg_infer": 0.84
+  }
+ },
+ "lobo": {
+  "Desktop CPU": {
+   "avg_train": {
+    "r2log": 0.663,
+    "n": 158,
+    "mape": 238.8,
+    "w20": 11.4
+   },
+   "avg_infer": {
+    "r2log": 0.813,
+    "n": 134,
+    "mape": 76.8,
+    "w20": 26.9
+   }
+  },
+  "CUDA": {
+   "avg_train": {
+    "r2log": -3.176,
+    "n": 158,
+    "mape": 570.7,
+    "w20": 6.3
+   },
+   "avg_infer": {
+    "r2log": -17.196,
+    "n": 114,
+    "mape": 849.5,
+    "w20": 0.0
+   }
+  },
+  "Mac CPU": {
+   "avg_train": {
+    "r2log": 0.791,
+    "n": 158,
+    "mape": 67.1,
+    "w20": 6.3
+   },
+   "avg_infer": {
+    "r2log": 0.87,
+    "n": 124,
+    "mape": 44.2,
+    "w20": 29.0
+   }
+  },
+  "MPS": {
+   "avg_train": {
+    "r2log": 0.613,
+    "n": 158,
+    "mape": 50.0,
+    "w20": 28.5
+   },
+   "avg_infer": {
+    "r2log": 0.55,
+    "n": 143,
+    "mape": 59.8,
+    "w20": 11.2
+   }
+  }
+ },
+ "group_joint_perm": {
+  "config": {
+   "base_r2": "0.984±0.010",
+   "mem": "0.854±0.115",
+   "flops": "0.107±0.034"
+  },
+  "family": {
+   "base_r2": "0.703±0.137",
+   "mem": "0.397±0.244",
+   "flops": "0.165±0.167"
+  }
+ }
+}
