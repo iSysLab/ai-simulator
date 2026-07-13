@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="600.0" y="28" text-anchor="middle" font-size="14" font-weight="600" font-family="Malgun Gothic, sans-serif">그림6: XGBoost 피처 중요도 (Top 15)</text>
+<text x="290.0" y="44.0" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">학습 시간 [CPU]</text>
+<text x="95.0" y="62.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_op_flops</text>
+<rect x="100.0" y="50.0" width="1.4" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="84.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">std_op_flops</text>
+<rect x="100.0" y="71.6" width="1.5" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="106.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">other_params</text>
+<rect x="100.0" y="93.2" width="2.1" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="127.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">seq_length</text>
+<rect x="100.0" y="114.8" width="2.1" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="149.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops</text>
+<rect x="100.0" y="136.4" width="2.9" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="170.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">avg_width</text>
+<rect x="100.0" y="158.0" width="3.0" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="192.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_Linear</text>
+<rect x="100.0" y="179.6" width="3.9" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="214.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_ReLU</text>
+<rect x="100.0" y="201.2" width="4.3" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="235.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_read</text>
+<rect x="100.0" y="222.8" width="5.5" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="257.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_write</text>
+<rect x="100.0" y="244.4" width="5.7" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="278.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_params</text>
+<rect x="100.0" y="266.0" width="7.3" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="300.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_width</text>
+<rect x="100.0" y="287.6" width="15.9" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="322.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">bn_params</text>
+<rect x="100.0" y="309.2" width="16.8" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="343.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">model_family_encoded</text>
+<rect x="100.0" y="330.8" width="31.1" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="365.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">conv_params</text>
+<rect x="100.0" y="352.4" width="380.0" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="290.0" y="464.0" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">학습 시간 [GPU(CUDA)]</text>
+<text x="95.0" y="482.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">num_linear_layers</text>
+<rect x="100.0" y="470.0" width="0.9" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="504.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_width</text>
+<rect x="100.0" y="491.6" width="1.0" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="526.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">cnn_num_filters</text>
+<rect x="100.0" y="513.2" width="1.6" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="547.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_op_flops</text>
+<rect x="100.0" y="534.8" width="5.3" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="569.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_ReLU</text>
+<rect x="100.0" y="556.4" width="12.4" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="590.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">num_hidden_layers</text>
+<rect x="100.0" y="578.0" width="13.8" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="612.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_layers</text>
+<rect x="100.0" y="599.6" width="15.6" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="634.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">num_ops</text>
+<rect x="100.0" y="621.2" width="30.8" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="655.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">conv_params</text>
+<rect x="100.0" y="642.8" width="34.5" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="677.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops</text>
+<rect x="100.0" y="664.4" width="34.9" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="698.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_MaxPool2d</text>
+<rect x="100.0" y="686.0" width="35.8" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="95.0" y="720.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_Linear</text>
+<rect x="100.0" y="707.6" width="78.5" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="95.0" y="742.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_read</text>
+<rect x="100.0" y="729.2" width="144.1" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="95.0" y="763.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">model_family_encoded</text>
+<rect x="100.0" y="750.8" width="198.0" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="95.0" y="785.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_write</text>
+<rect x="100.0" y="772.4" width="380.0" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="880.0" y="44.0" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">추론 시간 [CPU]</text>
+<text x="685.0" y="62.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_params</text>
+<rect x="690.0" y="50.0" width="5.5" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="84.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">linear_params</text>
+<rect x="690.0" y="71.6" width="10.3" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="106.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">seq_length</text>
+<rect x="690.0" y="93.2" width="12.0" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="127.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_ReLU</text>
+<rect x="690.0" y="114.8" width="14.4" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="149.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">vit_num_encoder_layers</text>
+<rect x="690.0" y="136.4" width="22.8" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="170.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops</text>
+<rect x="690.0" y="158.0" width="24.4" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="192.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_read</text>
+<rect x="690.0" y="179.6" width="28.2" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="214.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">bn_params</text>
+<rect x="690.0" y="201.2" width="32.1" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="235.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_width</text>
+<rect x="690.0" y="222.8" width="58.6" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="257.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">model_family_encoded</text>
+<rect x="690.0" y="244.4" width="78.9" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="278.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_op_flops</text>
+<rect x="690.0" y="266.0" width="85.2" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="300.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_flops</text>
+<rect x="690.0" y="287.6" width="99.9" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="322.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">other_params</text>
+<rect x="690.0" y="309.2" width="105.2" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="343.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">conv_params</text>
+<rect x="690.0" y="330.8" width="220.8" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="365.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_write</text>
+<rect x="690.0" y="352.4" width="380.0" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="880.0" y="464.0" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">추론 시간 [GPU(CUDA)]</text>
+<text x="685.0" y="482.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">std_op_flops</text>
+<rect x="690.0" y="470.0" width="1.5" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="504.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">avg_op_flops</text>
+<rect x="690.0" y="491.6" width="1.7" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="526.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">bn_params</text>
+<rect x="690.0" y="513.2" width="1.8" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="547.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_params</text>
+<rect x="690.0" y="534.8" width="4.1" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="569.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">linear_params</text>
+<rect x="690.0" y="556.4" width="4.8" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="590.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_width</text>
+<rect x="690.0" y="578.0" width="5.3" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="612.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_BatchNorm2d</text>
+<rect x="690.0" y="599.6" width="5.6" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="634.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">model_family_encoded</text>
+<rect x="690.0" y="621.2" width="22.9" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="655.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">max_op_flops</text>
+<rect x="690.0" y="642.8" width="30.8" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="677.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops</text>
+<rect x="690.0" y="664.4" width="41.1" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="698.8" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_ReLU</text>
+<rect x="690.0" y="686.0" width="42.5" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="685.0" y="720.4" text-anchor="end" font-size="8" font-family="Consolas, monospace">flops_ratio_Linear</text>
+<rect x="690.0" y="707.6" width="114.1" height="17.6" fill="#fde725" fill-opacity="0.9"/>
+<text x="685.0" y="742.0" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_read</text>
+<rect x="690.0" y="729.2" width="114.3" height="17.6" fill="#440154" fill-opacity="0.9"/>
+<text x="685.0" y="763.6" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_memory_write</text>
+<rect x="690.0" y="750.8" width="272.1" height="17.6" fill="#31688e" fill-opacity="0.9"/>
+<text x="685.0" y="785.2" text-anchor="end" font-size="8" font-family="Consolas, monospace">total_op_flops</text>
+<rect x="690.0" y="772.4" width="380.0" height="17.6" fill="#35b779" fill-opacity="0.9"/>
+<text x="600.0" y="850" text-anchor="middle" font-size="10" fill="#555" font-family="Malgun Gothic, sans-serif">[실험 환경]</text>
+<text x="600.0" y="864.0" text-anchor="middle" font-size="9" fill="#333" font-family="Malgun Gothic, sans-serif">GPU: GPU(CUDA) — 벤치마크 JSON 기준 (모델명은 torch 필요) · VRAM 8.0GB · SM 0</text>
+<text x="600.0" y="877.0" text-anchor="middle" font-size="9" fill="#333" font-family="Malgun Gothic, sans-serif">CPU 16코어 · 4.2GHz · RAM 31.1GB · Windows 11</text>
+</svg>
