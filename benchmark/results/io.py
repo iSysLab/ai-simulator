@@ -1,6 +1,7 @@
 import json
 import csv
 import os
+import time
 
 
 class ResultsManager:
@@ -36,13 +37,25 @@ class ResultsManager:
                 return True
         return False
 
-    def append_and_save(self, result):
-        """결과 추가 후 즉시 파일 저장 (원자적 쓰기)"""
+    def append_and_save(self, result, retries=40, wait_s=0.25):
+        """결과 추가 후 즉시 파일 저장 (원자적 쓰기)
+
+        Windows에서는 다른 프로세스(백신, 인덱서, 진행 확인 스크립트)가 결과 파일을 잠깐
+        열고 있으면 os.replace가 PermissionError(WinError 5)를 낸다. 측정 한 구성을 통째로
+        잃지 않도록 잠시 기다렸다가 재시도한다(기본 최대 10초).
+        """
         self.results.append(result)
         tmp_path = self.output_path + '.tmp'
         with open(tmp_path, 'w', encoding='utf-8') as f:
             json.dump(self.results, f, indent=2, ensure_ascii=False)
-        os.replace(tmp_path, self.output_path)
+        for attempt in range(retries):
+            try:
+                os.replace(tmp_path, self.output_path)
+                return
+            except PermissionError:
+                if attempt == retries - 1:
+                    raise
+                time.sleep(wait_s)
 
     def to_csv(self, csv_path=None):
         """피처 + 측정값을 CSV로 내보내기"""
