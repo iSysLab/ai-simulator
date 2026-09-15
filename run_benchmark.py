@@ -13,10 +13,23 @@
     python run_benchmark.py --repeats 3               # 반복 횟수 지정
     python run_benchmark.py --resume                  # 중단 후 이어서 실행
     python run_benchmark.py --profile-ops             # Op-level 프로파일링
+
+측정 프로토콜 v2 옵션 (2026-09 재측정, 심사 대응):
+    --require-idle                # 각 구성 시작 전 CPU/GPU 유휴 확인, 아니면 대기
+    --tag remeasure_v2            # 결과 행에 태그 기록
+    --subset stratified:60        # 계열별 균등 60구성만 (외부 백엔드 시험, 배치 스윕용)
+    --subset every:4 | names:A,B  # 다른 부분집합 지정 방식
+    --batch-size 128              # 학습 배치 크기 (기본 64, 배치 스윕용)
+    --discard-first               # 첫 반복을 통계에서 제외 (원시값에는 유지)
+  모든 행에 소프트웨어 환경(sw_*), 측정 직전 부하(load_*), 반복별 원시값, 피크 메모리가 기록된다.
 """
 import argparse
+import math
+import socket
 import subprocess
 import sys
+import time
+from datetime import datetime
 
 # 모델 등록을 위해 모든 모델 모듈 import
 from benchmark.models import (
@@ -36,11 +49,16 @@ from benchmark.configs.generator import generate_configs
 from benchmark.results.io import ResultsManager
 from benchmark.platform import PlatformInfo
 from benchmark.platform.compatibility import CompatibilityMatrix
+from benchmark.platform.software_env import (
+    collect_software_env, measure_system_load, is_idle,
+)
 
 # MNIST 모델 / CIFAR-10 모델 구분
 MNIST_MODELS = {'simple_ann', 'simple_cnn', 'resnet_mnist', 'mobilenet_mnist'}
 CIFAR10_MODELS = {'transformer', 'gan'}
 GAN_MODELS = {'gan'}
+FAMILY_ORDER = ['simple_ann', 'simple_cnn', 'resnet_mnist',
+                'mobilenet_mnist', 'transformer', 'gan']
 
 
 def parse_args():
@@ -66,7 +84,74 @@ def parse_args():
                         help='빠른 테스트 (3 반복, 대표 모델)')
     parser.add_argument('--full-pipeline', action='store_true',
                         help='벤치마크 → 학습 → 시각화 원클릭')
+    # --- 측정 프로토콜 v2 ---
+    parser.add_argument('--subset', type=str, default=None,
+                        help='부분집합: stratified:N (계열별 균등 N개), every:K, names:A,B,C')
+    parser.add_argument('--batch-size', type=int, default=64,
+                        help='학습 배치 크기 (기본 64)')
+    parser.add_argument('--test-batch-size', type=int, default=1000,
+                        help='추론 배치 크기 (기본 1000)')
+    parser.add_argument('--discard-first', action='store_true',
+                        help='첫 반복을 통계에서 제외 (원시값에는 유지)')
+    parser.add_argument('--require-idle', action='store_true',
+                        help='각 구성 시작 전 CPU/GPU 유휴 상태를 확인하고 아니면 대기')
+    parser.add_argument('--idle-cpu-max', type=float, default=20.0,
+                        help='유휴 판정 CPU 사용률 상한 %% (기본 20)')
+    parser.add_argument('--idle-gpu-max', type=float, default=10.0,
+                        help='유휴 판정 GPU 사용률 상한 %% (기본 10, CUDA만)')
+    parser.add_argument('--idle-wait', type=int, default=600,
+                        help='유휴 대기 최대 초 (기본 600, 초과 시 경고 후 진행)')
+    parser.add_argument('--tag', type=str, default='',
+                        help='결과 행에 기록할 태그 (예: remeasure_v2)')
     return parser.parse_args()
+
+
+def select_subset(configs, spec):
+    """부분집합 선택. 결정적(시드 불필요)이라 같은 spec은 항상 같은 구성을 고른다.
+
+    stratified:N — 계열별로 ceil(N/계열 수)개를 생성 순서에서 균등 간격으로 뽑는다
+                   (생성 순서가 크기 순에 가까우므로 소·중·대가 고르게 들어간다).
+    every:K      — 전체에서 K개마다 1개.
+    names:A,B    — model_name 목록.
+    """
+    kind, _, arg = spec.partition(':')
+    if kind == 'stratified':
+        n_total = int(arg)
+        families = [f for f in FAMILY_ORDER if any(c['model_type'] == f for c in configs)]
+        per = max(1, math.ceil(n_total / max(1, len(families))))
+        picked = []
+        for fam in families:
+            fam_cfgs = [c for c in configs if c['model_type'] == fam]
+            k = min(per, len(fam_cfgs))
+            if k == 1:
+                idx = [0]
+            else:
+                idx = sorted({round(j * (len(fam_cfgs) - 1) / (k - 1)) for j in range(k)})
+            picked.extend(fam_cfgs[i] for i in idx)
+        return picked
+    if kind == 'every':
+        return configs[::max(1, int(arg))]
+    if kind == 'names':
+        wanted = {s.strip() for s in arg.split(',') if s.strip()}
+        return [c for c in configs if c['model_name'] in wanted]
+    raise ValueError(f"알 수 없는 --subset 형식: {spec}")
+
+
+def wait_until_idle(device_type, args):
+    """유휴 상태가 될 때까지 대기. 마지막으로 측정한 부하와 대기 초를 반환."""
+    waited = 0
+    while True:
+        load = measure_system_load(device_type)
+        if not args.require_idle or is_idle(load, args.idle_cpu_max, args.idle_gpu_max):
+            return load, waited
+        if waited >= args.idle_wait:
+            print(f"  [경고] 유휴 대기 {args.idle_wait}s 초과 — 부하 상태로 진행 "
+                  f"(CPU {load['load_cpu_pct']}%, GPU {load['load_gpu_util_pct']}%)")
+            return load, waited
+        print(f"  [대기] 기기 사용 중 (CPU {load['load_cpu_pct']}%, "
+              f"GPU {load['load_gpu_util_pct']}%) — 15초 후 재확인")
+        time.sleep(15)
+        waited += 15
 
 
 def print_platform_info(dm, compat):
@@ -95,11 +180,12 @@ def print_platform_info(dm, compat):
 
 
 def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
-                          results_mgr, args, compat=None):
+                          results_mgr, args, compat=None, sw_env=None):
     """한 장치에서 설정 목록 벤치마크 실행"""
     print(f"\n  데이터를 {dev_label}에 사전 로딩 중...")
     train_batches, test_batches = data_mgr.preload_to_device(device)
-    print(f"  사전 로딩 완료.\n")
+    print(f"  사전 로딩 완료. (학습 배치 {len(train_batches)}개 × {args.batch_size}, "
+          f"추론 배치 {len(test_batches)}개 × {args.test_batch_size})\n")
 
     for cfg in configs:
         model_name = cfg['model_name']
@@ -136,7 +222,8 @@ def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
                 dummy_model, model_type,
                 input_shape=data_mgr.input_shape,
                 device_str=device.type,
-                config=cfg['config'])
+                config=cfg['config'],
+                batch_size=args.batch_size)
         except Exception as e:
             print(f"  [실패] {model_name}: 피처 추출 오류 — {e}")
             del dummy_model
@@ -160,15 +247,29 @@ def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
 
         print(f"  --- {model_name} (파라미터: {param_count:,}) ---")
 
-        # GPU 워밍업
-        if not is_gan:
-            runner.dm.warmup(device, model_fn, input_shape=data_mgr.input_shape)
+        # 측정 직전 시스템 부하 확인 (유휴 증빙, --require-idle 시 대기)
+        load, waited = wait_until_idle(device.type, args)
+
+        # 워밍업: 모든 계열·백엔드 동일 (실제 학습 스텝 1회 + 평가 순전파 1회)
+        try:
+            if is_gan:
+                runner.warmup_gan(model_fn, device, train_batches,
+                                  batch_size=args.batch_size)
+            else:
+                runner.warmup(model_fn, device, train_batches, test_batches)
+        except RuntimeError as e:
+            if 'out of memory' in str(e).lower():
+                print(f"    [OOM] 워밍업 중 GPU 메모리 부족 — 건너뜀")
+                runner.dm.clear_cache(device)
+                continue
+            raise
 
         # 벤치마크 실행
         try:
             if is_gan:
                 timing = runner.run_gan(
                     model_fn, device, train_batches,
+                    batch_size=args.batch_size,
                     config_name=model_name)
             else:
                 timing = runner.run(
@@ -192,16 +293,26 @@ def run_configs_on_device(configs, device, dev_label, data_mgr, runner,
             **features,
             **timing,
             **op_features,
+            'n_train_batches': len(train_batches),
+            'n_test_batches': len(test_batches),
+            'measured_at': datetime.now().isoformat(timespec='seconds'),
+            'host': socket.gethostname(),
+            'tag': args.tag,
+            'idle_wait_s': waited,
+            **load,
+            **(sw_env or {}),
         }
         results_mgr.append_and_save(result)
 
         if is_gan:
             print(f"    >> 평균 학습: {timing['avg_train']}s | "
-                  f"평균 추론(생성): {timing['avg_infer']}s\n")
+                  f"평균 추론(생성): {timing['avg_infer']}s | "
+                  f"피크 메모리: {timing['peak_mem_mb']}MB\n")
         else:
             print(f"    >> 평균 학습: {timing['avg_train']}s | "
                   f"평균 추론: {timing['avg_infer']}s | "
-                  f"정확도: {timing['avg_accuracy']}%\n")
+                  f"정확도: {timing['avg_accuracy']}% | "
+                  f"피크 메모리: {timing['peak_mem_mb']}MB\n")
 
     # 정리
     del train_batches, test_batches
@@ -255,6 +366,13 @@ def main():
 
     print(f"등록된 모델: {list_models()}")
 
+    # 소프트웨어 환경 (모든 결과 행에 기록)
+    sw_env = collect_software_env()
+    print("소프트웨어 환경: " + ", ".join(
+        f"{k[3:]}={v}" for k, v in sw_env.items()
+        if k in ('sw_python', 'sw_torch', 'sw_cuda_runtime', 'sw_cudnn',
+                 'sw_onednn', 'sw_gpu_driver', 'sw_macos') and v not in ('', None)))
+
     # 장치 관리 + 호환성
     dm = DeviceManager()
     compat = CompatibilityMatrix()
@@ -274,7 +392,8 @@ def main():
     print_platform_info(dm, compat)
 
     # 실험 러너
-    runner = ExperimentRunner(dm, repeats=args.repeats)
+    runner = ExperimentRunner(dm, repeats=args.repeats,
+                              discard_first=args.discard_first)
 
     # 결과 관리
     results_mgr = ResultsManager(args.output)
@@ -298,7 +417,15 @@ def main():
                 quick_configs.extend(mt_configs)
         configs = quick_configs
 
-    print(f"총 {len(configs)}개 설정 실행 예정\n")
+    # 부분집합 (외부 백엔드 시험, 배치 스윕)
+    if args.subset:
+        configs = select_subset(configs, args.subset)
+        print(f"부분집합 {args.subset}: {len(configs)}개 구성 "
+              f"({', '.join(sorted({c['model_type'] for c in configs}))})")
+
+    print(f"총 {len(configs)}개 설정 실행 예정 → {args.output}"
+          + (f" [tag={args.tag}]" if args.tag else "")
+          + (" [require-idle]" if args.require_idle else "") + "\n")
 
     # MNIST / CIFAR-10 설정 분리
     mnist_configs = [c for c in configs if c['model_type'] in MNIST_MODELS]
@@ -313,19 +440,21 @@ def main():
         # MNIST 모델 벤치마크
         if mnist_configs:
             print(f"\n--- MNIST 데이터셋 ({len(mnist_configs)}개 설정) ---")
-            mnist_data = MNISTDataManager()
+            mnist_data = MNISTDataManager(batch_size=args.batch_size,
+                                          test_batch_size=args.test_batch_size)
             run_configs_on_device(
                 mnist_configs, device, dev_label, mnist_data,
-                runner, results_mgr, args, compat)
+                runner, results_mgr, args, compat, sw_env)
             del mnist_data
 
         # CIFAR-10 모델 벤치마크
         if cifar_configs:
             print(f"\n--- CIFAR-10 데이터셋 ({len(cifar_configs)}개 설정) ---")
-            cifar_data = CIFAR10DataManager()
+            cifar_data = CIFAR10DataManager(batch_size=args.batch_size,
+                                            test_batch_size=args.test_batch_size)
             run_configs_on_device(
                 cifar_configs, device, dev_label, cifar_data,
-                runner, results_mgr, args, compat)
+                runner, results_mgr, args, compat, sw_env)
             del cifar_data
 
     # CSV 내보내기

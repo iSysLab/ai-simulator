@@ -1,11 +1,13 @@
 """환경 검증 스크립트 — 실행 전 점검
 
 사용법:
-    python check_env.py
+    python check_env.py            # 사람이 읽는 점검 결과
+    python check_env.py --json     # 소프트웨어 환경을 JSON으로 출력 (논문 §3.1 기재·재현용)
 
 시스템 요구사항, 패키지 설치 상태, 디바이스 가용성을 확인하고
 문제가 있으면 해결 방법을 안내합니다.
 """
+import json
 import sys
 import platform
 
@@ -62,9 +64,8 @@ def check_torch_device():
 
 def check_disk_space():
     """디스크 여유 공간 확인"""
-    import os
-    stat = os.statvfs('.')
-    free_gb = stat.f_bavail * stat.f_frsize / (1024 ** 3)
+    import shutil
+    free_gb = shutil.disk_usage('.').free / (1024 ** 3)
     ok = free_gb >= 1.0
     status = "OK" if ok else "WARN"
     print(f"  [{status}] 디스크 여유: {free_gb:.1f}GB", end='')
@@ -107,7 +108,28 @@ def check_platform_detection():
         return False
 
 
+def env_json():
+    """소프트웨어 환경 + 감지된 하드웨어 요약을 JSON으로 출력 (--json)"""
+    from benchmark.platform.software_env import collect_software_env
+    out = {"software": collect_software_env(), "hardware": {}}
+    try:
+        from benchmark.platform import PlatformInfo
+        out["hardware"]["cpu"] = PlatformInfo.detect('cpu').to_dict()
+        import torch
+        if torch.cuda.is_available():
+            out["hardware"]["cuda"] = PlatformInfo.detect('cuda').to_dict()
+        elif torch.backends.mps.is_available():
+            out["hardware"]["mps"] = PlatformInfo.detect('mps').to_dict()
+    except Exception as e:
+        out["hardware"]["error"] = str(e)
+    print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
+
+
 def main():
+    if '--json' in sys.argv[1:]:
+        env_json()
+        return
+
     os_name = platform.system()
     machine = platform.machine()
 
