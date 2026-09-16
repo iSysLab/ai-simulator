@@ -38,6 +38,18 @@ GRID = {"n_estimators": [200, 400], "max_depth": [3, 6], "learning_rate": [0.1]}
 import re
 HW_PAT = re.compile(r"cpu_|gpu_|memory_bandwidth|unified|shared_memory"
                     r"|memory_channels|device_type")
+# 스키마 [D] 하드웨어 블록 + v3 추가 GPU 사양 + 문자열 하드웨어 필드. 기기 간 복사 금지 대상.
+HW_FIELDS_NO_COPY = [
+    "device_type", "os_type", "accelerator_brand", "accelerator_name",
+    "cpu_cores", "cpu_cores_logical", "cpu_perf_cores", "cpu_efficiency_cores",
+    "cpu_freq_base_ghz", "cpu_freq_boost_ghz", "cpu_cache_l2_mb", "cpu_cache_l3_mb",
+    "ram_total_gb", "memory_type", "memory_bandwidth_gbs", "is_unified_memory",
+    "shared_memory_gb", "dedicated_vram_gb", "gpu_count", "gpu_memory_gb", "gpu_cores",
+    "peak_bandwidth_gbs", "tflops_fp32", "tflops_fp16", "fp16_support", "bf16_support",
+    "interconnect_type", "host_to_device_bandwidth_gbs", "is_discrete_gpu",
+    "is_integrated_gpu", "device_type_encoded", "cpu_freq_ghz", "memory_channels",
+    "gpu_tensor_core_count", "gpu_compute_capability", "gpu_clock_ghz",
+]
 HW_EXTRA = ["ram_total_gb", "dedicated_vram_gb", "peak_bandwidth_gbs",
             "tflops_fp32", "tflops_fp16", "host_to_device_bandwidth_gbs",
             "batch_size"]
@@ -73,19 +85,57 @@ def load_clean():
     for r in m4_mixed:
         groups[r["model_name"]].append(r)
     for name, rs in groups.items():
-        base = {**rs[0], "_backend": "Mac CPU", "_src": "mac"}
+        base = {**rs[0], "_backend": "Mac CPU", "_src": "mac", "_n_merged": len(rs)}
         for t in TARGETS:
-            base[t] = float(np.mean([float(x.get(t, 0) or 0) for x in rs]))
+            means = np.array([float(x.get(t, 0) or 0) for x in rs])
+            stds = np.array([float(x.get("std_" + t[4:], 0) or 0) for x in rs])
+            m = float(means.mean())
+            base[t] = m
+            # 풀링 표준편차: 각 실행의 분산 + 실행 평균의 편차 (v4k R1-11에서 사용.
+            # 이전에는 첫 행의 std가 그대로 남아 있었음. 기존 표 수치에는 영향 없음)
+            base["std_" + t[4:]] = float(np.sqrt(np.mean(stds ** 2 + (means - m) ** 2)))
         out.append(base)
 
     out += [{**r, "_backend": "MPS", "_src": "mac"} for r in mac
             if r["device"] == "GPU(MPS)" and r["model_name"] not in EXCLUDE]
 
+    # 스키마 버전 정합(2026-09-16, v4k에서 발견): 데스크톱 파일은 구버전 추출기 산출이라
+    # input_height/width/channels, num_classes, hidden_size, num_filters, embed_dim, num_heads,
+    # patch_size, latent_dim, generator/discriminator_params 등 구성에서 결정되는 구조 필드가
+    # 없다(→ 0). 맥 행에는 있어서 이 열들이 "데스크톱=0 / 맥≠0"으로 기기를 식별하는 누수가 됐다.
+    # 구조 필드는 (model_type, config)만의 함수이므로 같은 구성의 맥 행 값으로 채운다.
+    # 하드웨어·장치·측정 필드는 절대 복사하지 않는다.
+    NEVER_COPY = set(HW_FIELDS_NO_COPY) | {
+        "device", "batch_size", "avg_train", "std_train", "avg_infer", "std_infer",
+        "avg_accuracy", "_backend", "_src", "_n_merged", "config", "model_name", "model_type",
+    }
+    mac_by_name = {}
+    for r in mac:
+        if r["device"] == "GPU(MPS)":
+            mac_by_name[r["model_name"]] = r
+    filled_keys = defaultdict(int)
+    for e in out:
+        if e["_src"] != "win":
+            continue
+        ref = mac_by_name.get(e["model_name"])
+        if ref is None:
+            continue
+        for k, v in ref.items():
+            if k in NEVER_COPY or k.startswith("_"):
+                continue
+            if k not in e or e[k] is None:
+                e[k] = v
+                filled_keys[k] += 1
+    load_clean.filled_keys = dict(filled_keys)
+
     # 메타데이터 정정: 실제 실행은 전 백엔드 학습 배치 64로 동일
     # (run_benchmark.py의 get_optimal_batch_size 결과는 출력만 되고 미사용,
     #  DataManager 기본값 batch_size=64 사용. 데스크톱 행의 None → 0 오염 수정)
+    backend_id = {b: i for i, b in enumerate(BACKENDS)}
     for e in out:
         e["batch_size"] = 64
+        e["_backend_id"] = backend_id[e["_backend"]]   # v4k R1-5·R1-7 라벨 기준선용
+        e.setdefault("_n_merged", 1)
     return out
 
 
