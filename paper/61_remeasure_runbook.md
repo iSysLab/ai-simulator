@@ -110,7 +110,30 @@ python run_benchmark.py --device cpu --subset stratified:60 --repeats 3 --requir
 python check_env.py --json > paper/env_<기기이름>.json
 ```
 
-## 7. 분석 단계에서 할 일 (데스크톱)
+## 7. 측정 환경 프로브 (재측정 전 필수, 5분)
+
+기기가 과거와 같은 성능을 내는지 먼저 확인한다. 드리프트가 큰 3구성과 대조군 1구성을 5회씩 잰다.
+
+```bash
+.venv\Scripts\python run_benchmark.py --device cuda --subset names:ANN_h16_l1,ANN_h64_l6,ANN_h128_l8,CNN_f8_l1_bn0 --repeats 5 --tag probe --output results/probe_check.json
+```
+
+비교:
+
+```bash
+.venv\Scripts\python -c "import json,statistics as st; v1={r['model_name']:r for r in json.load(open('results/benchmark_results.json',encoding='utf-8')) if r['device']=='GPU(CUDA)'}; p=json.load(open('results/probe_check.json',encoding='utf-8')); print('v1 대비 중앙값', round(st.median(r['avg_train']/v1[r['model_name']]['avg_train'] for r in p),3))"
+```
+
+**판정 기준**: v1 대비 중앙값이 1.05 이내이고 각 구성의 반복 CV가 5% 이하여야 재측정할 가치가 있다.
+2026-09-16 프로브에서는 1.20~1.22, CV 최대 10%로 기준 미달이었다(`paper/60_racs_camera_ready_plan.md` §7).
+
+측정 전 환경 정리(관리자 권한 필요):
+- NVIDIA 앱 → 설정 → 게임 내 오버레이 끄기 (프로세스만 종료하면 즉시 재생성된다)
+- PresentMon, FvContainer, 게임 런처 종료 및 시작프로그램 해제
+- 전원 옵션 고성능: `powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c`
+  (되돌리기 — 균형 조정: `powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e`)
+
+## 8. 분석 단계에서 할 일 (데스크톱)
 
 - `eval_fill_v4i.load_clean()`에 v2 결과로 GPU 셀을 덮어쓰는 override를 넣고 v4i → v4j → v4k 재실행.
 - 재측정 전후 GAN 셀과 전체 표 수치의 변화량을 기록해 §3.1 각주로.
