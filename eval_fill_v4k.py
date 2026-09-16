@@ -550,19 +550,27 @@ def tuned_comparison(ctx):
         "GradientBoosting(grid=XGB)": (lambda: GradientBoostingRegressor(random_state=42), GB_GRID),
         "XGBoost(grid)": (mk_xgb, XGB_GRID),
     }
-    out = {"protocol": "random 5-fold outer / 4-fold inner nested CV, seed 42, identical folds for all"}
-    for name, (mk, grid) in defs.items():
-        out[name] = {}
-        for tgt in TARGETS:
-            X, y = ctx.X(NUMERIC, tgt)
-            if grid:
-                oof = nested_oof(X, y, mk, grid, None, seed=42)
-            else:
-                oof = np.zeros(len(y))
-                for tr, te in KFold(5, shuffle=True, random_state=42).split(X):
-                    oof[te] = mk().fit(X[tr], y[tr]).predict(X[te])
-            out[name][tgt] = round(float(r2_score(y, oof)), 4)
-        print(f"[R1-8] {name:30s} train {out[name]['avg_train']}  infer {out[name]['avg_infer']}", flush=True)
+    out = {"protocol": "outer 5-fold / inner 4-fold nested CV, seed 42, identical folds for all models; "
+                       "random_split = KFold (원고 표 5 기준), config_split = GroupKFold(구성)"}
+    for split in ("random_split", "config_split"):
+        out[split] = {}
+        g = None if split == "random_split" else ctx.groups
+        for name, (mk, grid) in defs.items():
+            out[split][name] = {}
+            for tgt in TARGETS:
+                X, y = ctx.X(NUMERIC, tgt)
+                if grid:
+                    oof = nested_oof(X, y, mk, grid, g, seed=42)
+                else:
+                    oof = np.zeros(len(y))
+                    cv = KFold(5, shuffle=True, random_state=42) if g is None else GroupKFold(5)
+                    for tr, te in cv.split(X, y, g):
+                        oof[te] = mk().fit(X[tr], y[tr]).predict(X[te])
+                yy, pp = np.expm1(y), np.expm1(oof)
+                out[split][name][tgt] = {"r2log": round(float(r2_score(y, oof)), 4),
+                                         **err_stats(yy, pp, (yy >= 0.01) if tgt == "avg_infer" else None)}
+            print(f"[R1-8] {split:13s} {name:30s} train {out[split][name]['avg_train']['r2log']}  "
+                  f"infer {out[split][name]['avg_infer']['r2log']}", flush=True)
     return out
 
 

@@ -212,11 +212,15 @@ if "symmetric_ablation" in K:
 if "tuned_comparison" in K:
     tc = K["tuned_comparison"]
     h("표 5 재산출 — 동일 nested CV·동일 그리드 (R1-8)", tc["protocol"])
-    hdr(["회귀 모델", "학습 R²(log)", "추론 R²(log)"])
-    for k, v in tc.items():
-        if k.startswith("_") or k == "protocol":
+    for split, title in [("random_split", "무작위 분할 (원고 표 5와 같은 프로토콜)"), ("config_split", "구성 단위 분할 (사다리 2단계와 같은 프로토콜)")]:
+        if split not in tc:
             continue
-        row([k, f(v["avg_train"], 4), f(v["avg_infer"], 4)])
+        L.append(f"\n**{title}**\n")
+        hdr(["회귀 모델", "학습 R²(log)", "학습 MAPE", "추론 R²(log)", "추론 MAPE(≥10ms)"])
+        for k, v in tc[split].items():
+            row([k, f(v["avg_train"]["r2log"], 4), pct(v["avg_train"]["mape"]), f(v["avg_infer"]["r2log"], 4), pct(v["avg_infer"]["mape"])])
+    L.append("\n해석 초안: 같은 그리드를 받은 GradientBoosting은 XGBoost와 소수 셋째 자리까지 동률이다. 원고 표 5의 0.988 대 0.977 차이는 알고리즘이 아니라 "
+             "튜닝 유무의 차이였다. XGBoost는 학습 속도 때문에 기준 알고리즘으로 유지한다.\n")
 
 # ------------------------------------------------------------------ R1-1 (b)
 if "overhead_features" in K:
