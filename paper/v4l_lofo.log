@@ -1,0 +1,13 @@
+행 632 | 피처 120 | 절: ['log_target_lofo']
+
+[lofo:log1p] L6_family_out avg_train: pooled R2 0.7828 MAPE 230.0 | GAN -3.5481/71.1 MobileNet 0.5844/35.9 ResNet 0.8367/61.9 ANN -20.872/680.1 CNN 0.8741/81.1 ViT 0.5538/50.4
+[lofo:log1p] L6_family_out avg_infer: pooled R2 0.8916 MAPE 1419.5 | GAN -2.0462/56.9 MobileNet 0.8777/35.6 ResNet 0.9557/31.8 ANN -397.433/5122.3 CNN 0.8832/115.8 ViT 0.7231/45.2
+[lofo:log1p] L7_backend_out avg_train: pooled R2 0.6375 MAPE 202.6 | CUDA -3.1791/570.3 Desktop CPU 0.8163/106.2 MPS 0.6813/89.4 Mac CPU 0.8469/44.4
+[lofo:log1p] L7_backend_out avg_infer: pooled R2 0.5518 MAPE 281.5 | CUDA -17.168/703.8 Desktop CPU 0.8802/82.1 MPS 0.6428/121.9 Mac CPU 0.8928/218.2
+[lofo:log] L6_family_out avg_train: pooled R2 0.7717 MAPE 220.7 | GAN -4.1395/75.4 MobileNet 0.5809/38.8 ResNet 0.6937/103.8 ANN -19.8841/653.5 CNN 0.8935/60.7 ViT 0.1693/54.2
+[lofo:log] L6_family_out avg_infer: pooled R2 0.9186 MAPE 614.1 | GAN -2.8176/92.3 MobileNet 0.8723/37.7 ResNet 0.9326/32.0 ANN -217.1735/2130.0 CNN 0.939/85.5 ViT 0.7515/36.7
+[lofo:log] L7_backend_out avg_train: pooled R2 0.6528 MAPE 199.2 | CUDA -3.1799/571.2 Desktop CPU 0.8308/83.5 MPS 0.7304/88.1 Mac CPU 0.8575/54.1
+[lofo:log] L7_backend_out avg_infer: pooled R2 0.5293 MAPE 224.1 | CUDA -17.1906/678.0 Desktop CPU 0.8111/44.2 MPS 0.7224/49.5 Mac CPU 0.872/124.5
+   ↳ log_target_lofo 저장 (47.6s)
+
+완료: /Users/ijunsu/Documents/Documents/ann/ai-simulator/paper/v4_measured_l.json
