@@ -106,7 +106,8 @@ def stats(y, p, mask=None):
     m = np.ones(len(y), bool) if mask is None else mask
     yy, pp = np.expm1(y[m]), np.expm1(p[m])
     s = {"r2log": round(float(r2_score(y[m], p[m])), 4) if m.sum() > 2 else None, **err_stats(yy, pp),
-         "spearman": round(float(spearmanr(yy, pp).correlation), 3) if m.sum() > 2 else None}
+         "spearman": round(float(spearmanr(yy, pp).correlation), 3) if m.sum() > 2 else None,
+         "median_pred_over_true": round(float(np.median(pp / np.clip(yy, 1e-9, None))), 3) if m.sum() > 0 else None}
     return s
 
 
@@ -139,6 +140,15 @@ def main():
         name = args.name or os.path.splitext(os.path.basename(args.external))[0]
         ext_raw, ext_key, ext_hw = load_external(args.external, args.env, tpl)
         train_raw = raw
+        if args.no_refresh_hw:
+            # 라벨만 있는 미지 백엔드 근사: 기술자를 v1 최근접 백엔드 값으로 맞추고 VRAM만 실제값
+            near_b = {"cuda": "CUDA", "mps": "MPS", "cpu": "Desktop CPU"}[ext_key]
+            v1 = next(r for r in raw if r["_backend"] == near_b)
+            for e in ext_raw:
+                for c in HW_NUMERIC_COLS:
+                    e[c] = v1.get(c)
+                e["gpu_memory_gb"] = ext_hw.get("gpu_memory_gb", e.get("gpu_memory_gb"))
+            print(f"[no-refresh] 외부 행 기술자를 v1 {near_b} 값으로 맞춤 (VRAM만 실제값 {ext_hw.get('gpu_memory_gb')})")
     print(f"학습 {len(train_raw)}셀 / 외부 {len(ext_raw)}셀 ({name}, device={ext_key}) / 타깃 {args.transform}")
 
     rows_tr = onnx_rows_of(train_raw)
@@ -180,14 +190,17 @@ def main():
         if ref_tflops and ext_tflops:
             res["baseline_nearest_spec_scaled"] = stats(y_te[ok], np.log1p(near[ok] * ref_tflops / ext_tflops))
             res["spec_ratio_tflops"] = round(ref_tflops / ext_tflops, 3)
+        res["cells"] = [{"name": n, "family": FAM_LABEL.get(f, f), "true": round(float(t), 5), "pred": round(float(np.expm1(q)), 5),
+                         "nearest": (None if np.isnan(nn) else round(float(nn), 5))}
+                        for n, f, t, q, nn in zip(names_ext, fams_ext, yy, pred, near)]
         out[tgt] = res
         d = res["descriptor_model"]
-        print(f"\n[{tgt}] 기술자 모델: R2(log) {d['r2log']}  MAPE {d['mape']}  MdAPE {d['mdape']}  ±20% {d['w20']}  Spearman {d['spearman']}"
+        print(f"\n[{tgt}] 기술자 모델: R2(log) {d['r2log']}  MAPE {d['mape']}  MdAPE {d['mdape']}  ±20% {d['w20']}  Spearman {d['spearman']}  pred/true 중앙 {d['median_pred_over_true']}"
               f"  | 소형 MAPE {res['small']['mape']}  대형 MAPE {res['large']['mape']}")
         for k in ["baseline_nearest_copy", "baseline_all_backend_mean", "baseline_nearest_spec_scaled"]:
             if k in res:
                 b = res[k]
-                print(f"   {k:28s}: R2(log) {b['r2log']}  MAPE {b['mape']}  MdAPE {b['mdape']}  Spearman {b['spearman']}")
+                print(f"   {k:28s}: R2(log) {b['r2log']}  MAPE {b['mape']}  MdAPE {b['mdape']}  Spearman {b['spearman']}  pred/true 중앙 {b['median_pred_over_true']}")
         print("   계열별 MAPE: " + ", ".join(f"{f} {v['mape']}" for f, v in res["per_family"].items()))
     path = os.path.join(BASE, f"paper/external_{name}.json")
     with open(path, "w", encoding="utf-8") as f:
