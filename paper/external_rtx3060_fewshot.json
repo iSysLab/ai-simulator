@@ -1,0 +1,216 @@
+{
+ "name": "rtx3060",
+ "device": "cuda",
+ "n_external": 56,
+ "reference_backend": "CUDA",
+ "targets": {
+  "avg_train": {
+   "0": {
+    "mape": {
+     "mean": 25.0,
+     "std": 0.0
+    },
+    "mdape": {
+     "mean": 26.2,
+     "std": 0.0
+    },
+    "w20": {
+     "mean": 37.5,
+     "std": 0.0
+    },
+    "r2log": {
+     "mean": 0.889,
+     "std": 0.0
+    },
+    "ratio": {
+     "mean": 0.738,
+     "std": 0.0
+    },
+    "n_eval": 56,
+    "n_train_added": 0
+   },
+   "6": {
+    "mape": {
+     "mean": 24.14,
+     "std": 6.39
+    },
+    "mdape": {
+     "mean": 18.9,
+     "std": 3.844
+    },
+    "w20": {
+     "mean": 50.4,
+     "std": 8.523
+    },
+    "r2log": {
+     "mean": 0.921,
+     "std": 0.039
+    },
+    "ratio": {
+     "mean": 0.936,
+     "std": 0.12
+    },
+    "n_eval": 50,
+    "n_train_added": 6
+   },
+   "12": {
+    "mape": {
+     "mean": 18.7,
+     "std": 1.59
+    },
+    "mdape": {
+     "mean": 14.86,
+     "std": 1.9
+    },
+    "w20": {
+     "mean": 63.16,
+     "std": 6.813
+    },
+    "r2log": {
+     "mean": 0.954,
+     "std": 0.009
+    },
+    "ratio": {
+     "mean": 0.917,
+     "std": 0.05
+    },
+    "n_eval": 44,
+    "n_train_added": 12
+   },
+   "24": {
+    "mape": {
+     "mean": 18.48,
+     "std": 2.807
+    },
+    "mdape": {
+     "mean": 14.46,
+     "std": 2.374
+    },
+    "w20": {
+     "mean": 64.34,
+     "std": 10.018
+    },
+    "r2log": {
+     "mean": 0.958,
+     "std": 0.012
+    },
+    "ratio": {
+     "mean": 0.967,
+     "std": 0.04
+    },
+    "n_eval": 32,
+    "n_train_added": 24
+   }
+  },
+  "avg_infer": {
+   "0": {
+    "mape": {
+     "mean": 23.6,
+     "std": 0.0
+    },
+    "mdape": {
+     "mean": 16.2,
+     "std": 0.0
+    },
+    "w20": {
+     "mean": 64.3,
+     "std": 0.0
+    },
+    "r2log": {
+     "mean": 0.97,
+     "std": 0.0
+    },
+    "ratio": {
+     "mean": 0.857,
+     "std": 0.0
+    },
+    "n_eval": 56,
+    "n_train_added": 0
+   },
+   "6": {
+    "mape": {
+     "mean": 53.72,
+     "std": 32.919
+    },
+    "mdape": {
+     "mean": 16.82,
+     "std": 4.521
+    },
+    "w20": {
+     "mean": 62.4,
+     "std": 11.482
+    },
+    "r2log": {
+     "mean": 0.953,
+     "std": 0.019
+    },
+    "ratio": {
+     "mean": 0.994,
+     "std": 0.112
+    },
+    "n_eval": 50,
+    "n_train_added": 6
+   },
+   "12": {
+    "mape": {
+     "mean": 44.36,
+     "std": 34.037
+    },
+    "mdape": {
+     "mean": 12.72,
+     "std": 1.425
+    },
+    "w20": {
+     "mean": 72.74,
+     "std": 3.486
+    },
+    "r2log": {
+     "mean": 0.979,
+     "std": 0.007
+    },
+    "ratio": {
+     "mean": 0.966,
+     "std": 0.045
+    },
+    "n_eval": 44,
+    "n_train_added": 12
+   },
+   "24": {
+    "mape": {
+     "mean": 35.6,
+     "std": 18.403
+    },
+    "mdape": {
+     "mean": 10.72,
+     "std": 2.661
+    },
+    "w20": {
+     "mean": 71.24,
+     "std": 8.705
+    },
+    "r2log": {
+     "mean": 0.981,
+     "std": 0.006
+    },
+    "ratio": {
+     "mean": 1.009,
+     "std": 0.07
+    },
+    "n_eval": 32,
+    "n_train_added": 24
+   }
+  }
+ },
+ "ratio_vs_reference": {
+  "avg_train": {
+   "median": 1.32,
+   "small_lt1s": 1.25,
+   "large_gt10s": 1.58
+  },
+  "avg_infer": {
+   "median": 1.17,
+   "small_lt1s": 1.72,
+   "large_gt10s": 1.15
+  }
+ }
+}
