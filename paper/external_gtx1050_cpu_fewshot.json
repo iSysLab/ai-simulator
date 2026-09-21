@@ -1,0 +1,216 @@
+{
+ "name": "gtx1050_cpu",
+ "device": "cpu",
+ "n_external": 41,
+ "reference_backend": "Desktop CPU",
+ "targets": {
+  "avg_train": {
+   "0": {
+    "mape": {
+     "mean": 76.8,
+     "std": 0.0
+    },
+    "mdape": {
+     "mean": 76.2,
+     "std": 0.0
+    },
+    "w20": {
+     "mean": 0.0,
+     "std": 0.0
+    },
+    "r2log": {
+     "mean": 0.421,
+     "std": 0.0
+    },
+    "ratio": {
+     "mean": 0.238,
+     "std": 0.0
+    },
+    "n_eval": 41,
+    "n_train_added": 0
+   },
+   "6": {
+    "mape": {
+     "mean": 31.42,
+     "std": 4.5
+    },
+    "mdape": {
+     "mean": 26.44,
+     "std": 5.931
+    },
+    "w20": {
+     "mean": 38.28,
+     "std": 7.797
+    },
+    "r2log": {
+     "mean": 0.94,
+     "std": 0.015
+    },
+    "ratio": {
+     "mean": 0.793,
+     "std": 0.05
+    },
+    "n_eval": 35,
+    "n_train_added": 6
+   },
+   "12": {
+    "mape": {
+     "mean": 28.74,
+     "std": 3.824
+    },
+    "mdape": {
+     "mean": 23.08,
+     "std": 6.359
+    },
+    "w20": {
+     "mean": 42.74,
+     "std": 5.161
+    },
+    "r2log": {
+     "mean": 0.957,
+     "std": 0.021
+    },
+    "ratio": {
+     "mean": 0.859,
+     "std": 0.08
+    },
+    "n_eval": 29,
+    "n_train_added": 12
+   },
+   "24": {
+    "mape": {
+     "mean": 20.18,
+     "std": 3.54
+    },
+    "mdape": {
+     "mean": 14.16,
+     "std": 3.498
+    },
+    "w20": {
+     "mean": 62.34,
+     "std": 8.83
+    },
+    "r2log": {
+     "mean": 0.979,
+     "std": 0.01
+    },
+    "ratio": {
+     "mean": 0.944,
+     "std": 0.058
+    },
+    "n_eval": 17,
+    "n_train_added": 24
+   }
+  },
+  "avg_infer": {
+   "0": {
+    "mape": {
+     "mean": 68.2,
+     "std": 0.0
+    },
+    "mdape": {
+     "mean": 73.6,
+     "std": 0.0
+    },
+    "w20": {
+     "mean": 4.9,
+     "std": 0.0
+    },
+    "r2log": {
+     "mean": 0.506,
+     "std": 0.0
+    },
+    "ratio": {
+     "mean": 0.264,
+     "std": 0.0
+    },
+    "n_eval": 41,
+    "n_train_added": 0
+   },
+   "6": {
+    "mape": {
+     "mean": 32.74,
+     "std": 8.733
+    },
+    "mdape": {
+     "mean": 30.82,
+     "std": 12.136
+    },
+    "w20": {
+     "mean": 36.0,
+     "std": 8.208
+    },
+    "r2log": {
+     "mean": 0.91,
+     "std": 0.097
+    },
+    "ratio": {
+     "mean": 0.723,
+     "std": 0.141
+    },
+    "n_eval": 35,
+    "n_train_added": 6
+   },
+   "12": {
+    "mape": {
+     "mean": 29.2,
+     "std": 6.444
+    },
+    "mdape": {
+     "mean": 24.06,
+     "std": 8.202
+    },
+    "w20": {
+     "mean": 42.06,
+     "std": 16.795
+    },
+    "r2log": {
+     "mean": 0.961,
+     "std": 0.027
+    },
+    "ratio": {
+     "mean": 0.811,
+     "std": 0.104
+    },
+    "n_eval": 29,
+    "n_train_added": 12
+   },
+   "24": {
+    "mape": {
+     "mean": 23.52,
+     "std": 3.493
+    },
+    "mdape": {
+     "mean": 16.68,
+     "std": 2.327
+    },
+    "w20": {
+     "mean": 59.98,
+     "std": 6.881
+    },
+    "r2log": {
+     "mean": 0.985,
+     "std": 0.004
+    },
+    "ratio": {
+     "mean": 0.912,
+     "std": 0.052
+    },
+    "n_eval": 17,
+    "n_train_added": 24
+   }
+  }
+ },
+ "ratio_vs_reference": {
+  "avg_train": {
+   "median": 4.33,
+   "small_lt1s": 2.83,
+   "large_gt10s": 6.22
+  },
+  "avg_infer": {
+   "median": 3.83,
+   "small_lt1s": 2.2,
+   "large_gt10s": 4.57
+  }
+ }
+}
