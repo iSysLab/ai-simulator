@@ -175,3 +175,9 @@ Camera-ready는 리뷰어가 다시 보지 않는다. 그래서 수정은 "반�
 | `72_external_backend_runbook.md` | 외부 기기 측정 지시서 | ensemble |
 | `73_external_gtx1050_results.md` | GTX 1050 결과·의존도 분석 | ensemble |
 | `results/remeasure_{cuda,mps}_v2.json`, `results/external_gtx1050.json` | 재측정·외부 측정 원시 데이터 | racs-cr / ensemble |
+
+## 10. 추가 (9/26) — RTX 3060·i7, 그리고 GPU 3대로 한 대씩 빼고 맞히기
+
+- **RTX 3060(VRAM 12 GB)·i7-10700F:** 3060은 VRAM 분기에도 안 걸려서 사양을 넣어도 4060 Ti 베끼기와 똑같다(0.74 vs 0.76). i7도 Desktop CPU 베끼기와 똑같다. 상세 `75_external_rtx3060_results.md`.
+- **GPU 3대(1050·3060·4060 Ti)로 하나씩 빼고 맞히기:** 모델은 3060(가운데)은 맞히지만 사양을 전부 4060 Ti 값으로 바꿔도 예측이 5%만 변한다 — 1050과 4060 Ti가 섞여 중간값이 나온 우연. 가장 빠르거나 느린 기기를 빼면 크게 틀린다(트리는 범위 밖을 못 넘음). 반면 **학습 없이 "남은 두 GPU 시간을 TFLOPS 기준 직선으로 잇기"가 학습시간을 셋 다 이긴다**(MAPE 23/7/9 vs 모델 48/13/120). 추론은 오버헤드 체제라 이 방법도 안 된다. 상세 `76_logo_gpu_results.md`.
+- **결론:** 사양 축이 생겨도 트리는 사양을 안 쓴다 — 트리 구조의 한계. 다음 논문은 "구조는 트리, 하드웨어 스케일링은 TFLOPS의 매끄러운 함수"로 분리하는 설계. camera-ready엔 Limitations 한 문장.
