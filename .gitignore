@@ -281,5 +281,12 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/windows,python,data,images.DS_Store
+# End of https://www.toptal.com/developers/gitignore/api/windows,python,data,images
+
+### macOS ###
+.DS_Store
+
+### 프로젝트 ###
 results/onnx_configs/
+results/trained_models_v4/
+tmp/
