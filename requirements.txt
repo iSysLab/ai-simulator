@@ -1,8 +1,10 @@
 torch
 torchvision
 numpy
-scikit-learn
+scipy
+scikit-learn>=1.6
 xgboost
 onnx
 joblib
 psutil
+matplotlib

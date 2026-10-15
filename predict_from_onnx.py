@@ -84,7 +84,12 @@ def predict(onnx_path, device, model_dir, embed_dim=0, num_heads=0,
     for name, model in sorted(models.items()):
         y_pred_log = model.predict(X)[0]
         y_pred = float(np.expm1(y_pred_log))
-        unit = 's/epoch' if 'training' in name else 's'
+        if 'memory' in name:
+            unit = 'bytes'
+        elif 'training' in name:
+            unit = 's/epoch'
+        else:
+            unit = 's'
         print(f"  {name:<30s} | {y_pred:>10.4f} {unit}")
 
     print()

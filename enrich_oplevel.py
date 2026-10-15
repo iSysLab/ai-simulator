@@ -8,7 +8,9 @@
 특징:
   - op-level 피처는 디바이스 무관(구조적)이므로 unique (model_type, config)당 1번만 계산.
   - 원본은 보존하고 `*_enriched.json`으로 저장.
-  - 프로파일 실패(예: GAN forward 특수성) 시 해당 config만 건너뛰고 로그.
+  - GAN은 이미지 모양 더미 입력으로는 forward가 실패하는데, op_profiler가 예외를 삼켜
+    op-level 피처가 0인 채로 저장된다. 논문 파이프라인은 results/onnx_configs의 ONNX
+    그래프에서 이 값을 다시 계산하므로 영향이 없고, PyTorch 훅 경로 결과에만 해당한다.
 
 사용:
   python enrich_oplevel.py
