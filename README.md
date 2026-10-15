@@ -100,13 +100,13 @@ python check_env.py              # 환경 점검 (--json: 환경 정보를 JSON�
 모든 명령은 저장소 루트에서 실행합니다. 원시 측정값(2026년 3월, v1 프로토콜)은 저장소에 있고, 중간 산출물 두 가지는 gitignore 대상이라 먼저 만들어야 합니다.
 
 ```bash
-# 1. op-level 피처 보강: results/benchmark_results{,_mac}.json → results/*_enriched.json
+# 1. op-level 피처 보강: results/benchmark_results{,_mac}.json → *_enriched.json
 python enrich_oplevel.py
 # 2. 160개 구성을 ONNX(opset 17)로 내보내기 → results/onnx_configs/ (+ manifest.json)
 python export_onnx_configs.py
-# 3. 632셀 정리 + 플랫폼 간 비율(표 3)·피처 중요도(표 9)·절제(표 10) → paper/v4_measured_i.json
+# 3. 632셀 정리, 표 3(플랫폼 간 비율)·9(중요도)·10(절제) → paper/v4_measured_i.json
 python eval_fill_v4i.py
-# 4. nested CV: 회귀 모델 비교(표 6)·플랫폼별(표 7)·검증 방식과 기준선(표 8)·오차 → paper/v4_measured_j.json
+# 4. nested CV, 표 6(모델 비교)·7(플랫폼별)·8(기준선), 오차 → paper/v4_measured_j.json
 python eval_fill_v4j.py
 # 5. camera-ready 보충 실험 → paper/v4_measured_k.json → paper/v4k_tables.md
 python eval_fill_v4k.py          # --only precision_check,... 로 일부 절만 실행
@@ -131,7 +131,8 @@ python paper/build_pdf.py 50_draft_v4.md
 python check_env.py --json > paper/env_<host>.json
 python run_benchmark.py --device cuda --repeats 10 --require-idle --tag remeasure_v2 \
     --output results/remeasure_cuda_v2.json
-python run_benchmark.py --quick --output results/quick_test.json      # 대표 구성 9개, 3회 반복
+# 빠른 시험: 대표 구성 9개, 3회 반복
+python run_benchmark.py --quick --output results/quick_test.json
 ```
 
 - **`--output`을 꼭 지정하세요.** 기본값이 논문 원시 데이터 `results/benchmark_results.json`이고, 기존 파일에 결과를 이어 붙입니다.
@@ -141,8 +142,10 @@ python run_benchmark.py --quick --output results/quick_test.json      # 대표 �
 ## 실행 시간 예측 (`predict_v4.py`)
 
 ```bash
-python predict_v4.py --train                     # 632셀로 학습 → results/trained_models_v4/bundle_v4.pkl
-python predict_v4.py --list-backends             # Desktop CPU, CUDA, Mac CPU, MPS
+# 632셀로 학습 → results/trained_models_v4/bundle_v4.pkl
+python predict_v4.py --train
+# 플랫폼 목록: Desktop CPU, CUDA, Mac CPU, MPS
+python predict_v4.py --list-backends
 python predict_v4.py --onnx model.onnx --backend MPS --dataset mnist
 ```
 
@@ -156,27 +159,31 @@ python predict_v4.py --onnx model.onnx --backend MPS --dataset mnist
 ```
 ai-simulator/
 ├── benchmark/                      # 패키지
-│   ├── models/                     # 모델 6종 + 레지스트리 (MNIST: ANN·CNN·ResNet·MobileNet / CIFAR-10: ViT·GAN)
-│   ├── configs/generator.py        # 160개 구성 (ANN 42·CNN 60·ResNet 18·MobileNet 20·ViT 12·GAN 8)
+│   ├── models/                     # 모델 6종·레지스트리 (MNIST 4종, CIFAR-10 2종)
+│   ├── configs/generator.py        # 160개 구성 (ANN 42·CNN 60·ResNet 18·
+│   │                               #   MobileNet 20·ViT 12·GAN 8)
 │   ├── features/
 │   │   ├── merged_schema.py        # v4 스키마 130열 (수치 120)
 │   │   ├── onnx_oplevel.py         # ONNX shape inference 기반 op-level 정적 피처
-│   │   ├── op_profiler.py          # PyTorch 훅 기반 op-level 피처 (enrich_oplevel.py가 사용)
+│   │   ├── op_profiler.py          # PyTorch 훅 기반 op-level 피처 (enrich에서 사용)
 │   │   └── extractor.py, onnx_extractor.py   # 구판 96피처
-│   ├── platform/                   # 하드웨어 자동 감지, software_env.py(소프트웨어 버전·측정 직전 부하)
+│   ├── platform/                   # 하드웨어 감지, software_env.py(버전·부하)
 │   ├── runner/                     # 장치·데이터 사전 적재·측정 루프(v2 프로토콜)
 │   ├── predictor/ensemble.py       # log 타깃 회귀기 등 예측기 6종
 │   └── results/io.py               # 증분 저장·재개
 ├── run_benchmark.py, check_env.py  # 측정, 환경 점검
 ├── enrich_oplevel.py               # 재현 1단계
 ├── export_onnx_configs.py          # 재현 2단계
-├── train_merged.py                 # NUMERIC(수치 120열)·enrich() 정의, v4 스크립트들이 import
-├── eval_fill_v4i.py ~ v4l.py       # 논문 검증 실험 (i: 632셀·표 3/9/10, j: nested CV·표 6/7/8, k: camera-ready, l: log 타깃)
+├── train_merged.py                 # NUMERIC(수치 120열)·enrich() 정의 (v4 공용)
+├── eval_fill_v4i.py ~ v4l.py       # 논문 검증 실험 (i: 632셀·표 3/9/10,
+│                                   #   j: nested CV·표 6/7/8, k: camera-ready,
+│                                   #   l: log 타깃)
 ├── make_tables_v4k.py, make_tables_v4l.py, make_fig_pipeline.py
 ├── predict_v4.py                   # 예측 CLI
-├── eval_external_backend.py, eval_external_fewshot.py, eval_logo_gpu.py   # 외부 기기 분석
-├── eval_fill_v4.py, v4b ~ v4h.py   # 데이터 정리 전(698행) 실험, 일부는 v4i·v4j가 import
-├── train_predictor.py, visualize_results.py, predict_from_onnx.py, export_onnx.py   # 레거시
+├── eval_external_*.py, eval_logo_gpu.py   # 외부 기기 분석
+├── eval_fill_v4.py, v4b ~ v4h.py   # 정리 전(698행) 실험, 일부는 v4i·v4j가 import
+├── train_predictor.py, visualize_results.py   # 레거시
+├── predict_from_onnx.py, export_onnx.py       # 레거시
 ├── paper/
 │   ├── 50_draft_v4.md (+.pdf)      # RACS 2026 제출 원고 국문판
 │   ├── 60~61_*.md                  # camera-ready 재측정 설계·런북
@@ -184,10 +191,12 @@ ai-simulator/
 │   ├── v4_measured_*.json          # 논문·분석 수치의 실행 근거
 │   └── build_pdf.py, build_hwp_docx.py   # 원고 빌드
 └── results/
-    ├── benchmark_results.json      # 데스크톱 원시 378행: x86 CPU 218(데스크톱 158 + 섞여 든 M4 48 + 기기 불명 ViT 12), CUDA 160
+    ├── benchmark_results.json      # 데스크톱 원시 378행: CUDA 160, x86 CPU 218
+    │                               #   (데스크톱 158 + 섞인 M4 48 + 기기 불명 ViT 12)
     ├── benchmark_results_mac.json  # 맥북 원시 320행: ARM CPU 160, MPS 160
     ├── remeasure_{cuda,mps}_v2.json    # v2 재측정 각 160행
-    ├── external_*.json             # 외부 기기: GTX 1050 55행, i3-8100 42행, RTX 3060 58행, i7-10700F 42행
+    ├── external_*.json             # 외부 기기: GTX 1050 55행, i3-8100 42행,
+    │                               #   RTX 3060 58행, i7-10700F 42행
     ├── onnx_samples/               # 구판 ONNX 샘플 14개 (opset 11)
     └── trained_models*/, figures/  # 구판 예측 모델·그림
 ```
@@ -220,9 +229,13 @@ ai-simulator/
 논문 이전의 PyTorch 훅 기반 96피처(v3.0) 파이프라인입니다. `run_benchmark.py`는 지금도 측정 도구로 쓰고("새로 측정하기"), 나머지는 기록용으로 남겨 두었습니다.
 
 ```bash
-python train_predictor.py --features full --cv 10          # 장치별 분리 모델 (--features core|full|merged)
-python visualize_results.py --input-mac results/benchmark_results_mac.json --output-dir results/figures_new
-python predict_from_onnx.py model.onnx                     # 인자가 없으면 results/onnx_samples 전체를 예측
+# 장치별 분리 모델 (--features core|full|merged)
+python train_predictor.py --features full --cv 10
+# 구판 그림 9종
+python visualize_results.py --input-mac results/benchmark_results_mac.json \
+    --output-dir results/figures_new
+# 구판 ONNX 예측 (인자가 없으면 results/onnx_samples 전체)
+python predict_from_onnx.py model.onnx
 ```
 
 `train_predictor.py --save-models`는 `results/trained_models/`를, `visualize_results.py`는 기본값으로 `results/figures/`를 덮어씁니다.
