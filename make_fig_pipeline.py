@@ -32,36 +32,36 @@ def arrow(x1, y1, x2, y2, style="-", label=None, lx=0, ly=0):
 
 
 # 최상단: 모델 구성
-box(18, 96, 64, 10, "6개 모델 계열 × 160개 구성\n(ANN · CNN · ResNet · MobileNet · ViT · GAN)")
+box(18, 96, 64, 10, "6개 모델 계열 · 160개 생성\n(158개 구성 분석)")
 
-# 2행: 좌 = 벤치마크 실측, 우 = ONNX export
-box(3, 72, 44, 16, "PyTorch 벤치마크\n2기기 · 4백엔드\n632개 학습·추론 시간 실측", fc="0.93")
+# 2행: 좌 = 학습 데이터 실측, 우 = ONNX export
+box(3, 72, 44, 16, "학습 데이터 수집 (PyTorch 실측)\n2기기 · 4개 하드웨어 플랫폼\n632개 학습·추론 시간", fc="0.93")
 box(53, 72, 44, 16, "ONNX export\n(opset 17)\n프레임워크 중립 그래프")
 arrow(38, 96, 27, 89)
 arrow(62, 96, 73, 89)
 
 # 3행: 좌 = 타깃/하드웨어, 우 = 피처 추출
 box(3, 50, 44, 14, "타깃: 실측 시간 (log1p)\n+ 하드웨어 자동 감지\n(36개 피처)", fc="0.93")
-box(53, 50, 44, 14, "그래프 피처 추출\n구조 · 입력 · op-level 14개\n(shape inference)")
+box(53, 50, 44, 14, "ONNX 피처 추출\n구조 31개 · op-level 14개\n(shape inference)")
 arrow(25, 72, 25, 65)
 arrow(75, 72, 75, 65)
 
 # 4행: 130차원 피처 벡터 (하드웨어 + 그래프 피처 병합)
-box(28, 32, 44, 10, "130차원 피처 벡터", bold=True)
+box(28, 32, 44, 10, "130열 스키마\n(수치 입력 120개)", bold=True)
 arrow(75, 50, 58, 43)
 arrow(33, 49.5, 41, 43)
 ax.text(28, 46.5, "하드웨어 피처", fontsize=6.3, ha="right", va="center",
         style="italic")
 
 # 5행: 통합 회귀 모델
-box(22, 14, 56, 10, "XGBoost 단일 크로스플랫폼 모델\n(네 백엔드 통합 학습)")
+box(22, 14, 56, 10, "타깃별 XGBoost 회귀기 2개\n(각 회귀기는 네 하드웨어 플랫폼 통합)")
 arrow(50, 32, 50, 25)
 arrow(10, 49.5, 10, 19, style=":")
 arrow(10, 19, 21, 19, style=":")
 ax.text(8, 33, "타깃", fontsize=6.3, ha="right", va="center", style="italic")
 
 # 최하단: 출력
-box(22, 0, 56, 8, "학습·추론 시간 예측\nR²(log) 0.988 / 0.989", fs=7.2)
+box(22, 0, 56, 8, "구성 단위 검증: 학습·추론\nR²(log) 0.991 / 0.990", fs=7.2)
 arrow(50, 14, 50, 8.5)
 
 fig.savefig("paper/figures/fig1_pipeline.png", dpi=300, bbox_inches="tight",
