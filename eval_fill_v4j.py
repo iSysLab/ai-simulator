@@ -54,8 +54,10 @@ HW_NUMERIC_COLS = [
     "memory_channels", "gpu_tensor_core_count", "gpu_compute_capability",
     "gpu_clock_ghz",
 ]
-FAMILY_ID_COLS = {"model_family_encoded", "model_family", "model_arch"}
-LOFO_COLS = [c for c in NUMERIC if c not in FAMILY_ID_COLS]
+FAMILY_ID_NUMERIC_COLS = {"model_family_encoded"}
+FAMILY_ID_STRING_COLS = {"model_family", "model_arch"}  # NUMERIC에서 이미 제외됨
+FAMILY_ID_COLS = FAMILY_ID_NUMERIC_COLS | FAMILY_ID_STRING_COLS  # v4k import 호환
+LOFO_COLS = [c for c in NUMERIC if c not in FAMILY_ID_NUMERIC_COLS]
 
 assert len(HW_NUMERIC_COLS) == 30
 assert set(HW_NUMERIC_COLS) <= set(NUMERIC)
@@ -131,7 +133,7 @@ def main():
     out["t4_nested"], out["t5_backend"], out["errors"] = comp, bb, errors
 
     # ---- 표6: 프로토콜·기준선 (nested) ----
-    t6 = {}
+    t6, group_errors = {}, {}
     for label, cols, kind in [("full_random", NUMERIC, "kfold"),
                               ("full_group", NUMERIC, "group"),
                               ("no_hw_group", [c for c in NUMERIC
@@ -142,7 +144,18 @@ def main():
         for tgt in TARGETS:
             X, y = xy(rows, cols, tgt)
             g = None if kind == "kfold" else groups
-            vals[tgt] = round(r2_score(y, nested_oof(X, y, mk_xgb, XGB_GRID, g)), 3)
+            oof = nested_oof(X, y, mk_xgb, XGB_GRID, g)
+            vals[tgt] = round(r2_score(y, oof), 3)
+            if label == "full_group":
+                y_raw = np.expm1(y)
+                pred_raw = np.expm1(oof)
+                m10 = y_raw >= 0.01
+                group_errors[tgt] = {
+                    "all": err_stats(y_raw, pred_raw),
+                    "ge10ms": err_stats(y_raw, pred_raw, m10),
+                    "ge10ms_nogan": err_stats(y_raw, pred_raw, m10 & ~is_gan),
+                    "gan_only": err_stats(y_raw, pred_raw, is_gan),
+                }
         t6[label] = vals
         print("표6", label, vals, flush=True)
 
@@ -174,6 +187,14 @@ def main():
         t6.setdefault("analytic_foldwise", {})[tgt] = round(
             r2_score(np.log1p(y_raw), np.log1p(np.clip(pred, 0, None))), 2)
     out["t6_protocols"] = t6
+    out["group_errors"] = group_errors
+    out["t6_hardware_ablation"] = {
+        "input_numeric_feature_count": len(NUMERIC),
+        "removed_hardware_feature_count": len(HW_NUMERIC_COLS),
+        "remaining_numeric_feature_count": len(NUMERIC) - len(HW_NUMERIC_COLS),
+        "batch_size_retained": True,
+        "removed_columns": HW_NUMERIC_COLS,
+    }
     print("표6 analytic(fold)", t6["analytic_foldwise"], flush=True)
 
     # ---- LOBO: R² + MAPE ----
@@ -213,7 +234,8 @@ def main():
                               **err_stats(yv, pv, m)}
         print("LOFO(no family id)", fam, lofo[fam], flush=True)
     out["lofo_no_family_id"] = {
-        "excluded_columns": sorted(FAMILY_ID_COLS),
+        "excluded_numeric_columns": sorted(FAMILY_ID_NUMERIC_COLS),
+        "string_identifiers_already_excluded": sorted(FAMILY_ID_STRING_COLS),
         "numeric_feature_count": len(LOFO_COLS),
         "results": lofo,
     }

@@ -99,6 +99,90 @@
    "avg_infer": 0.84
   }
  },
+ "group_errors": {
+  "avg_train": {
+   "all": {
+    "n": 632,
+    "mape": 16.6,
+    "w20": 69.6
+   },
+   "ge10ms": {
+    "n": 632,
+    "mape": 16.6,
+    "w20": 69.6
+   },
+   "ge10ms_nogan": {
+    "n": 600,
+    "mape": 17.0,
+    "w20": 68.2
+   },
+   "gan_only": {
+    "n": 32,
+    "mape": 8.5,
+    "w20": 96.9
+   }
+  },
+  "avg_infer": {
+   "all": {
+    "n": 632,
+    "mape": 45.4,
+    "w20": 53.8
+   },
+   "ge10ms": {
+    "n": 515,
+    "mape": 20.9,
+    "w20": 64.9
+   },
+   "ge10ms_nogan": {
+    "n": 483,
+    "mape": 21.2,
+    "w20": 64.4
+   },
+   "gan_only": {
+    "n": 32,
+    "mape": 15.9,
+    "w20": 71.9
+   }
+  }
+ },
+ "t6_hardware_ablation": {
+  "input_numeric_feature_count": 120,
+  "removed_hardware_feature_count": 30,
+  "remaining_numeric_feature_count": 90,
+  "batch_size_retained": true,
+  "removed_columns": [
+   "cpu_cores",
+   "cpu_cores_logical",
+   "cpu_perf_cores",
+   "cpu_efficiency_cores",
+   "cpu_freq_base_ghz",
+   "cpu_freq_boost_ghz",
+   "cpu_cache_l2_mb",
+   "cpu_cache_l3_mb",
+   "ram_total_gb",
+   "memory_bandwidth_gbs",
+   "is_unified_memory",
+   "shared_memory_gb",
+   "dedicated_vram_gb",
+   "gpu_count",
+   "gpu_memory_gb",
+   "gpu_cores",
+   "peak_bandwidth_gbs",
+   "tflops_fp32",
+   "tflops_fp16",
+   "fp16_support",
+   "bf16_support",
+   "host_to_device_bandwidth_gbs",
+   "is_discrete_gpu",
+   "is_integrated_gpu",
+   "device_type_encoded",
+   "cpu_freq_ghz",
+   "memory_channels",
+   "gpu_tensor_core_count",
+   "gpu_compute_capability",
+   "gpu_clock_ghz"
+  ]
+ },
  "lobo": {
   "Desktop CPU": {
    "avg_train": {
@@ -155,6 +239,115 @@
     "mape": 59.8,
     "w20": 11.2
    }
+  }
+ },
+ "lofo_no_family_id": {
+  "excluded_numeric_columns": [
+   "model_family_encoded"
+  ],
+  "string_identifiers_already_excluded": [
+   "model_arch",
+   "model_family"
+  ],
+  "numeric_feature_count": 119,
+  "results": {
+   "simple_ann": {
+    "avg_train": {
+     "r2log": -20.504,
+     "n": 168,
+     "mape": 681.8,
+     "w20": 2.4
+    },
+    "avg_infer": {
+     "r2log": -185.994,
+     "n": 53,
+     "mape": 1300.1,
+     "w20": 0.0
+    }
+   },
+   "simple_cnn": {
+    "avg_train": {
+     "r2log": 0.885,
+     "n": 240,
+     "mape": 57.9,
+     "w20": 22.5
+    },
+    "avg_infer": {
+     "r2log": 0.935,
+     "n": 238,
+     "mape": 79.2,
+     "w20": 26.5
+    }
+   },
+   "resnet_mnist": {
+    "avg_train": {
+     "r2log": 0.611,
+     "n": 72,
+     "mape": 126.1,
+     "w20": 18.1
+    },
+    "avg_infer": {
+     "r2log": 0.945,
+     "n": 72,
+     "mape": 26.0,
+     "w20": 47.2
+    }
+   },
+   "mobilenet_mnist": {
+    "avg_train": {
+     "r2log": 0.615,
+     "n": 80,
+     "mape": 37.1,
+     "w20": 41.2
+    },
+    "avg_infer": {
+     "r2log": 0.89,
+     "n": 80,
+     "mape": 41.5,
+     "w20": 16.2
+    }
+   },
+   "transformer": {
+    "avg_train": {
+     "r2log": 0.385,
+     "n": 40,
+     "mape": 48.0,
+     "w20": 20.0
+    },
+    "avg_infer": {
+     "r2log": 0.364,
+     "n": 40,
+     "mape": 75.3,
+     "w20": 20.0
+    }
+   },
+   "gan": {
+    "avg_train": {
+     "r2log": -3.289,
+     "n": 32,
+     "mape": 71.0,
+     "w20": 0.0
+    },
+    "avg_infer": {
+     "r2log": -2.562,
+     "n": 32,
+     "mape": 90.4,
+     "w20": 0.0
+    }
+   }
+  }
+ },
+ "t12_path_nested": {
+  "protocol": "outer 5-fold / inner 4-fold nested CV, random_state=42",
+  "n_rows": 632,
+  "numeric_feature_count": 120,
+  "onnx": {
+   "avg_train": 0.988,
+   "avg_infer": 0.989
+  },
+  "pytorch": {
+   "avg_train": 0.989,
+   "avg_infer": 0.989
   }
  },
  "group_joint_perm": {
