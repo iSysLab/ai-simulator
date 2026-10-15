@@ -240,9 +240,9 @@ python predict_from_onnx.py model.onnx
 
 `train_predictor.py --save-models`는 `results/trained_models/`를, `visualize_results.py`는 기본값으로 `results/figures/`를 덮어씁니다.
 
-main 브랜치에는 2026년 4월 통합 때의 레거시 폴더도 함께 있습니다: `past/`(단계별 실험·데이터·모델), `benchmark/dal/`·`benchmark/support/`(`past/` 코드가 사용), `docs/`. 당시의 `scripts/` 실행 스크립트는 최상위 스크립트로 대체돼 main에서 뺐고, 4월 통합 상태 전체는 `integration` 브랜치에 있습니다.
-
 `results/figures/`의 그림과 `results/trained_models/`의 모델은 2026년 3월의 정리 전 데이터로 만든 것이라 논문 수치와 다릅니다.
+
+main 브랜치에는 2026년 4월 통합 때의 레거시 폴더도 함께 있습니다: `past/`(단계별 실험·데이터·모델), `benchmark/dal/`·`benchmark/support/`(`past/` 코드가 사용), `docs/`. 당시의 `scripts/` 실행 스크립트는 최상위 스크립트로 대체돼 main에서 뺐고, 4월 통합 상태 전체는 `integration` 브랜치에 있습니다.
 
 ## 팀원별 기여
 
