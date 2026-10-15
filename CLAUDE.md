@@ -4,14 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PyTorch-based DNN benchmarking and execution time/memory prediction framework. Benchmarks 6 model architectures (ANN, CNN, ResNet, MobileNet, Transformer, GAN) on MNIST/CIFAR-10, extracts **111** structural + hardware features (**Feature Schema v2.0**, `scripts/train_predictor.py` → `FEATURE_COLUMNS`), and trains ML regressors (XGBoost, RandomForest, etc.) to predict training time, inference time, and memory usage. Supports multi-platform hardware auto-detection (macOS/Windows/Linux).
+PyTorch DNN execution-time prediction across heterogeneous hardware. Six model families (ANN, CNN, ResNet, MobileNet on MNIST; ViT and GAN on CIFAR-10) are measured on four hardware platforms: x86 CPU and CUDA GPU (desktop: Ryzen 7 7800X3D + RTX 4060 Ti) and Apple ARM CPU and MPS (MacBook, Apple M4). The paper pipeline (v4, ACM RACS 2026) combines ONNX-graph architectural and op-level features with configuration and hardware metadata (130-column schema, 120 numeric inputs) and trains one XGBoost regressor per target (training time, inference time) that covers all four platforms. The canonical dataset is 158 configurations × 4 platforms = 632 cells. Memory is not a prediction target (the recorded value is just `total_params × 4`).
 
-## Documentation
-
-| File | Purpose |
-|------|---------|
-| `README.md` (root) | **Single unified report** — overview, repo layout, quick start, 111-dim feature schema, methodology, results, ONNX path, YAML schema draft, Stage 1–5 history, branch merge, troubleshooting |
-| `CLAUDE.md` (this file) | Short English cheat-sheet for AI assistants |
+The older v3 pipeline (96 PyTorch-hook features, per-device models: `train_predictor.py`, `visualize_results.py`, `predict_from_onnx.py`) is kept as legacy; `run_benchmark.py` is still the measurement tool. README.md has the results, the changes made while writing the paper, and the reproduction steps.
 
 ## Setup
 
@@ -22,109 +17,89 @@ source .venv/bin/activate        # Mac/Linux
 pip install -r requirements.txt
 ```
 
-Dependencies: `torch`, `torchvision`, `numpy`, `scikit-learn`, `xgboost`, `onnx`, `joblib`, `psutil` (matplotlib for visualization)
+Tested with Python 3.13.5, torch 2.10.0, scikit-learn 1.8.0 (≥1.6 required for `GroupKFold(shuffle=...)`), xgboost 3.2.0, numpy 2.4.3, scipy 1.18.1, onnx 1.20.1. Run every script from the repo root (several use CWD-relative paths).
 
 ## Commands
 
 ```bash
-# All CLI entry points live under scripts/ (run from repo root ai-simulator/)
+# Paper pipeline (v4). Steps 1-2 regenerate gitignored inputs.
+python enrich_oplevel.py           # results/benchmark_results{,_mac}.json → results/*_enriched.json
+python export_onnx_configs.py      # → results/onnx_configs/ (160 ONNX, opset 17) + manifest.json
+python eval_fill_v4i.py            # 632-cell load_clean, Tables 3/9/10 → paper/v4_measured_i.json
+python eval_fill_v4j.py            # nested CV, Tables 6/7/8, error stats → paper/v4_measured_j.json
+python eval_fill_v4k.py [--only a,b]   # camera-ready analyses → paper/v4_measured_k.json
+python make_tables_v4k.py          # → paper/v4k_tables.md
+python eval_fill_v4l.py [--only a,b]   # log-target / ensemble study → paper/v4_measured_l.json
+python make_tables_v4l.py          # → paper/v4l_tables.md
 
-# Full benchmark (6 models × 160 configs × 10 repeats, hours on CPU)
-python scripts/run_benchmark.py
+# Predictor CLI (default --estimator log = log-target XGBoost; --estimator xgb = the paper's log1p XGBoost)
+python predict_v4.py --train       # → results/trained_models_v4/bundle_v4.pkl (gitignored)
+python predict_v4.py --onnx model.onnx --backend MPS --dataset mnist   # backends: "Desktop CPU", CUDA, "Mac CPU", MPS
+python predict_v4.py --list-backends
 
-# Single model type
-python scripts/run_benchmark.py --model simple_ann
-python scripts/run_benchmark.py --model transformer
+# Measurement (protocol v2). Always pass --output: the default appends to the tracked raw dataset.
+python check_env.py --json > paper/env_<host>.json
+python run_benchmark.py --device cuda --repeats 10 --require-idle --tag remeasure_v2 --output results/remeasure_cuda_v2.json
+python run_benchmark.py --quick --output results/quick_test.json
+# other flags: --model --resume --discard-first --subset stratified:N|every:K|names:... --batch-size --idle-cpu-max --idle-gpu-max --idle-wait --profile-ops
 
-# Quick test (3 repeats, CPU only)
-python scripts/run_benchmark.py --repeats 3 --device cpu
+# External-device analyses (paper/72-77)
+python eval_external_backend.py --external results/external_<name>.json --env paper/env_<host>.json --name <name>
+python eval_external_fewshot.py --external results/external_<name>.json --env paper/env_<host>.json --name <name>
+python eval_logo_gpu.py --external <name>:results/external_<name>.json:paper/env_<host>.json   # repeat per GPU
 
-# Resume interrupted run
-python scripts/run_benchmark.py --resume
-
-# With op-level profiling
-python scripts/run_benchmark.py --profile-ops
-
-# Train prediction models (XGBoost + GridSearchCV, 5-fold CV)
-python scripts/train_predictor.py
-python scripts/train_predictor.py --cv 10 --save-models
-
-# Generate 9 visualization figures (includes cross-platform if Mac data present)
-python scripts/visualize_results.py
-python scripts/visualize_results.py --input-mac results/benchmark_results_mac.json
-
-# ONNX pipeline
-python scripts/export_onnx.py
-python scripts/predict_from_onnx.py path/to/model.onnx --device cpu
-python scripts/predict_from_onnx.py
-
-# One-click ONNX predict + JSON/CSV save
-python scripts/test.py model.onnx
-python scripts/test.py --all
-python scripts/test.py --benchmark --model simple_ann --repeats 3
+# Legacy (v3, 96 features)
+python train_predictor.py --features core|full|merged --cv 10   # --save-models overwrites results/trained_models/
+python visualize_results.py --input-mac results/benchmark_results_mac.json --output-dir <dir>   # default overwrites results/figures/
+python predict_from_onnx.py [model.onnx]   # no argument = all results/onnx_samples
 ```
-
-Legacy standalone scripts (`ann.py`, `cnn.py`, `cnn_remaining.py`) have been removed — use `scripts/run_benchmark.py` instead.
 
 ## Architecture
 
 ### Pipeline Flow
 
 ```
-scripts/run_benchmark.py → benchmark/ package → results/benchmark_results.json
-                                              ↓
-                                     scripts/train_predictor.py → results/trained_models/*.pkl
-                                              ↓
-                                     scripts/visualize_results.py → results/figures/*.png
+run_benchmark.py → results/benchmark_results.json (desktop), results/benchmark_results_mac.json
+        ↓ enrich_oplevel.py (PyTorch op-level features)
+results/*_enriched.json → export_onnx_configs.py → results/onnx_configs/*.onnx
+        ↓ eval_fill_v4i.load_clean() (632 cells) + ONNX features (eval_fill_v4e.onnx_feats_for)
+eval_fill_v4i/j/k/l.py → paper/v4_measured_*.json → make_tables_v4k/l.py → paper/v4k_tables.md, v4l_tables.md
+predict_v4.py --train → results/trained_models_v4/bundle_v4.pkl
 ```
-
-Parallel ONNX path: `scripts/export_onnx.py` → `.onnx` → `scripts/predict_from_onnx.py` / `scripts/test.py`
 
 ### benchmark/ Package
 
-- **models/registry.py**: Decorator-based model factory (`@register_model("name")` → `create_model("name", **kwargs)`). All 6 model files import-register themselves.
-- **models/**: `simple_ann.py`, `simple_cnn.py`, `resnet_mnist.py`, `mobilenet_mnist.py` (MNIST, 28×28×1), `transformer.py`, `gan.py` (CIFAR-10, 32×32×3)
-- **configs/generator.py**: Generates 160 hyperparameter combinations across all 6 model types (ANN 42 + CNN 60 + ResNet 18 + MobileNet 20 + ViT 12 + GAN 8)
-- **`benchmark/dal/extractor.py`**: Canonical **111** `FEATURE_COLUMNS` PyTorch extraction (`named_modules()`, hooks, op-level stats).
-- **`benchmark/dal/op_profiler.py`**: FLOPs/memory op decomposition for the dal feature schema.
-- **`benchmark/support/`**: `hardware_info.py`, `device_utils.py`, `timer.py`, legacy `onnx_feature_extractor.py` (Stage 5 ONNX path).
-- **`benchmark/features/extractor.py`**: **Wrapper** mapping ijunsoo `model_type` → dal `ann/cnn/...` then calling `benchmark.dal.extractor`.
-- **`benchmark/features/onnx_extractor.py`**: ONNX graph → feature dict aligned with `feature_columns.pkl` (missing keys default to 0 when predicting).
-- **`benchmark/features/op_profiler.py`**: ijunsoo-style op timing profiler (used by `scripts/run_benchmark.py --profile-ops`), distinct from `benchmark/dal/op_profiler.py`.
-- **runner/device.py**: Auto-detects CPU/CUDA/MPS, handles sync and warmup
-- **runner/data.py**: `MNISTDataManager` and `CIFAR10DataManager` — preloads batches to device memory
-- **runner/experiment.py**: `ExperimentRunner` — timed training/inference loops (classification + GAN), 10 repeats with avg/std
-- **results/io.py**: Atomic JSON save (`os.replace`) + corrupted file recovery + CSV export
-
-### Prediction Pipeline (`scripts/train_predictor.py`)
-
-- Loads `results/benchmark_results.json`, builds feature matrix from **111** columns defined in `FEATURE_COLUMNS` (with `enrich_result` for legacy rows)
-- Trains 4 ML models: LinearRegression, RandomForest+GridSearchCV, GradientBoosting, XGBoost+GridSearchCV
-- Predicts 3 targets per device (CPU/GPU separately): training time, inference time, memory
-- Uses `log1p` transform on targets for stability across wide ranges (ms to hundreds of seconds)
-- Key metric: R²(log) — evaluated in log space for balanced accuracy across scales
+- **models/registry.py**: Decorator-based model factory (`@register_model("name")` → `create_model("name", **kwargs)`). `models/__init__.py` is empty, so scripts import the six model modules explicitly to register them — those "unused" imports are required.
+- **models/**: `simple_ann.py`, `simple_cnn.py`, `resnet_mnist.py`, `mobilenet_mnist.py` (MNIST, 28×28×1), `transformer.py` (ViT), `gan.py` (CIFAR-10, 32×32×3)
+- **configs/generator.py**: 160 configurations (ANN 42, CNN 60, ResNet 18, MobileNet 20, ViT 12, GAN 8)
+- **features/merged_schema.py**: v4 schema — `MERGED_FEATURE_COLUMNS` (130), `STRING_FEATURES` (10), `OP_LEVEL_FEATURES` (14), `NUMERIC_FEATURE_COLUMNS` (120). `train_merged.NUMERIC` is the same list and is what the v4 scripts import.
+- **features/onnx_oplevel.py**: torch-free op-level features from ONNX shape inference. Memory read = input + weight bytes, write = output bytes, from a static batch-1 graph (a proxy, not measured traffic).
+- **features/op_profiler.py**: PyTorch-hook op decomposition used by `enrich_oplevel.py`. GAN forward fails with the image-shaped dummy input, so GAN op features stay 0 there; the ONNX path recomputes them.
+- **features/extractor.py, onnx_extractor.py**: legacy 96-feature schema (`CORE_FEATURE_COLUMNS` 50 + `EXTENDED_FEATURE_COLUMNS` 46) plus hardware via `benchmark/platform`
+- **platform/**: hardware auto-detection (`detector`, `cpu_info`, `gpu_info`, `memory_info`, `compatibility`) and `software_env.py` (`sw_*` versions, `load_*` pre-run load, idle check)
+- **runner/device.py, data.py, experiment.py**: device sync and peak memory; `MNISTDataManager`/`CIFAR10DataManager` preload batches to device memory; `ExperimentRunner` with protocol `v2-uniform-warmup` (one real training step + one eval pass for every backend and family), per-repeat times, `peak_mem_mb`, `--discard-first`
+- **predictor/ensemble.py**: log-target and other regressors used by `eval_fill_v4l.py` and `predict_v4.py`
+- **results/io.py**: incremental save with resume, atomic `os.replace` with retries
 
 ### Key Design Decisions
 
-- **MNIST vs CIFAR-10 split**: ANN/CNN/ResNet/MobileNet use MNIST (28×28×1), Transformer/GAN use CIFAR-10 (32×32×3). Determined by `MNIST_MODELS`/`CIFAR10_MODELS` sets in `scripts/run_benchmark.py`.
-- **Data preloading**: All batches are loaded to device memory before timing to exclude data transfer overhead
-- **GAN handled separately**: `ExperimentRunner.run_gan()` measures adversarial training time + generator inference, distinct from classification `run()`
-- **Incremental save**: Results are appended after each config completes, enabling `--resume` after interruption
-- **CNN AdaptiveAvgPool2d**: `SimpleCNN` uses `AdaptiveAvgPool2d((1,1))` before classifier to fix parameter inversion bug where deeper models had fewer params
-
-## Legacy archive
-
-- **`past/`**: Stage별 `experiments/`, `collect/`, `data/stage*`, `reports/`(figures only), 루트 구 `models/` 등. Stage 1–5 narrative is now summarized in `README.md` §10. 메인 코드는 여기를 import하지 않음.
-- To run a legacy script from `past/`, add the folder to `PYTHONPATH` (from the repo root):
-  - PowerShell: `$env:PYTHONPATH = "$PWD\past"; python past/collect/ann_collector.py`
-  - bash: `export PYTHONPATH="$(pwd)/past" && python past/collect/ann_collector.py`
+- **Canonical loader** `eval_fill_v4i.load_clean()`: moves 48 M4 rows found in the desktop file to Mac CPU and averages them, drops 12 ViT rows without hardware info and 2 ViT configurations incomplete on x86 (→ 158 × 4 = 632), sets `batch_size` 64, and (since 2026-09-16, f054d66) fills 24 structural fields missing on desktop rows from the matching Mac rows. Paper tables were produced before that fix (`paper/v4_measured_j.json` from Jul 13, `paper/v4_measured_k_before_schema_fix.json`); current code reproduces `paper/v4_measured_k.json`.
+- **Targets and validation**: `log1p(seconds)`, metric R²(log). Nested CV: outer 5-fold (random `KFold`, or configuration-wise `GroupKFold` grouped by `model_name`), inner 4-fold GridSearchCV, seed 42. XGBoost grid: n_estimators {200, 400} × max_depth {3, 6}, learning_rate 0.1.
+- **log1p flaw** (paper/71): log1p(y) ≈ y below 0.1 s, so sub-10 ms cells barely affect the loss; a log(y) target (`LogTargetXGBRegressor`) cuts inference MAPE 58% → 16%. Not reflected in the paper tables.
+- **Hardware features act as platform identifiers**: replacing the 30 numeric hardware columns with a platform label gives the same accuracy, and the external devices (GTX 1050, i3-8100, RTX 3060, i7-10700F) showed the model does not use specs as a continuous speed axis.
+- **Measurement**: training = one epoch over the training set (batch 64), inference = the full test set (batch 1000; for GAN, the generator produces ~50k images in batches of 64), mean of 10 repeats. Batches are preloaded to device memory; GAN uses `ExperimentRunner.run_gan()`.
+- **MNIST vs CIFAR-10 split**: `MNIST_MODELS`/`CIFAR10_MODELS` sets in `run_benchmark.py`.
+- **CNN AdaptiveAvgPool2d**: `SimpleCNN` uses `AdaptiveAvgPool2d((1,1))` before the classifier to fix the parameter-inversion bug where deeper models had fewer params.
+- **Merge-save**: `eval_fill_v4k.py`/`eval_fill_v4l.py` overwrite only the sections they run, so one JSON can mix runs.
 
 ## Data Files
 
-- `results/benchmark_results.json` / `.csv`: benchmark samples (tracked in git despite .gitignore `*.json` — force-added)
-- `results/trained_models/`: Saved `.pkl` predictor models (joblib)
-- `results/figures/`: 9 visualization PNGs (7 base + 2 cross-platform)
-- `data/`: Auto-downloaded MNIST/CIFAR-10 (gitignored)
+- `results/benchmark_results.json`: desktop raw data (protocol v1, March 2026), 378 rows — x86 CPU 218 (158 desktop + 48 mixed-in M4 + 12 ViT without hardware info) and CUDA 160. `results/benchmark_results_mac.json`: Mac raw data, 320 rows (CPU 160, MPS 160). Both are force-added despite `.gitignore` `*.json`.
+- `results/*_enriched.json`, `results/onnx_configs/`, `results/trained_models_v4/`: gitignored; regenerate with the commands above.
+- `results/remeasure_{cuda,mps}_v2.json`: protocol-v2 re-measurements (160 rows each). `results/external_*.json`: external devices (3 repeats). `results/probe_*.json`, `results/diag_*`: desktop drift probes.
+- `paper/v4_measured_*.json`: sources of the paper and analysis numbers (`_j` headline and Tables 6–8, `_i` Tables 3/9/10, `_k` and `_k_before_schema_fix` camera-ready, `_l` log target; `v4_measured{,_b,_d,_e,_f,_g,_h}` are earlier 698-row iterations). `paper/env_*.json`: `check_env.py --json` per host.
+- `results/trained_models/`, `results/figures/`: legacy models and figures built from March 2026 data.
+- `data/`: auto-downloaded MNIST/CIFAR-10 (gitignored)
 
 ## Language
 

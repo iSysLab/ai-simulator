@@ -1,0 +1,93 @@
+행 632 | 피처 120 | 절: ['baseline', 'gate_analysis', 'log_target', 'weighted_baseline', 'residual_baseline', 'regime_ensemble', 'algo_average', 'per_backend_control', 'ladder_check', 'seed_stability']
+
+[base] avg_train: R2 0.99  all MAPE 17.3 MdAPE 13.4  small(n=166) MAPE 17.5 MdAPE 10.9 ±20% 69.9  large MAPE 17.2  (?s)
+       oracle specialist small: {'n': 166, 'mape': 7.4, 'mdape': 5.3, 'w20': 92.8}  chosen {'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400}
+[base] avg_infer: R2 0.9899  all MAPE 58.1 MdAPE 19.1  small(n=117) MAPE 221.6 MdAPE 139.7 ±20% 5.1  large MAPE 21.0  (?s)
+       oracle specialist small: {'n': 117, 'mape': 19.0, 'mdape': 12.2, 'w20': 65.0}  chosen {'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400}
+   ↳ baseline 저장 (33.1s)
+
+[gate] avg_train τ=0.5s n_small=76: clf AUC 0.9954 P/R 0.921/0.921 | base-route AUC 0.994 P/R 0.892/0.868
+[gate] avg_train τ=1.0s n_small=166: clf AUC 0.9951 P/R 0.94/0.946 | base-route AUC 0.9953 P/R 0.933/0.922
+[gate] avg_train τ=2.0s n_small=223: clf AUC 0.9956 P/R 0.96/0.96 | base-route AUC 0.9981 P/R 0.963/0.942
+[gate] avg_infer τ=0.01s n_small=117: clf AUC 0.9978 P/R 0.967/0.991 | base-route AUC 0.9854 P/R 0.933/0.718
+[gate] avg_infer τ=0.02s n_small=151: clf AUC 0.9971 P/R 0.942/0.967 | base-route AUC 0.9931 P/R 0.969/0.828
+[gate] avg_infer τ=0.05s n_small=184: clf AUC 0.9978 P/R 0.973/0.978 | base-route AUC 0.9971 P/R 0.966/0.94
+[gate] avg_infer τ=0.1s n_small=210: clf AUC 0.9979 P/R 0.976/0.981 | base-route AUC 0.9972 P/R 0.962/0.962
+   ↳ gate_analysis 저장 (1.6s)
+
+[F:log] avg_train: R2 0.9889  all MAPE 15.9 MdAPE 12.3  small(n=166) MAPE 10.6 MdAPE 7.0 ±20% 86.1  large MAPE 17.9  (12.4s)
+[F:log1p_ms] avg_train: R2 0.9888  all MAPE 15.9 MdAPE 12.3  small(n=166) MAPE 10.8 MdAPE 8.9 ±20% 86.7  large MAPE 17.7  (12.3s)
+[F:log] avg_infer: R2 0.9902  all MAPE 16.4 MdAPE 12.1  small(n=117) MAPE 21.2 MdAPE 10.5 ±20% 73.5  large MAPE 15.3  (12.9s)
+[F:log1p_ms] avg_infer: R2 0.9906  all MAPE 16.4 MdAPE 11.9  small(n=117) MAPE 22.3 MdAPE 10.5 ±20% 75.2  large MAPE 15.0  (12.8s)
+   ↳ log_target 저장 (62.1s)
+
+[D] avg_train: R2 0.9901  all MAPE 17.0 MdAPE 12.8  small(n=166) MAPE 15.5 MdAPE 11.4 ±20% 77.1  large MAPE 17.6  (138.5s)
+       chosen {'alpha': 3.0, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'scheme': 'step', 'tau_s': 0.6931471805599453}
+[D] avg_infer: R2 0.9901  all MAPE 20.2 MdAPE 14.1  small(n=117) MAPE 35.1 MdAPE 18.4 ±20% 53.0  large MAPE 16.9  (116.7s)
+       chosen {'alpha': 3.0, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'scheme': 'linear', 'tau_s': 0.09531017980432487}
+   ↳ weighted_baseline 저장 (314.9s)
+
+[E] avg_train: R2 0.99  all MAPE 17.3 MdAPE 13.3  small(n=166) MAPE 17.2 MdAPE 10.6 ±20% 71.1  large MAPE 17.3  (433.8s)
+       chosen {'beta': 0.2, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.4054651081081644, 'tau_s': 0.6931471805599453}
+[E] avg_infer: R2 0.9899  all MAPE 56.5 MdAPE 17.9  small(n=117) MAPE 210.4 MdAPE 104.7 ±20% 9.4  large MAPE 21.5  (362.8s)
+       chosen {'beta': 0.02, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.019802627296179712, 'tau_s': 0.04879016416943201}
+   ↳ residual_baseline 저장 (983.7s)
+
+[B:hard] avg_train: R2 0.9902  all MAPE 15.1 MdAPE 11.3  small(n=166) MAPE 9.5 MdAPE 6.6 ±20% 92.2  large MAPE 17.1  (53.6s)
+       chosen {'gate': 'hard', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.6931471805599453, 'tau_s': 1.0986122886681098}  w>0.5: 0.258
+[B:soft] avg_train: R2 0.9902  all MAPE 15.1 MdAPE 11.2  small(n=166) MAPE 9.2 MdAPE 6.2 ±20% 92.2  large MAPE 17.2  (106.3s)
+       chosen {'beta': 0.2, 'gate': 'soft', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.6931471805599453, 'tau_s': 1.0986122886681098}  w>0.5: 0.258
+[B:clf] avg_train: R2 0.9902  all MAPE 15.4 MdAPE 11.6  small(n=166) MAPE 10.3 MdAPE 7.9 ±20% 91.6  large MAPE 17.1  (65.3s)
+       chosen {'gate': 'clf', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.6931471805599453, 'tau_s': 1.0986122886681098}  w>0.5: 0.263
+[B:all] avg_train: R2 0.9902  all MAPE 15.1 MdAPE 11.2  small(n=166) MAPE 9.3 MdAPE 6.2 ±20% 92.8  large MAPE 17.1  (226.4s)
+[B:hard] avg_infer: R2 0.9899  all MAPE 20.5 MdAPE 14.4  small(n=117) MAPE 30.7 MdAPE 18.8 ±20% 55.6  large MAPE 18.1  (44.4s)
+       chosen {'gate': 'hard', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.04879016416943201, 'tau_s': 0.04879016416943201}  w>0.5: 0.28
+[B:soft] avg_infer: R2 0.9899  all MAPE 23.1 MdAPE 15.3  small(n=117) MAPE 45.4 MdAPE 25.2 ±20% 38.5  large MAPE 18.0  (87.1s)
+       chosen {'beta': 0.02, 'gate': 'soft', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.04879016416943201, 'tau_s': 0.09531017980432487}  w>0.5: 0.28
+[B:clf] avg_infer: R2 0.9899  all MAPE 18.9 MdAPE 14.1  small(n=117) MAPE 24.3 MdAPE 17.9 ±20% 59.8  large MAPE 17.6  (54.9s)
+       chosen {'gate': 'clf', 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 400, 'tau': 0.04879016416943201, 'tau_s': 0.04879016416943201}  w>0.5: 0.29
+[B:all] avg_infer: R2 0.9899  all MAPE 23.1 MdAPE 15.3  small(n=117) MAPE 45.4 MdAPE 25.2 ±20% 38.5  large MAPE 18.0  (186.0s)
+   ↳ regime_ensemble 저장 (1016.5s)
+
+[A] avg_train: R2 0.9903  all MAPE 15.6 MdAPE 11.5  small(n=166) MAPE 12.4 MdAPE 8.6 ±20% 83.1  large MAPE 16.8  (133.4s)
+[A] avg_infer: R2 0.991  all MAPE 34.8 MdAPE 15.8  small(n=117) MAPE 111.8 MdAPE 80.2 ±20% 11.1  large MAPE 17.4  (132.2s)
+   ↳ algo_average 저장 (330.5s)
+
+[C] avg_train: R2 0.9911  all MAPE 14.3 MdAPE 10.3  small(n=166) MAPE 8.6 MdAPE 5.6 ±20% 91.6  large MAPE 16.4  (33.5s)
+[C] avg_infer: R2 0.9884  all MAPE 23.1 MdAPE 14.7  small(n=117) MAPE 49.6 MdAPE 21.1 ±20% 45.3  large MAPE 17.1  (29.1s)
+   ↳ per_backend_control 저장 (62.7s)
+
+[ladder] avg_train xgb: L3 0.9552/39.8  L4 0.975/30.5  L5 0.9121/66.2 p/t 0.772
+[ladder] avg_train F_log: L3 0.9495/39.3  L4 0.976/26.0  L5 0.9202/59.0 p/t 0.816
+[ladder] avg_train D_weighted: L3 0.9522/37.1  L4 0.9718/29.5  L5 0.9206/64.6 p/t 0.836
+[ladder] avg_train E_residual: L3 0.9554/39.0  L4 0.975/30.5  L5 0.9123/65.8 p/t 0.769
+[ladder] avg_train B_regime: L3 0.9563/34.1  L4 0.9758/27.1  L5 0.9144/60.5 p/t 0.772
+[ladder] avg_infer xgb: L3 0.9594/110.5  L4 0.9833/70.8  L5 0.882/275.3 p/t 0.91
+[ladder] avg_infer F_log: L3 0.9539/53.7  L4 0.9813/28.0  L5 0.8811/154.9 p/t 0.886
+[ladder] avg_infer D_weighted: L3 0.9538/116.3  L4 0.983/47.6  L5 0.8691/314.4 p/t 0.917
+[ladder] avg_infer E_residual: L3 0.9595/107.4  L4 0.9833/65.6  L5 0.882/274.2 p/t 0.904
+[ladder] avg_infer B_regime: L3 0.9598/76.9  L4 0.9834/42.7  L5 0.8821/256.1 p/t 0.91
+   ↳ ladder_check 저장 (103.2s)
+
+[seeds] avg_train xgb: R2 0.9882±0.0013  small MAPE 18.0±1.7  large MAPE 19.1±0.8
+[seeds] avg_train F_log: R2 0.9862±0.002  small MAPE 10.8±0.5  large MAPE 19.3±0.6
+[seeds] avg_train D_weighted: R2 0.987±0.0018  small MAPE 13.1±0.9  large MAPE 19.8±1.3
+[seeds] avg_train E_residual: R2 0.9882±0.0012  small MAPE 17.5±1.3  large MAPE 19.1±0.8
+[seeds] avg_train B_regime: R2 0.9885±0.0012  small MAPE 10.3±0.5  large MAPE 18.8±0.8
+[seeds] avg_infer xgb: R2 0.9873±0.001  small MAPE 170.3±35.2  large MAPE 22.4±1.0
+[seeds] avg_infer F_log: R2 0.9862±0.0013  small MAPE 22.1±5.0  large MAPE 16.7±0.5
+[seeds] avg_infer D_weighted: R2 0.9868±0.0013  small MAPE 103.3±20.4  large MAPE 20.3±1.3
+[seeds] avg_infer E_residual: R2 0.9873±0.001  small MAPE 165.3±27.6  large MAPE 22.8±1.1
+[seeds] avg_infer B_regime: R2 0.9873±0.001  small MAPE 49.0±22.1  large MAPE 19.2±0.8
+   ↳ seed_stability 저장 (469.9s)
+
+완료: /Users/ijunsu/Documents/Documents/ann/ai-simulator/paper/v4_measured_l.json
+행 632 | 피처 120 | 절: ['log_per_backend']
+
+[F+C:log] avg_train: R2 0.9908  all MAPE 14.2 MdAPE 10.1  small(n=166) MAPE 7.6 MdAPE 5.1 ±20% 94.0  large MAPE 16.5  (35.1s)
+[F+C:log1p] avg_train: R2 0.9911  all MAPE 14.3 MdAPE 10.3  small(n=166) MAPE 8.6 MdAPE 5.6 ±20% 91.6  large MAPE 16.4  (34.0s)
+[F+C:log] avg_infer: R2 0.9906  all MAPE 15.4 MdAPE 12.4  small(n=117) MAPE 19.0 MdAPE 9.1 ±20% 76.9  large MAPE 14.6  (36.3s)
+[F+C:log1p] avg_infer: R2 0.9884  all MAPE 23.1 MdAPE 14.7  small(n=117) MAPE 49.6 MdAPE 21.1 ±20% 45.3  large MAPE 17.1  (29.4s)
+   ↳ log_per_backend 저장 (166.6s)
+
+완료: /Users/ijunsu/Documents/Documents/ann/ai-simulator/paper/v4_measured_l.json

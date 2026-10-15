@@ -1,0 +1,738 @@
+{
+ "cells": 632,
+ "t2_ratios": {
+  "mac_over_desktop": {
+   "simple_cnn": 2.1,
+   "mobilenet_mnist": 14.0,
+   "resnet_mnist": 2.5,
+   "simple_ann": 0.5,
+   "gan": 0.6,
+   "transformer": 0.9
+  },
+  "mps_speedup": {
+   "simple_cnn": 5.1,
+   "mobilenet_mnist": 35.0,
+   "resnet_mnist": 7.1,
+   "simple_ann": 0.5,
+   "gan": 1.7,
+   "transformer": 2.7
+  }
+ },
+ "t4_model_comparison": {
+  "avg_train": {
+   "LinearRegression": 0.855,
+   "RandomForest": 0.981,
+   "GradientBoosting": 0.977,
+   "XGBoost": 0.988
+  },
+  "avg_infer": {
+   "LinearRegression": 0.782,
+   "RandomForest": 0.976,
+   "GradientBoosting": 0.979,
+   "XGBoost": 0.989
+  }
+ },
+ "t5_backend": {
+  "avg_train": {
+   "Desktop CPU": 0.988,
+   "CUDA": 0.961,
+   "Mac CPU": 0.99,
+   "MPS": 0.983
+  },
+  "avg_infer": {
+   "Desktop CPU": 0.989,
+   "CUDA": 0.951,
+   "Mac CPU": 0.988,
+   "MPS": 0.979
+  }
+ },
+ "mape": {
+  "avg_train": {
+   "mape_ge10ms": 18.9,
+   "w20_ge10ms": 63.3
+  },
+  "avg_infer": {
+   "mape_ge10ms": 23.4,
+   "w20_ge10ms": 62.3
+  }
+ },
+ "t6_protocols": {
+  "full_random": {
+   "avg_train": 0.988,
+   "avg_infer": 0.989
+  },
+  "full_group": {
+   "avg_train": 0.989,
+   "avg_infer": 0.989
+  },
+  "no_hw_group": {
+   "avg_train": 0.782,
+   "avg_infer": 0.672
+  },
+  "flops_group": {
+   "avg_train": 0.574,
+   "avg_infer": 0.498
+  },
+  "params_group": {
+   "avg_train": 0.231,
+   "avg_infer": 0.295
+  },
+  "analytic": {
+   "avg_train": 0.78,
+   "avg_infer": 0.84
+  }
+ },
+ "lobo": {
+  "Desktop CPU": {
+   "avg_train": 0.663,
+   "avg_infer": 0.813
+  },
+  "CUDA": {
+   "avg_train": -3.176,
+   "avg_infer": -17.196
+  },
+  "Mac CPU": {
+   "avg_train": 0.791,
+   "avg_infer": 0.87
+  },
+  "MPS": {
+   "avg_train": 0.613,
+   "avg_infer": 0.55
+  }
+ },
+ "lodo": {
+  "desktop→mac": {
+   "avg_train": 0.758,
+   "avg_infer": 0.831
+  },
+  "mac→desktop": {
+   "avg_train": -0.529,
+   "avg_infer": -0.544
+  }
+ },
+ "t7_importance": {
+  "Desktop CPU": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.778
+    ],
+    [
+     "total_op_memory_read",
+     0.055
+    ],
+    [
+     "std_op_flops",
+     0.034
+    ]
+   ],
+   "flops_rank": 7,
+   "flops_imp": 0.013
+  },
+  "CUDA": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.652
+    ],
+    [
+     "model_family_encoded",
+     0.092
+    ],
+    [
+     "flops_ratio_Linear",
+     0.059
+    ]
+   ],
+   "flops_rank": 5,
+   "flops_imp": 0.021
+  },
+  "Mac CPU": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.474
+    ],
+    [
+     "conv_params",
+     0.257
+    ],
+    [
+     "flops_ratio_Linear",
+     0.117
+    ]
+   ],
+   "flops_rank": 24,
+   "flops_imp": 0.001
+  },
+  "MPS": {
+   "top3": [
+    [
+     "total_op_memory_write",
+     0.821
+    ],
+    [
+     "total_op_memory_read",
+     0.079
+    ],
+    [
+     "max_op_flops",
+     0.023
+    ]
+   ],
+   "flops_rank": 10,
+   "flops_imp": 0.005
+  }
+ },
+ "t8_ablation": {
+  "Desktop CPU": {
+   "full": 0.9861,
+   "ablate_a": 0.9815,
+   "ablate_b": 0.9817,
+   "perm_write": 0.825,
+   "perm_flops": 0.001
+  },
+  "CUDA": {
+   "full": 0.9711,
+   "ablate_a": 0.9672,
+   "ablate_b": 0.9671,
+   "perm_write": 0.521,
+   "perm_flops": 0.002
+  },
+  "Mac CPU": {
+   "full": 0.9837,
+   "ablate_a": 0.9813,
+   "ablate_b": 0.9811,
+   "perm_write": 0.584,
+   "perm_flops": 0.001
+  },
+  "MPS": {
+   "full": 0.9843,
+   "ablate_a": 0.9748,
+   "ablate_b": 0.975,
+   "perm_write": 0.991,
+   "perm_flops": 0.001
+  }
+ },
+ "t8_group_perm": {
+  "config": {
+   "base_r2": 0.97,
+   "perm_write": 0.661,
+   "perm_flops": 0.001,
+   "held_groups": 40
+  },
+  "family": {
+   "base_r2": 0.509,
+   "perm_write": 0.315,
+   "perm_flops": 0.002,
+   "held_groups": [
+    "gan",
+    "mobilenet_mnist"
+   ]
+  }
+ },
+ "t9_lofo": {
+  "simple_ann": {
+   "avg_train": -18.045,
+   "avg_infer": -185.246
+  },
+  "simple_cnn": {
+   "avg_train": 0.883,
+   "avg_infer": 0.935
+  },
+  "resnet_mnist": {
+   "avg_train": 0.592,
+   "avg_infer": 0.942
+  },
+  "mobilenet_mnist": {
+   "avg_train": 0.631,
+   "avg_infer": 0.897
+  },
+  "transformer": {
+   "avg_train": 0.455,
+   "avg_infer": 0.366
+  },
+  "gan": {
+   "avg_train": -3.288,
+   "avg_infer": -2.562
+  }
+ },
+ "t10_path_comparison": {
+  "onnx": {
+   "avg_train": 0.988,
+   "avg_infer": 0.989
+  },
+  "pytorch": {
+   "avg_train": 0.989,
+   "avg_infer": 0.989
+  }
+ },
+ "t11_external": {
+  "n_train": 576,
+  "n_test": 56,
+  "per_target": {
+   "avg_train": {
+    "r2log": 0.848,
+    "mape_novit": 13.7,
+    "w20_novit": 70.5,
+    "mape_vit": 64.9
+   },
+   "avg_infer": {
+    "r2log": 0.756,
+    "mape_novit": 16.9,
+    "w20_novit": 63.2,
+    "mape_vit": 74.3
+   }
+  },
+  "cases": [
+   {
+    "model_name": "ANN_h128_l1",
+    "backend": "Desktop CPU",
+    "train_meas": 0.303,
+    "train_pred": 0.344,
+    "infer_meas": 0.0069,
+    "infer_pred": 0.0116
+   },
+   {
+    "model_name": "ANN_h256_l2",
+    "backend": "Desktop CPU",
+    "train_meas": 0.497,
+    "train_pred": 0.492,
+    "infer_meas": 0.0134,
+    "infer_pred": 0.0205
+   },
+   {
+    "model_name": "ANN_h512_l3",
+    "backend": "Desktop CPU",
+    "train_meas": 1.04,
+    "train_pred": 1.322,
+    "infer_meas": 0.034,
+    "infer_pred": 0.0346
+   },
+   {
+    "model_name": "CNN_f32_l2_bn0",
+    "backend": "Desktop CPU",
+    "train_meas": 10.032,
+    "train_pred": 13.162,
+    "infer_meas": 1.0173,
+    "infer_pred": 1.2265
+   },
+   {
+    "model_name": "CNN_f64_l3_bn0",
+    "backend": "Desktop CPU",
+    "train_meas": 57.194,
+    "train_pred": 66.01,
+    "infer_meas": 4.0029,
+    "infer_pred": 4.6001
+   },
+   {
+    "model_name": "CNN_f128_l4_bn0",
+    "backend": "Desktop CPU",
+    "train_meas": 384.338,
+    "train_pred": 394.562,
+    "infer_meas": 22.4347,
+    "infer_pred": 23.7893
+   },
+   {
+    "model_name": "ResNet_2222_w16",
+    "backend": "Desktop CPU",
+    "train_meas": 28.15,
+    "train_pred": 29.931,
+    "infer_meas": 1.2441,
+    "infer_pred": 1.3022
+   },
+   {
+    "model_name": "ResNet_2222_w32",
+    "backend": "Desktop CPU",
+    "train_meas": 79.547,
+    "train_pred": 106.017,
+    "infer_meas": 4.1624,
+    "infer_pred": 5.552
+   },
+   {
+    "model_name": "ResNet_2222_w64",
+    "backend": "Desktop CPU",
+    "train_meas": 257.431,
+    "train_pred": 281.226,
+    "infer_meas": 13.1983,
+    "infer_pred": 17.7586
+   },
+   {
+    "model_name": "ViT_d64_l2_h4_p4",
+    "backend": "Desktop CPU",
+    "train_meas": 12.174,
+    "train_pred": 4.391,
+    "infer_meas": 1.143,
+    "infer_pred": 0.1995
+   },
+   {
+    "model_name": "ViT_d128_l4_h4_p4",
+    "backend": "Desktop CPU",
+    "train_meas": 57.218,
+    "train_pred": 6.459,
+    "infer_meas": 4.6167,
+    "infer_pred": 0.2582
+   },
+   {
+    "model_name": "ViT_d256_l4_h8_p4",
+    "backend": "Desktop CPU",
+    "train_meas": 165.774,
+    "train_pred": 13.809,
+    "infer_meas": 13.3611,
+    "infer_pred": 0.9277
+   },
+   {
+    "model_name": "GAN_z64_G128_256",
+    "backend": "Desktop CPU",
+    "train_meas": 4.458,
+    "train_pred": 3.964,
+    "infer_meas": 0.3414,
+    "infer_pred": 0.5012
+   },
+   {
+    "model_name": "GAN_z128_G256_512_1024",
+    "backend": "Desktop CPU",
+    "train_meas": 21.978,
+    "train_pred": 18.087,
+    "infer_meas": 1.2558,
+    "infer_pred": 1.1524
+   },
+   {
+    "model_name": "ANN_h128_l1",
+    "backend": "CUDA",
+    "train_meas": 0.5,
+    "train_pred": 0.506,
+    "infer_meas": 0.0035,
+    "infer_pred": 0.004
+   },
+   {
+    "model_name": "ANN_h256_l2",
+    "backend": "CUDA",
+    "train_meas": 0.608,
+    "train_pred": 0.562,
+    "infer_meas": 0.0025,
+    "infer_pred": 0.0031
+   },
+   {
+    "model_name": "ANN_h512_l3",
+    "backend": "CUDA",
+    "train_meas": 0.746,
+    "train_pred": 0.837,
+    "infer_meas": 0.0041,
+    "infer_pred": 0.0015
+   },
+   {
+    "model_name": "CNN_f32_l2_bn0",
+    "backend": "CUDA",
+    "train_meas": 1.24,
+    "train_pred": 1.539,
+    "infer_meas": 0.1188,
+    "infer_pred": 0.1471
+   },
+   {
+    "model_name": "CNN_f64_l3_bn0",
+    "backend": "CUDA",
+    "train_meas": 5.22,
+    "train_pred": 6.285,
+    "infer_meas": 0.3563,
+    "infer_pred": 0.433
+   },
+   {
+    "model_name": "CNN_f128_l4_bn0",
+    "backend": "CUDA",
+    "train_meas": 24.168,
+    "train_pred": 26.636,
+    "infer_meas": 1.3285,
+    "infer_pred": 1.543
+   },
+   {
+    "model_name": "ResNet_2222_w16",
+    "backend": "CUDA",
+    "train_meas": 6.548,
+    "train_pred": 6.541,
+    "infer_meas": 0.1602,
+    "infer_pred": 0.1505
+   },
+   {
+    "model_name": "ResNet_2222_w32",
+    "backend": "CUDA",
+    "train_meas": 6.413,
+    "train_pred": 7.896,
+    "infer_meas": 0.4308,
+    "infer_pred": 0.5332
+   },
+   {
+    "model_name": "ResNet_2222_w64",
+    "backend": "CUDA",
+    "train_meas": 16.579,
+    "train_pred": 20.042,
+    "infer_meas": 0.9837,
+    "infer_pred": 1.127
+   },
+   {
+    "model_name": "ViT_d64_l2_h4_p4",
+    "backend": "CUDA",
+    "train_meas": 2.971,
+    "train_pred": 2.654,
+    "infer_meas": 0.1166,
+    "infer_pred": 0.0603
+   },
+   {
+    "model_name": "ViT_d128_l4_h4_p4",
+    "backend": "CUDA",
+    "train_meas": 5.094,
+    "train_pred": 3.668,
+    "infer_meas": 0.352,
+    "infer_pred": 0.0997
+   },
+   {
+    "model_name": "ViT_d256_l4_h8_p4",
+    "backend": "CUDA",
+    "train_meas": 10.69,
+    "train_pred": 4.66,
+    "infer_meas": 0.83,
+    "infer_pred": 0.3254
+   },
+   {
+    "model_name": "GAN_z64_G128_256",
+    "backend": "CUDA",
+    "train_meas": 3.052,
+    "train_pred": 2.399,
+    "infer_meas": 0.2245,
+    "infer_pred": 0.2476
+   },
+   {
+    "model_name": "GAN_z128_G256_512_1024",
+    "backend": "CUDA",
+    "train_meas": 3.833,
+    "train_pred": 3.84,
+    "infer_meas": 0.2612,
+    "infer_pred": 0.2824
+   },
+   {
+    "model_name": "ANN_h128_l1",
+    "backend": "Mac CPU",
+    "train_meas": 0.138,
+    "train_pred": 0.159,
+    "infer_meas": 0.0027,
+    "infer_pred": 0.0098
+   },
+   {
+    "model_name": "ANN_h256_l2",
+    "backend": "Mac CPU",
+    "train_meas": 0.228,
+    "train_pred": 0.225,
+    "infer_meas": 0.0052,
+    "infer_pred": 0.0119
+   },
+   {
+    "model_name": "ANN_h512_l3",
+    "backend": "Mac CPU",
+    "train_meas": 0.525,
+    "train_pred": 0.676,
+    "infer_meas": 0.0154,
+    "infer_pred": 0.0184
+   },
+   {
+    "model_name": "CNN_f32_l2_bn0",
+    "backend": "Mac CPU",
+    "train_meas": 22.705,
+    "train_pred": 25.874,
+    "infer_meas": 1.0349,
+    "infer_pred": 1.0989
+   },
+   {
+    "model_name": "CNN_f64_l3_bn0",
+    "backend": "Mac CPU",
+    "train_meas": 83.521,
+    "train_pred": 91.202,
+    "infer_meas": 4.5455,
+    "infer_pred": 4.7366
+   },
+   {
+    "model_name": "CNN_f128_l4_bn0",
+    "backend": "Mac CPU",
+    "train_meas": 468.875,
+    "train_pred": 489.427,
+    "infer_meas": 27.1342,
+    "infer_pred": 27.8586
+   },
+   {
+    "model_name": "ResNet_2222_w16",
+    "backend": "Mac CPU",
+    "train_meas": 91.939,
+    "train_pred": 92.172,
+    "infer_meas": 3.7093,
+    "infer_pred": 3.6929
+   },
+   {
+    "model_name": "ResNet_2222_w32",
+    "backend": "Mac CPU",
+    "train_meas": 189.257,
+    "train_pred": 251.052,
+    "infer_meas": 10.0586,
+    "infer_pred": 13.407
+   },
+   {
+    "model_name": "ResNet_2222_w64",
+    "backend": "Mac CPU",
+    "train_meas": 528.522,
+    "train_pred": 474.555,
+    "infer_meas": 29.8102,
+    "infer_pred": 32.4499
+   },
+   {
+    "model_name": "ViT_d64_l2_h4_p4",
+    "backend": "Mac CPU",
+    "train_meas": 12.986,
+    "train_pred": 6.371,
+    "infer_meas": 1.1276,
+    "infer_pred": 0.4569
+   },
+   {
+    "model_name": "ViT_d128_l4_h4_p4",
+    "backend": "Mac CPU",
+    "train_meas": 37.401,
+    "train_pred": 6.559,
+    "infer_meas": 3.4936,
+    "infer_pred": 0.5196
+   },
+   {
+    "model_name": "ViT_d256_l4_h8_p4",
+    "backend": "Mac CPU",
+    "train_meas": 103.358,
+    "train_pred": 11.288,
+    "infer_meas": 7.8096,
+    "infer_pred": 1.0556
+   },
+   {
+    "model_name": "GAN_z64_G128_256",
+    "backend": "Mac CPU",
+    "train_meas": 3.126,
+    "train_pred": 3.103,
+    "infer_meas": 0.2648,
+    "infer_pred": 0.3438
+   },
+   {
+    "model_name": "GAN_z128_G256_512_1024",
+    "backend": "Mac CPU",
+    "train_meas": 13.213,
+    "train_pred": 10.912,
+    "infer_meas": 0.6767,
+    "infer_pred": 0.6743
+   },
+   {
+    "model_name": "ANN_h128_l1",
+    "backend": "MPS",
+    "train_meas": 0.334,
+    "train_pred": 0.341,
+    "infer_meas": 0.0267,
+    "infer_pred": 0.0228
+   },
+   {
+    "model_name": "ANN_h256_l2",
+    "backend": "MPS",
+    "train_meas": 0.402,
+    "train_pred": 0.414,
+    "infer_meas": 0.0303,
+    "infer_pred": 0.0151
+   },
+   {
+    "model_name": "ANN_h512_l3",
+    "backend": "MPS",
+    "train_meas": 0.513,
+    "train_pred": 0.559,
+    "infer_meas": 0.0133,
+    "infer_pred": 0.0129
+   },
+   {
+    "model_name": "CNN_f32_l2_bn0",
+    "backend": "MPS",
+    "train_meas": 4.229,
+    "train_pred": 6.118,
+    "infer_meas": 0.22,
+    "infer_pred": 0.2753
+   },
+   {
+    "model_name": "CNN_f64_l3_bn0",
+    "backend": "MPS",
+    "train_meas": 19.542,
+    "train_pred": 24.736,
+    "infer_meas": 0.9263,
+    "infer_pred": 1.1133
+   },
+   {
+    "model_name": "CNN_f128_l4_bn0",
+    "backend": "MPS",
+    "train_meas": 121.49,
+    "train_pred": 131.972,
+    "infer_meas": 5.6009,
+    "infer_pred": 6.0075
+   },
+   {
+    "model_name": "ResNet_2222_w16",
+    "backend": "MPS",
+    "train_meas": 10.409,
+    "train_pred": 11.013,
+    "infer_meas": 0.4734,
+    "infer_pred": 0.5383
+   },
+   {
+    "model_name": "ResNet_2222_w32",
+    "backend": "MPS",
+    "train_meas": 27.829,
+    "train_pred": 26.844,
+    "infer_meas": 1.2375,
+    "infer_pred": 1.6963
+   },
+   {
+    "model_name": "ResNet_2222_w64",
+    "backend": "MPS",
+    "train_meas": 85.057,
+    "train_pred": 93.734,
+    "infer_meas": 3.9323,
+    "infer_pred": 3.928
+   },
+   {
+    "model_name": "ViT_d64_l2_h4_p4",
+    "backend": "MPS",
+    "train_meas": 5.126,
+    "train_pred": 2.24,
+    "infer_meas": 0.3078,
+    "infer_pred": 0.1777
+   },
+   {
+    "model_name": "ViT_d128_l4_h4_p4",
+    "backend": "MPS",
+    "train_meas": 15.998,
+    "train_pred": 3.915,
+    "infer_meas": 1.0597,
+    "infer_pred": 0.2166
+   },
+   {
+    "model_name": "ViT_d256_l4_h8_p4",
+    "backend": "MPS",
+    "train_meas": 42.568,
+    "train_pred": 6.239,
+    "infer_meas": 2.8258,
+    "infer_pred": 0.3274
+   },
+   {
+    "model_name": "GAN_z64_G128_256",
+    "backend": "MPS",
+    "train_meas": 2.589,
+    "train_pred": 2.097,
+    "infer_meas": 0.1539,
+    "infer_pred": 0.1817
+   },
+   {
+    "model_name": "GAN_z128_G256_512_1024",
+    "backend": "MPS",
+    "train_meas": 7.177,
+    "train_pred": 5.244,
+    "infer_meas": 0.2321,
+    "infer_pred": 0.232
+   }
+  ]
+ }
+}

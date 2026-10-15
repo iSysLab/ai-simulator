@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>README.md 삽입용 그림 (SVG)</title>
+  <style>
+    body { font-family: "Segoe UI", "Malgun Gothic", sans-serif; max-width: 1150px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { font-size: 1.35rem; }
+    p.note { background: #f0f7ff; border-left: 4px solid #1f77b4; padding: 0.75rem 1rem; font-size: 0.95rem; }
+    figure { margin: 2rem 0; }
+    figcaption { font-size: 0.9rem; color: #444; margin-top: 0.5rem; line-height: 1.5; }
+    img { max-width: 100%; height: auto; border: 1px solid #ddd; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <h1>보고서 그림 미리보기</h1>
+  <p class="note">
+    Cursor·VS Code·PyCharm 등에서 <code>README.md</code>를 미리보기 할 때 <strong>로컬 SVG가 표시되지 않는 경우</strong>가 있습니다 (미리보기 보안 정책).
+    이 페이지는 같은 폴더의 <code>images/*.svg</code>를 브라우저로 보여 줍니다.
+    <strong>이 파일을 탐색기에서 더블클릭</strong>하거나, 드래그해 Chrome/Edge에 넣으면 됩니다.
+  </p>
+
+  <figure>
+    <img src="images/scatter_train.svg" alt="실측 vs RF 예측 학습 시간" width="1100" />
+    <figcaption>
+      <strong>학습 시간.</strong> 왼쪽 CPU · 오른쪽 GPU(CUDA) 패널.
+      <code>python scripts/visualize_results.py</code> 의 fig5와 같이 장치를 나누고, 점 색은 ONNX 파일명 기준 모델 계열(ANN/CNN/ResNet/ViT/GAN)입니다.
+      빨간 점선은 완벽 예측선(y=x).
+    </figcaption>
+  </figure>
+
+  <figure>
+    <img src="images/scatter_infer.svg" alt="실측 vs RF 예측 추론 시간" width="1100" />
+    <figcaption>
+      <strong>추론 시간.</strong> 구성은 학습 시간 그림과 동일합니다.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <img src="images/feature_importance_gpu_train.svg" alt="피처 중요도" width="760" />
+    <figcaption>
+      <strong>피처 중요도.</strong> 1위 항목은 막대가 너무 커서 숨겨 보이던 문제를 피하기 위해 제목에 수치로 표시하고, 2~10위만 막대로 확대해 그립니다.
+    </figcaption>
+  </figure>
+</body>
+</html>

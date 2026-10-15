@@ -1,0 +1,12 @@
+device,rank,feature,importance
+GPU(CUDA),1,total_op_memory_write,0.6701
+GPU(CUDA),2,total_op_memory_read,0.0765
+GPU(CUDA),3,flops_ratio_Linear,0.0546
+GPU(CUDA),4,flops_per_sample,0.0227
+GPU(CUDA),5,num_mult_adds,0.0210
+CPU,1,total_op_memory_write,0.7919
+CPU,2,total_op_memory_read,0.0767
+CPU,3,flops_ratio_Linear,0.0521
+GPU(MPS),1,total_op_memory_write,0.8015
+GPU(MPS),2,total_op_memory_read,0.0641
+GPU(MPS),3,flops_ratio_Linear,0.0494

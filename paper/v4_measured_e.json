@@ -1,0 +1,39 @@
+{
+ "n_rows": 698,
+ "n_skipped": 0,
+ "feature_agreement_relerr": {
+  "flops": {
+   "median": 0.0022,
+   "p90": 0.0543,
+   "n": 152
+  },
+  "total_op_memory_read": {
+   "median": 0.0523,
+   "p90": 0.2912,
+   "n": 152
+  },
+  "total_op_memory_write": {
+   "median": 0.3152,
+   "p90": 0.3446,
+   "n": 152
+  },
+  "total_params": {
+   "median": 0.001,
+   "p90": 0.0313,
+   "n": 160
+  },
+  "num_ops": {
+   "median": 0.1429,
+   "p90": 0.3448,
+   "n": 152
+  }
+ },
+ "onnx_features": {
+  "avg_train": 0.988,
+  "avg_infer": 0.99
+ },
+ "pytorch_features_same_rows": {
+  "avg_train": 0.988,
+  "avg_infer": 0.988
+ }
+}

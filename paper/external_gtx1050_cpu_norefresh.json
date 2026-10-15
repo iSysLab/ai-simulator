@@ -1,0 +1,812 @@
+{
+ "name": "gtx1050_cpu_norefresh",
+ "device": "cpu",
+ "transform": "log",
+ "n_train": 632,
+ "n_external": 41,
+ "nearest_backend": "Desktop CPU",
+ "external_hw": {
+  "gpu_cores": 0,
+  "gpu_memory_gb": 0.0,
+  "tflops_fp32": 0.0,
+  "gpu_clock_ghz": 0.0,
+  "cpu_cores": 4,
+  "ram_total_gb": 7.8
+ },
+ "avg_train": {
+  "params": {
+   "learning_rate": 0.1,
+   "max_depth": 3,
+   "n_estimators": 400,
+   "transform": "log"
+  },
+  "descriptor_model": {
+   "r2log": 0.4047,
+   "n": 41,
+   "mape": 77.0,
+   "mdape": 75.9,
+   "w20": 0.0,
+   "spearman": 0.966,
+   "median_pred_over_true": 0.241
+  },
+  "small": {
+   "r2log": -30.2065,
+   "n": 3,
+   "mape": 58.9,
+   "mdape": 60.8,
+   "w20": 0.0,
+   "spearman": 1.0,
+   "median_pred_over_true": 0.392
+  },
+  "large": {
+   "r2log": 0.1543,
+   "n": 38,
+   "mape": 78.4,
+   "mdape": 81.7,
+   "w20": 0.0,
+   "spearman": 0.958,
+   "median_pred_over_true": 0.183
+  },
+  "per_family": {
+   "ANN": {
+    "r2log": 0.0822,
+    "n": 7,
+    "mape": 65.1,
+    "mdape": 68.5,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.315
+   },
+   "CNN": {
+    "r2log": -0.7382,
+    "n": 7,
+    "mape": 85.8,
+    "mdape": 85.2,
+    "w20": 0.0,
+    "spearman": 0.964,
+    "median_pred_over_true": 0.148
+   },
+   "ResNet": {
+    "r2log": -1.2731,
+    "n": 7,
+    "mape": 84.4,
+    "mdape": 83.7,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.163
+   },
+   "MobileNet": {
+    "r2log": -12.7192,
+    "n": 7,
+    "mape": 87.4,
+    "mdape": 87.7,
+    "w20": 0.0,
+    "spearman": 0.679,
+    "median_pred_over_true": 0.123
+   },
+   "ViT": {
+    "r2log": 0.2497,
+    "n": 6,
+    "mape": 65.0,
+    "mdape": 68.5,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.315
+   },
+   "GAN": {
+    "r2log": -5.2106,
+    "n": 7,
+    "mape": 72.5,
+    "mdape": 73.2,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.268
+   }
+  },
+  "baseline_nearest_copy": {
+   "r2log": 0.3948,
+   "n": 41,
+   "mape": 77.4,
+   "mdape": 76.9,
+   "w20": 0.0,
+   "spearman": 0.967,
+   "median_pred_over_true": 0.231
+  },
+  "baseline_all_backend_mean": {
+   "r2log": 0.058,
+   "n": 41,
+   "mape": 83.7,
+   "mdape": 88.8,
+   "w20": 0.0,
+   "spearman": 0.988,
+   "median_pred_over_true": 0.112
+  },
+  "cells": [
+   {
+    "name": "ANN_h16_l1",
+    "family": "ANN",
+    "true": 0.52473,
+    "pred": 0.23688,
+    "nearest": 0.23573
+   },
+   {
+    "name": "ANN_h32_l1",
+    "family": "ANN",
+    "true": 0.62619,
+    "pred": 0.24385,
+    "nearest": 0.23631
+   },
+   {
+    "name": "ANN_h64_l1",
+    "family": "ANN",
+    "true": 0.70668,
+    "pred": 0.2772,
+    "nearest": 0.26765
+   },
+   {
+    "name": "ANN_h64_l8",
+    "family": "ANN",
+    "true": 1.88488,
+    "pred": 0.57184,
+    "nearest": 0.6278
+   },
+   {
+    "name": "ANN_h128_l8",
+    "family": "ANN",
+    "true": 2.38776,
+    "pred": 0.75264,
+    "nearest": 0.77855
+   },
+   {
+    "name": "ANN_h256_l8",
+    "family": "ANN",
+    "true": 4.43956,
+    "pred": 1.22197,
+    "nearest": 1.31504
+   },
+   {
+    "name": "ANN_h512_l8",
+    "family": "ANN",
+    "true": 9.01737,
+    "pred": 2.82585,
+    "nearest": 2.529
+   },
+   {
+    "name": "CNN_f8_l1_bn0",
+    "family": "CNN",
+    "true": 12.61781,
+    "pred": 0.93069,
+    "nearest": 0.79546
+   },
+   {
+    "name": "CNN_f8_l6_bn0",
+    "family": "CNN",
+    "true": 54.50775,
+    "pred": 7.30696,
+    "nearest": 5.79168
+   },
+   {
+    "name": "CNN_f16_l5_bn0",
+    "family": "CNN",
+    "true": 72.82593,
+    "pred": 12.26806,
+    "nearest": 11.15034
+   },
+   {
+    "name": "CNN_f32_l4_bn0",
+    "family": "CNN",
+    "true": 186.89164,
+    "pred": 29.50736,
+    "nearest": 30.49209
+   },
+   {
+    "name": "CNN_f64_l2_bn1",
+    "family": "CNN",
+    "true": 241.30759,
+    "pred": 35.63838,
+    "nearest": 37.85754
+   },
+   {
+    "name": "CNN_f128_l1_bn1",
+    "family": "CNN",
+    "true": 72.14866,
+    "pred": 3.80827,
+    "nearest": 6.22176
+   },
+   {
+    "name": "CNN_f128_l6_bn1",
+    "family": "CNN",
+    "true": 2295.95302,
+    "pred": 600.9444,
+    "nearest": 686.45112
+   },
+   {
+    "name": "ResNet_1111_w16",
+    "family": "ResNet",
+    "true": 110.86849,
+    "pred": 17.80332,
+    "nearest": 16.70607
+   },
+   {
+    "name": "ResNet_2111_w16",
+    "family": "ResNet",
+    "true": 150.8734,
+    "pred": 19.74345,
+    "nearest": 21.50069
+   },
+   {
+    "name": "ResNet_2211_w16",
+    "family": "ResNet",
+    "true": 167.58221,
+    "pred": 22.47992,
+    "nearest": 21.4719
+   },
+   {
+    "name": "ResNet_2211_w64",
+    "family": "ResNet",
+    "true": 1215.54957,
+    "pred": 199.56357,
+    "nearest": 193.21436
+   },
+   {
+    "name": "ResNet_2221_w64",
+    "family": "ResNet",
+    "true": 1357.58168,
+    "pred": 220.98553,
+    "nearest": 220.68244
+   },
+   {
+    "name": "ResNet_2222_w64",
+    "family": "ResNet",
+    "true": 1635.69323,
+    "pred": 287.46677,
+    "nearest": 257.43127
+   },
+   {
+    "name": "ResNet_3333_w64",
+    "family": "ResNet",
+    "true": 2455.26616,
+    "pred": 409.23898,
+    "nearest": 450.96259
+   },
+   {
+    "name": "MobileNet_w0.25_b3",
+    "family": "MobileNet",
+    "true": 206.18535,
+    "pred": 13.4194,
+    "nearest": 14.28187
+   },
+   {
+    "name": "MobileNet_w0.25_b10",
+    "family": "MobileNet",
+    "true": 458.03571,
+    "pred": 51.80581,
+    "nearest": 44.57211
+   },
+   {
+    "name": "MobileNet_w0.5_b7",
+    "family": "MobileNet",
+    "true": 381.46724,
+    "pred": 54.02325,
+    "nearest": 38.38354
+   },
+   {
+    "name": "MobileNet_w0.75_b7",
+    "family": "MobileNet",
+    "true": 548.83527,
+    "pred": 67.30473,
+    "nearest": 58.27291
+   },
+   {
+    "name": "MobileNet_w1.0_b5",
+    "family": "MobileNet",
+    "true": 421.70033,
+    "pred": 54.30784,
+    "nearest": 47.72996
+   },
+   {
+    "name": "MobileNet_w1.5_b3",
+    "family": "MobileNet",
+    "true": 429.664,
+    "pred": 52.81306,
+    "nearest": 55.6799
+   },
+   {
+    "name": "MobileNet_w1.5_b10",
+    "family": "MobileNet",
+    "true": 1606.15774,
+    "pred": 305.99426,
+    "nearest": 315.41387
+   },
+   {
+    "name": "ViT_d64_l2_h4_p4",
+    "family": "ViT",
+    "true": 38.62095,
+    "pred": 12.32537,
+    "nearest": 12.17433
+   },
+   {
+    "name": "ViT_d64_l2_h4_p8",
+    "family": "ViT",
+    "true": 8.81934,
+    "pred": 5.25373,
+    "nearest": 4.40828
+   },
+   {
+    "name": "ViT_d128_l4_h4_p4",
+    "family": "ViT",
+    "true": 181.61874,
+    "pred": 53.18217,
+    "nearest": 57.21775
+   },
+   {
+    "name": "ViT_d128_l2_h8_p4",
+    "family": "ViT",
+    "true": 108.11667,
+    "pred": 28.01724,
+    "nearest": 31.65795
+   },
+   {
+    "name": "ViT_d128_l4_h8_p4",
+    "family": "ViT",
+    "true": 206.69003,
+    "pred": 64.15629,
+    "nearest": 62.32085
+   },
+   {
+    "name": "ViT_d256_l4_h8_p4",
+    "family": "ViT",
+    "true": 482.48363,
+    "pred": 156.87888,
+    "nearest": 165.77404
+   },
+   {
+    "name": "GAN_z64_G128_256",
+    "family": "GAN",
+    "true": 17.64844,
+    "pred": 4.92857,
+    "nearest": 4.45761
+   },
+   {
+    "name": "GAN_z64_G128_256_512",
+    "family": "GAN",
+    "true": 39.41923,
+    "pred": 9.56128,
+    "nearest": 9.10258
+   },
+   {
+    "name": "GAN_z128_G256_512",
+    "family": "GAN",
+    "true": 36.858,
+    "pred": 8.88765,
+    "nearest": 8.61309
+   },
+   {
+    "name": "GAN_z128_G128_256_512_256",
+    "family": "GAN",
+    "true": 22.54962,
+    "pred": 7.98069,
+    "nearest": 6.95074
+   },
+   {
+    "name": "GAN_z256_G256_512_1024",
+    "family": "GAN",
+    "true": 84.33192,
+    "pred": 20.97576,
+    "nearest": 22.08508
+   },
+   {
+    "name": "GAN_z256_G512_1024_512",
+    "family": "GAN",
+    "true": 52.77289,
+    "pred": 15.30356,
+    "nearest": 15.64056
+   },
+   {
+    "name": "GAN_z256_G256_512_1024_512",
+    "family": "GAN",
+    "true": 61.84744,
+    "pred": 16.59819,
+    "nearest": 16.597
+   }
+  ]
+ },
+ "avg_infer": {
+  "params": {
+   "learning_rate": 0.1,
+   "max_depth": 3,
+   "n_estimators": 400,
+   "transform": "log"
+  },
+  "descriptor_model": {
+   "r2log": 0.5093,
+   "n": 41,
+   "mape": 68.2,
+   "mdape": 73.6,
+   "w20": 2.4,
+   "spearman": 0.979,
+   "median_pred_over_true": 0.264
+  },
+  "small": {
+   "r2log": null,
+   "n": 2,
+   "mape": 34.2,
+   "mdape": 34.2,
+   "w20": 50.0,
+   "spearman": null,
+   "median_pred_over_true": 0.658
+  },
+  "large": {
+   "r2log": 0.4592,
+   "n": 39,
+   "mape": 69.9,
+   "mdape": 73.6,
+   "w20": 0.0,
+   "spearman": 0.976,
+   "median_pred_over_true": 0.264
+  },
+  "per_family": {
+   "ANN": {
+    "r2log": 0.2784,
+    "n": 7,
+    "mape": 54.9,
+    "mdape": 59.5,
+    "w20": 14.3,
+    "spearman": 0.893,
+    "median_pred_over_true": 0.405
+   },
+   "CNN": {
+    "r2log": 0.3148,
+    "n": 7,
+    "mape": 81.5,
+    "mdape": 81.2,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.188
+   },
+   "ResNet": {
+    "r2log": -0.6867,
+    "n": 7,
+    "mape": 81.2,
+    "mdape": 81.2,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.188
+   },
+   "MobileNet": {
+    "r2log": -2.2016,
+    "n": 7,
+    "mape": 77.3,
+    "mdape": 78.0,
+    "w20": 0.0,
+    "spearman": 0.964,
+    "median_pred_over_true": 0.22
+   },
+   "ViT": {
+    "r2log": 0.0506,
+    "n": 6,
+    "mape": 70.8,
+    "mdape": 70.0,
+    "w20": 0.0,
+    "spearman": 1.0,
+    "median_pred_over_true": 0.3
+   },
+   "GAN": {
+    "r2log": -0.477,
+    "n": 7,
+    "mape": 43.8,
+    "mdape": 41.4,
+    "w20": 0.0,
+    "spearman": 0.964,
+    "median_pred_over_true": 0.586
+   }
+  },
+  "baseline_nearest_copy": {
+   "r2log": 0.4971,
+   "n": 41,
+   "mape": 69.6,
+   "mdape": 73.9,
+   "w20": 0.0,
+   "spearman": 0.976,
+   "median_pred_over_true": 0.261
+  },
+  "baseline_all_backend_mean": {
+   "r2log": 0.0964,
+   "n": 41,
+   "mape": 85.6,
+   "mdape": 86.8,
+   "w20": 2.4,
+   "spearman": 0.985,
+   "median_pred_over_true": 0.132
+  },
+  "cells": [
+   {
+    "name": "ANN_h16_l1",
+    "family": "ANN",
+    "true": 0.00629,
+    "pred": 0.00537,
+    "nearest": 0.00476
+   },
+   {
+    "name": "ANN_h32_l1",
+    "family": "ANN",
+    "true": 0.00806,
+    "pred": 0.00373,
+    "nearest": 0.00373
+   },
+   {
+    "name": "ANN_h64_l1",
+    "family": "ANN",
+    "true": 0.01134,
+    "pred": 0.00459,
+    "nearest": 0.00507
+   },
+   {
+    "name": "ANN_h64_l8",
+    "family": "ANN",
+    "true": 0.01895,
+    "pred": 0.00933,
+    "nearest": 0.00933
+   },
+   {
+    "name": "ANN_h128_l8",
+    "family": "ANN",
+    "true": 0.04154,
+    "pred": 0.01519,
+    "nearest": 0.01454
+   },
+   {
+    "name": "ANN_h256_l8",
+    "family": "ANN",
+    "true": 0.10713,
+    "pred": 0.02544,
+    "nearest": 0.03242
+   },
+   {
+    "name": "ANN_h512_l8",
+    "family": "ANN",
+    "true": 0.23212,
+    "pred": 0.07857,
+    "nearest": 0.08642
+   },
+   {
+    "name": "CNN_f8_l1_bn0",
+    "family": "CNN",
+    "true": 0.20597,
+    "pred": 0.0227,
+    "nearest": 0.02283
+   },
+   {
+    "name": "CNN_f8_l6_bn0",
+    "family": "CNN",
+    "true": 2.21853,
+    "pred": 0.32318,
+    "nearest": 0.33078
+   },
+   {
+    "name": "CNN_f16_l5_bn0",
+    "family": "CNN",
+    "true": 5.17538,
+    "pred": 0.99761,
+    "nearest": 0.8585
+   },
+   {
+    "name": "CNN_f32_l4_bn0",
+    "family": "CNN",
+    "true": 10.60623,
+    "pred": 2.54928,
+    "nearest": 2.32427
+   },
+   {
+    "name": "CNN_f64_l2_bn1",
+    "family": "CNN",
+    "true": 14.39914,
+    "pred": 2.70776,
+    "nearest": 3.15269
+   },
+   {
+    "name": "CNN_f128_l1_bn1",
+    "family": "CNN",
+    "true": 5.16879,
+    "pred": 0.79571,
+    "nearest": 0.90816
+   },
+   {
+    "name": "CNN_f128_l6_bn1",
+    "family": "CNN",
+    "true": 127.66273,
+    "pred": 33.64295,
+    "nearest": 41.69134
+   },
+   {
+    "name": "ResNet_1111_w16",
+    "family": "ResNet",
+    "true": 4.83952,
+    "pred": 0.90701,
+    "nearest": 0.73463
+   },
+   {
+    "name": "ResNet_2111_w16",
+    "family": "ResNet",
+    "true": 7.43435,
+    "pred": 1.10051,
+    "nearest": 1.0833
+   },
+   {
+    "name": "ResNet_2211_w16",
+    "family": "ResNet",
+    "true": 7.85379,
+    "pred": 1.20846,
+    "nearest": 1.03953
+   },
+   {
+    "name": "ResNet_2211_w64",
+    "family": "ResNet",
+    "true": 51.54555,
+    "pred": 9.69694,
+    "nearest": 10.59969
+   },
+   {
+    "name": "ResNet_2221_w64",
+    "family": "ResNet",
+    "true": 58.38234,
+    "pred": 11.22429,
+    "nearest": 11.89808
+   },
+   {
+    "name": "ResNet_2222_w64",
+    "family": "ResNet",
+    "true": 69.28467,
+    "pred": 13.43478,
+    "nearest": 13.19827
+   },
+   {
+    "name": "ResNet_3333_w64",
+    "family": "ResNet",
+    "true": 97.60738,
+    "pred": 24.29558,
+    "nearest": 25.46281
+   },
+   {
+    "name": "MobileNet_w0.25_b3",
+    "family": "MobileNet",
+    "true": 5.07934,
+    "pred": 0.93482,
+    "nearest": 0.92899
+   },
+   {
+    "name": "MobileNet_w0.25_b10",
+    "family": "MobileNet",
+    "true": 12.69589,
+    "pred": 2.44049,
+    "nearest": 2.0636
+   },
+   {
+    "name": "MobileNet_w0.5_b7",
+    "family": "MobileNet",
+    "true": 13.06421,
+    "pred": 2.55634,
+    "nearest": 2.19746
+   },
+   {
+    "name": "MobileNet_w0.75_b7",
+    "family": "MobileNet",
+    "true": 19.85104,
+    "pred": 4.37407,
+    "nearest": 3.75332
+   },
+   {
+    "name": "MobileNet_w1.0_b5",
+    "family": "MobileNet",
+    "true": 17.92616,
+    "pred": 4.89814,
+    "nearest": 3.62999
+   },
+   {
+    "name": "MobileNet_w1.5_b3",
+    "family": "MobileNet",
+    "true": 21.85055,
+    "pred": 5.76421,
+    "nearest": 5.24647
+   },
+   {
+    "name": "MobileNet_w1.5_b10",
+    "family": "MobileNet",
+    "true": 78.70467,
+    "pred": 20.48295,
+    "nearest": 19.88845
+   },
+   {
+    "name": "ViT_d64_l2_h4_p4",
+    "family": "ViT",
+    "true": 4.05745,
+    "pred": 1.07739,
+    "nearest": 1.143
+   },
+   {
+    "name": "ViT_d64_l2_h4_p8",
+    "family": "ViT",
+    "true": 0.76379,
+    "pred": 0.23559,
+    "nearest": 0.19433
+   },
+   {
+    "name": "ViT_d128_l4_h4_p4",
+    "family": "ViT",
+    "true": 15.33737,
+    "pred": 4.60081,
+    "nearest": 4.61675
+   },
+   {
+    "name": "ViT_d128_l2_h8_p4",
+    "family": "ViT",
+    "true": 9.44632,
+    "pred": 2.58282,
+    "nearest": 2.79281
+   },
+   {
+    "name": "ViT_d128_l4_h8_p4",
+    "family": "ViT",
+    "true": 18.75041,
+    "pred": 5.62008,
+    "nearest": 5.40592
+   },
+   {
+    "name": "ViT_d256_l4_h8_p4",
+    "family": "ViT",
+    "true": 37.41843,
+    "pred": 11.38288,
+    "nearest": 13.36112
+   },
+   {
+    "name": "GAN_z64_G128_256",
+    "family": "GAN",
+    "true": 0.57237,
+    "pred": 0.41523,
+    "nearest": 0.3414
+   },
+   {
+    "name": "GAN_z64_G128_256_512",
+    "family": "GAN",
+    "true": 1.71639,
+    "pred": 0.68336,
+    "nearest": 0.61694
+   },
+   {
+    "name": "GAN_z128_G256_512",
+    "family": "GAN",
+    "true": 1.13507,
+    "pred": 0.69705,
+    "nearest": 0.60276
+   },
+   {
+    "name": "GAN_z128_G128_256_512_256",
+    "family": "GAN",
+    "true": 0.89388,
+    "pred": 0.63794,
+    "nearest": 0.50723
+   },
+   {
+    "name": "GAN_z256_G256_512_1024",
+    "family": "GAN",
+    "true": 2.736,
+    "pred": 1.36868,
+    "nearest": 1.32382
+   },
+   {
+    "name": "GAN_z256_G512_1024_512",
+    "family": "GAN",
+    "true": 1.72469,
+    "pred": 1.01052,
+    "nearest": 0.94857
+   },
+   {
+    "name": "GAN_z256_G256_512_1024_512",
+    "family": "GAN",
+    "true": 2.66707,
+    "pred": 1.06472,
+    "nearest": 0.98333
+   }
+  ]
+ }
+}

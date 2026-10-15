@@ -1,0 +1,26 @@
+[project]
+name = "ai-simulator"
+version = "2.0.0"
+description = "DNN 벤치마크 및 실행 시간 예측 프레임워크"
+requires-python = ">=3.8"
+
+dependencies = [
+    "torch>=2.0",
+    "torchvision",
+    "numpy",
+    "scikit-learn",
+    "psutil",
+    "joblib",
+]
+
+[project.optional-dependencies]
+xgboost = ["xgboost>=1.7"]
+viz = ["matplotlib>=3.5", "pandas"]
+onnx = ["onnx>=1.14"]
+full = ["ai-simulator[xgboost,viz,onnx]"]
+
+[project.scripts]
+ai-benchmark = "run_benchmark:main"
+ai-train = "train_predictor:main"
+ai-visualize = "visualize_results:main"
+ai-check = "check_env:main"

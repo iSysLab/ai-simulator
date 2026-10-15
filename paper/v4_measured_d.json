@@ -1,0 +1,54 @@
+{
+ "model_comparison": {
+  "avg_train": {
+   "LinearRegression": 0.864,
+   "RandomForest": 0.984,
+   "GradientBoosting": 0.976,
+   "XGBoost": 0.988
+  },
+  "avg_infer": {
+   "LinearRegression": 0.788,
+   "RandomForest": 0.98,
+   "GradientBoosting": 0.981,
+   "XGBoost": 0.988
+  }
+ },
+ "backend_breakdown": {
+  "avg_train": {
+   "Desktop CPU": {
+    "n": 218,
+    "r2log": 0.988
+   },
+   "CUDA": {
+    "n": 160,
+    "r2log": 0.967
+   },
+   "Mac CPU": {
+    "n": 160,
+    "r2log": 0.987
+   },
+   "MPS": {
+    "n": 160,
+    "r2log": 0.986
+   }
+  },
+  "avg_infer": {
+   "Desktop CPU": {
+    "n": 218,
+    "r2log": 0.986
+   },
+   "CUDA": {
+    "n": 160,
+    "r2log": 0.946
+   },
+   "Mac CPU": {
+    "n": 160,
+    "r2log": 0.989
+   },
+   "MPS": {
+    "n": 160,
+    "r2log": 0.982
+   }
+  }
+ }
+}

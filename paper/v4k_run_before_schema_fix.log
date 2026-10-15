@@ -1,0 +1,64 @@
+행 632 | 피처 120 | 절: ['label_vs_descriptors', 'overhead_features', 'protocol_ladder', 'symmetric_ablation', 'tuned_comparison', 'unified_importance']
+
+[R1-2] L1_random avg_train: R2 0.9873±0.0009  MAPE 18.8±0.5
+[R1-2] L1_random avg_infer: R2 0.9887±0.0017  MAPE 23.3±1.0
+[R1-2] L2_config avg_train: R2 0.9887±0.0011  MAPE 17.9±0.8
+[R1-2] L2_config avg_infer: R2 0.9874±0.0013  MAPE 22.1±1.5
+[R1-2] L3_width_level avg_train: 0.9639  MAPE 33.2
+[R1-2] L3_width_level avg_infer: 0.9577  MAPE 74.5
+[R1-2] L4_depth_level avg_train: 0.9748  MAPE 29.9
+[R1-2] L4_depth_level avg_infer: 0.9843  MAPE 33.2
+[R1-2] L5_top_quartile avg_train: 0.9121  MAPE 70.8  pred/true 중앙 0.823
+[R1-2] L5_top_quartile avg_infer: 0.8801  MAPE 173.2  pred/true 중앙 0.906
+[R1-2] L6_family_out avg_train: pooled 0.7872  MAPE 233.1  per-group R2 -21.5708~0.8936
+[R1-2] L6_family_out avg_infer: pooled 0.8985  MAPE 240.4  per-group R2 -450.6048~0.959
+[R1-2] L7_backend_out avg_train: pooled 0.6416  MAPE 207.3  per-group R2 -3.181~0.8517
+[R1-2] L7_backend_out avg_infer: pooled 0.5557  MAPE 237.7  per-group R2 -17.2044~0.8934
+   ↳ protocol_ladder 저장 (594.1s)
+
+[R1-5] a_full_120                       train 0.9904  infer 0.9891
+[R1-5] b_no_hw_90                       train 0.7837  infer 0.6724
+[R1-5] c_no_hw_plus_backend_id          train 0.99  infer 0.9905
+[R1-5] d_no_hw_plus_device_type_only    train 0.9904  infer 0.9891
+[R1-5] e_no_hw_plus_backend_onehot      train 0.9912  infer 0.9888
+[R1-5] LOBO Desktop CPU avg_train: model 0.817  mean-others 0.873  nearest 0.653
+[R1-5] LOBO CUDA        avg_train: model -3.181  mean-others -3.154  nearest -0.253
+[R1-5] LOBO Mac CPU     avg_train: model 0.852  mean-others 0.47  nearest 0.788
+[R1-5] LOBO MPS         avg_train: model 0.695  mean-others 0.845  nearest 0.587
+[R1-5] LOBO Desktop CPU avg_infer: model 0.893  mean-others 0.733  nearest 0.81
+[R1-5] LOBO CUDA        avg_infer: model -17.204  mean-others -12.844  nearest -1.389
+[R1-5] LOBO Mac CPU     avg_infer: model 0.893  mean-others 0.418  nearest 0.869
+[R1-5] LOBO MPS         avg_infer: model 0.649  mean-others 0.326  nearest 0.497
+   ↳ label_vs_descriptors 저장 (122.9s)
+
+[R1-6] avg_train: Δ mem_write 0.554  flops 0.0096  MEM 0.6238  FLOPS 0.1723  HW 0.4085  | gain rank mem_write [1, 1, 1, 1, 1] flops [5, 10, 5, 5, 5]
+[R1-6] avg_infer: Δ mem_write 0.9047  flops 0.0172  MEM 0.9989  FLOPS 0.045  HW 0.6148  | gain rank mem_write [1, 1, 1, 1, 1] flops [3, 4, 9, 7, 4]
+   ↳ unified_importance 저장 (24.8s)
+
+[R1-7] ablation       full                         train 0.9904  infer 0.9891
+[R1-7] ablation       minus_MEM                    train 0.9869  infer 0.9831
+[R1-7] ablation       minus_FLOPS                  train 0.9902  infer 0.9905
+[R1-7] ablation       minus_both                   train 0.9852  infer 0.9804
+[R1-7] single_feature only_mem_write               train 0.7027  infer 0.5977
+[R1-7] single_feature only_flops                   train 0.5564  infer 0.4867
+[R1-7] single_feature only_params                  train 0.2015  infer 0.3079
+[R1-7] single_feature mem_write+backend_id         train 0.9398  infer 0.9395
+[R1-7] single_feature flops+backend_id             train 0.7863  infer 0.7962
+[R1-7] single_feature params+backend_id            train 0.3858  infer 0.5718
+[R1-7] single_feature mem_write+flops+backend_id   train 0.9687  infer 0.976
+[R1-7] Spearman(mem_write, flops) all 0.879; per family [('ANN', 0.952), ('CNN', 0.952), ('ResNet', 0.996), ('MobileNet', 0.979), ('ViT', 0.988), ('GAN', 0.731)]
+   ↳ symmetric_ablation 저장 (113.5s)
+
+[R1-8] LinearRegression(default)      train 0.8553  infer 0.7816
+[R1-8] Ridge(scaled, α∈{0.1,1,10})    train 0.8584  infer 0.7896
+[R1-8] RandomForest(grid)             train 0.981  infer 0.9761
+[R1-8] GradientBoosting(default)      train 0.9772  infer 0.9789
+[R1-8] GradientBoosting(grid=XGB)     train 0.988  infer 0.9894
+[R1-8] XGBoost(grid)                  train 0.9884  infer 0.9891
+   ↳ tuned_comparison 저장 (217.8s)
+
+[R1-1b] avg_train: lt100ms MAPE base None → +ovh None → huber None → +ovh+huber None → specialist None  | R2 base 0.9904 +ovh 0.9902
+[R1-1b] avg_infer: lt10ms MAPE base 108.8 → +ovh 127.1 → huber 98.1 → +ovh+huber 92.8 → specialist 22.3  | R2 base 0.9891 +ovh 0.9892
+   ↳ overhead_features 저장 (103.6s)
+
+완료: C:\Users\dlwns\Desktop\ann\.claude\worktrees\ai-simulator-clone-ijunsu-2c4019\paper/v4_measured_k.json

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620">
+<rect width="100%" height="100%" fill="#fafafa"/>
+<text x="550.0" y="36" text-anchor="middle" font-size="15" font-weight="600" font-family="Malgun Gothic, sans-serif">ONNX 검증: 실측 vs RF 예측 — 학습 시간 (장치별)</text>
+<text x="302.0" y="50.0" text-anchor="middle" font-size="13" font-weight="600" font-family="Malgun Gothic, sans-serif">CPU</text>
+<line x1="191.50" y1="58" x2="191.50" y2="478" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="72" y1="368.89" x2="532" y2="368.89" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="319.67" y1="58" x2="319.67" y2="478" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="72" y1="251.87" x2="532" y2="251.87" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="447.84" y1="58" x2="447.84" y2="478" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="72" y1="134.84" x2="532" y2="134.84" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="72.00" y1="478.00" x2="532.00" y2="58.00" stroke="#c44e52" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.75"/>
+<circle cx="83.05" cy="328.44" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="109.90" cy="326.44" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="159.30" cy="298.43" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="319.85" cy="243.76" r="5.0" fill="#DD8452" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="416.74" cy="238.83" r="5.0" fill="#DD8452" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="522.79" cy="218.64" r="5.0" fill="#C44E52" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="377.28" cy="228.42" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="435.11" cy="217.49" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="500.48" cy="202.28" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="330.62" cy="238.29" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="416.77" cy="219.38" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="475.98" cy="197.45" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="274.70" cy="302.54" r="5.0" fill="#937860" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="363.50" cy="265.01" r="5.0" fill="#937860" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<rect x="72.0" y="58.0" width="460.0" height="420.0" fill="none" stroke="#333" stroke-width="1"/>
+<text x="191.5" y="494.0" text-anchor="middle" font-size="9" fill="#444" font-family="Malgun Gothic, sans-serif">1.0</text>
+<text x="319.7" y="494.0" text-anchor="middle" font-size="9" fill="#444" font-family="Malgun Gothic, sans-serif">10</text>
+<text x="447.8" y="494.0" text-anchor="middle" font-size="9" fill="#444" font-family="Malgun Gothic, sans-serif">100</text>
+<text x="818.0" y="50.0" text-anchor="middle" font-size="13" font-weight="600" font-family="Malgun Gothic, sans-serif">GPU (CUDA)</text>
+<line x1="684.61" y1="58" x2="684.61" y2="478" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="588" y1="389.79" x2="1048" y2="389.79" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="934.34" y1="58" x2="934.34" y2="478" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="588" y1="161.78" x2="1048" y2="161.78" stroke="#e8e8e8" stroke-width="1"/>
+<line x1="588.00" y1="478.00" x2="1048.00" y2="58.00" stroke="#c44e52" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.75"/>
+<circle cx="609.52" cy="327.65" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="630.56" cy="321.12" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="652.83" cy="317.18" r="5.0" fill="#4C72B0" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="707.90" cy="320.74" r="5.0" fill="#DD8452" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="863.83" cy="311.18" r="5.0" fill="#DD8452" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="1030.05" cy="286.64" r="5.0" fill="#C44E52" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="888.42" cy="289.22" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="886.16" cy="267.71" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="989.17" cy="264.99" r="5.0" fill="#55A868" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="802.70" cy="253.01" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="861.19" cy="247.50" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="941.58" cy="247.42" r="5.0" fill="#8172B3" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="805.61" cy="286.79" r="5.0" fill="#937860" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<circle cx="830.34" cy="282.63" r="5.0" fill="#937860" fill-opacity="0.85" stroke="#fff" stroke-width="0.6"/>
+<rect x="588.0" y="58.0" width="460.0" height="420.0" fill="none" stroke="#333" stroke-width="1"/>
+<text x="684.6" y="494.0" text-anchor="middle" font-size="9" fill="#444" font-family="Malgun Gothic, sans-serif">1.0</text>
+<text x="934.3" y="494.0" text-anchor="middle" font-size="9" fill="#444" font-family="Malgun Gothic, sans-serif">10</text>
+<text transform="rotate(-90 22 268.0)" x="22" y="268.0" text-anchor="middle" font-size="12" font-family="Malgun Gothic, sans-serif">RF 예측 학습 시간 (s)</text>
+<text x="302.0" y="514" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">실측 학습 시간 (s)</text>
+<text x="818.0" y="514" text-anchor="middle" font-size="11" font-family="Malgun Gothic, sans-serif">실측 학습 시간 (s)</text>
+<text x="550.0" y="536.0" text-anchor="middle" font-size="10" fill="#555" font-family="Malgun Gothic, sans-serif">점 색 = ONNX 샘플 계열 (벤치마크 시각화와 동일 팔레트)</text>
+<circle cx="330.0" cy="542.0" r="4.5" fill="#4C72B0"/>
+<text x="340.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">ANN</text>
+<circle cx="480.0" cy="542.0" r="4.5" fill="#DD8452"/>
+<text x="490.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">CNN</text>
+<circle cx="630.0" cy="542.0" r="4.5" fill="#55A868"/>
+<text x="640.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">ResNet</text>
+<circle cx="780.0" cy="542.0" r="4.5" fill="#C44E52"/>
+<text x="790.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">MobileNet</text>
+<circle cx="930.0" cy="542.0" r="4.5" fill="#8172B3"/>
+<text x="940.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">ViT</text>
+<circle cx="1080.0" cy="542.0" r="4.5" fill="#937860"/>
+<text x="1090.0" y="546.0" font-size="10" font-family="Malgun Gothic, sans-serif">GAN</text>
+</svg>

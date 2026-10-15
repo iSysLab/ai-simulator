@@ -1,10 +1,26 @@
-"""벤치마크 실험 실행기 — 분류 모델 + GAN 모델 지원"""
+"""벤치마크 실험 실행기 — 분류 모델 + GAN 모델 지원
+
+측정 프로토콜 v2 (2026-09 재측정, 심사 대응 R1-10/R1-11):
+  - 워밍업: 모든 백엔드(CPU 포함)·모든 계열에서 실제 학습 배치 1개로 학습 스텝 1회 +
+    평가 순전파 1회. GAN은 D 스텝 + G 스텝 1회 + 생성 1회. 워밍업에 쓴 모델은 버린다.
+    (v1은 GPU의 비-GAN 모델에만 배치 1 no_grad 순전파 1회였다.)
+  - 반복: repeats회, 매 반복 새 모델. 반복별 원시값(train_times, infer_times)을 저장한다.
+  - 통계: avg_*는 산술평균, std_*는 모표준편차(ddof=0). discard_first=True면 첫 반복을
+    통계에서 제외한다(원시값에는 남기고 n_used로 표시).
+  - 피크 메모리: CUDA는 max_memory_allocated, MPS는 driver_allocated_memory의 최댓값(MB).
+"""
 import time
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from .device import DeviceManager
+
+
+def _stats(times, discard_first):
+    """(통계에 쓴 값들, 평균, 모표준편차)"""
+    used = times[1:] if (discard_first and len(times) > 1) else times
+    return used, round(float(np.mean(used)), 5), round(float(np.std(used)), 5)
 
 
 class ExperimentRunner:
@@ -17,29 +33,92 @@ class ExperimentRunner:
       Generator/Discriminator 적대적 학습 시간 + Generator 추론 시간 측정
     """
 
+    PROTOCOL = 'v2-uniform-warmup'
+
     def __init__(self, device_manager, epochs=1, repeats=10, lr=0.01,
-                 adaptive_training=False, max_adaptive_epochs=10,
-                 target_accuracy=65.0):
+                 discard_first=False):
         self.dm = device_manager
         self.epochs = epochs
         self.repeats = repeats
         self.lr = lr
-        # 선택: 정확도 목표에 도달하거나 max_adaptive_epochs까지 에폭 추가
-        self.adaptive_training = adaptive_training
-        self.max_adaptive_epochs = max(1, int(max_adaptive_epochs))
-        self.target_accuracy = float(target_accuracy)
+        self.discard_first = discard_first
 
+    # ------------------------------------------------------------------ 워밍업
+    def warmup(self, model_fn, device, train_batches, test_batches):
+        """분류 모델 워밍업: 실제 배치 1개로 학습 스텝 1회 + 평가 순전파 1회 (모든 백엔드)"""
+        model = model_fn().to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(model.parameters(), lr=self.lr)
+
+        model.train()
+        data, target = train_batches[0]
+        optimizer.zero_grad()
+        loss = criterion(model(data), target)
+        loss.backward()
+        optimizer.step()
+
+        # 평가 경로도 측정 루프와 같은 커널(argmax → eq → sum → item)을 한 번 거친다.
+        # CUDA는 커널을 첫 사용 시점에 로드하므로 경로가 다르면 첫 반복에 잔여 비용이 남는다.
+        model.eval()
+        with torch.no_grad():
+            data, target = test_batches[0]
+            pred = model(data).argmax(dim=1, keepdim=True)
+            _ = pred.eq(target.view_as(pred)).sum().item()
+
+        self.dm.sync(device)
+        del model, optimizer, criterion, loss
+        self.dm.clear_cache(device)
+
+    def warmup_gan(self, model_fn, device, train_batches, batch_size=64):
+        """GAN 워밍업: D 스텝 1회 + G 스텝 1회 + 생성 1회 (모든 백엔드)"""
+        gan = model_fn().to(device)
+        G, D, latent_dim = gan.generator, gan.discriminator, gan.latent_dim
+        optimizer_G = optim.Adam(G.parameters(), lr=0.0002, betas=(0.5, 0.999))
+        optimizer_D = optim.Adam(D.parameters(), lr=0.0002, betas=(0.5, 0.999))
+        criterion = nn.BCELoss()
+
+        G.train()
+        D.train()
+        real_imgs, _ = train_batches[0]
+        bs = real_imgs.size(0)
+        real_label = torch.ones(bs, 1, device=device)
+        fake_label = torch.zeros(bs, 1, device=device)
+
+        z = torch.randn(bs, latent_dim, device=device)
+        fake_imgs = G(z)
+        loss_d = (criterion(D(real_imgs), real_label)
+                  + criterion(D(fake_imgs.detach()), fake_label))
+        optimizer_D.zero_grad()
+        loss_d.backward()
+        optimizer_D.step()
+
+        z = torch.randn(bs, latent_dim, device=device)
+        loss_g = criterion(D(G(z)), real_label)
+        optimizer_G.zero_grad()
+        loss_g.backward()
+        optimizer_G.step()
+
+        G.eval()
+        with torch.no_grad():
+            _ = G(torch.randn(batch_size, latent_dim, device=device))
+
+        self.dm.sync(device)
+        del gan, G, D, optimizer_G, optimizer_D, criterion, loss_d, loss_g
+        self.dm.clear_cache(device)
+
+    # ------------------------------------------------------------------ 측정
     def run(self, model_fn, device, train_batches, test_batches,
             num_test_samples, config_name=""):
         """분류 모델 벤치마크 실행
 
         Returns:
-            dict: avg/std train/infer time + accuracy
+            dict: avg/std train/infer time + accuracy + 반복별 원시값 + 피크 메모리
         """
         train_times = []
         infer_times = []
         accuracies = []
-        epochs_per_repeat = []
+        peak_mb, peak_method = 0.0, 'none'
+        self.dm.reset_peak_memory(device)
 
         for i in range(self.repeats):
             model = model_fn().to(device)
@@ -51,41 +130,18 @@ class ExperimentRunner:
             self.dm.sync(device)
             start = time.perf_counter()
 
-            if self.adaptive_training:
-                epochs_done = 0
-                accuracy = 0.0
-                while epochs_done < self.max_adaptive_epochs:
-                    for data, target in train_batches:
-                        optimizer.zero_grad()
-                        output = model(data)
-                        loss = criterion(output, target)
-                        loss.backward()
-                        optimizer.step()
-                    epochs_done += 1
-                    model.eval()
-                    correct = 0
-                    with torch.no_grad():
-                        for data, target in test_batches:
-                            output = model(data)
-                            pred = output.argmax(dim=1, keepdim=True)
-                            correct += pred.eq(target.view_as(pred)).sum().item()
-                    accuracy = 100. * correct / num_test_samples
-                    model.train()
-                    if accuracy >= self.target_accuracy:
-                        break
-                epochs_per_repeat.append(epochs_done)
-            else:
-                for _ in range(self.epochs):
-                    for data, target in train_batches:
-                        optimizer.zero_grad()
-                        output = model(data)
-                        loss = criterion(output, target)
-                        loss.backward()
-                        optimizer.step()
-                epochs_per_repeat.append(self.epochs)
+            for _ in range(self.epochs):
+                for data, target in train_batches:
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    optimizer.step()
 
             self.dm.sync(device)
             train_time = time.perf_counter() - start
+            mb, peak_method = self.dm.memory_snapshot_mb(device)
+            peak_mb = max(peak_mb, mb)
 
             # --- 추론 시간 측정 ---
             model.eval()
@@ -101,42 +157,39 @@ class ExperimentRunner:
 
             self.dm.sync(device)
             infer_time = time.perf_counter() - start
+            mb, _ = self.dm.memory_snapshot_mb(device)
+            peak_mb = max(peak_mb, mb)
             accuracy = 100. * correct / num_test_samples
 
             train_times.append(train_time)
             infer_times.append(infer_time)
             accuracies.append(accuracy)
 
-            ep_info = ""
-            if self.adaptive_training:
-                ep_info = f" | 에폭: {epochs_per_repeat[-1]}"
-
             print(f"    [{i+1}/{self.repeats}] "
                   f"학습: {train_time:.4f}s | "
                   f"추론: {infer_time:.4f}s | "
-                  f"정확도: {accuracy:.2f}%{ep_info}")
+                  f"정확도: {accuracy:.2f}%")
 
             del model
             self.dm.clear_cache(device)
 
-        out = {
-            'avg_train': round(float(np.mean(train_times)), 5),
-            'std_train': round(float(np.std(train_times)), 5),
-            'avg_infer': round(float(np.mean(infer_times)), 5),
-            'std_infer': round(float(np.std(infer_times)), 5),
+        used_tr, avg_tr, std_tr = _stats(train_times, self.discard_first)
+        used_inf, avg_inf, std_inf = _stats(infer_times, self.discard_first)
+        return {
+            'avg_train': avg_tr,
+            'std_train': std_tr,
+            'avg_infer': avg_inf,
+            'std_infer': std_inf,
             'avg_accuracy': round(float(np.mean(accuracies)), 2),
+            'train_times': [round(t, 5) for t in train_times],
+            'infer_times': [round(t, 5) for t in infer_times],
+            'n_repeats': self.repeats,
+            'n_used': len(used_tr),
+            'std_ddof': 0,
+            'peak_mem_mb': round(peak_mb, 1),
+            'peak_mem_method': peak_method,
+            'protocol': self.PROTOCOL,
         }
-        if self.adaptive_training:
-            out['avg_benchmark_epochs'] = round(float(np.mean(epochs_per_repeat)), 2)
-            out['std_benchmark_epochs'] = round(float(np.std(epochs_per_repeat)), 2)
-            out['benchmark_adaptive'] = True
-            out['benchmark_target_accuracy'] = self.target_accuracy
-            out['benchmark_max_epochs'] = self.max_adaptive_epochs
-        else:
-            out['avg_benchmark_epochs'] = float(self.epochs)
-            out['std_benchmark_epochs'] = 0.0
-            out['benchmark_adaptive'] = False
-        return out
 
     def run_gan(self, model_fn, device, train_batches, batch_size=64,
                 config_name=""):
@@ -147,10 +200,12 @@ class ExperimentRunner:
         - 추론: Generator만으로 이미지 생성
 
         Returns:
-            dict: avg/std train/infer time (accuracy는 N/A → 0)
+            dict: avg/std train/infer time (accuracy는 N/A → 0) + 원시값 + 피크 메모리
         """
         train_times = []
         infer_times = []
+        peak_mb, peak_method = 0.0, 'none'
+        self.dm.reset_peak_memory(device)
 
         for i in range(self.repeats):
             gan = model_fn().to(device)
@@ -196,6 +251,8 @@ class ExperimentRunner:
 
             self.dm.sync(device)
             train_time = time.perf_counter() - start
+            mb, peak_method = self.dm.memory_snapshot_mb(device)
+            peak_mb = max(peak_mb, mb)
 
             # --- 추론 시간 측정 (Generator만) ---
             G.eval()
@@ -203,13 +260,15 @@ class ExperimentRunner:
             start = time.perf_counter()
 
             with torch.no_grad():
-                # 테스트 배치 수만큼 생성
+                # 학습 배치 수만큼 생성
                 for _ in range(len(train_batches)):
                     z = torch.randn(batch_size, latent_dim, device=device)
                     G(z)
 
             self.dm.sync(device)
             infer_time = time.perf_counter() - start
+            mb, _ = self.dm.memory_snapshot_mb(device)
+            peak_mb = max(peak_mb, mb)
 
             train_times.append(train_time)
             infer_times.append(infer_time)
@@ -221,10 +280,20 @@ class ExperimentRunner:
             del gan, G, D
             self.dm.clear_cache(device)
 
+        used_tr, avg_tr, std_tr = _stats(train_times, self.discard_first)
+        used_inf, avg_inf, std_inf = _stats(infer_times, self.discard_first)
         return {
-            'avg_train': round(float(np.mean(train_times)), 5),
-            'std_train': round(float(np.std(train_times)), 5),
-            'avg_infer': round(float(np.mean(infer_times)), 5),
-            'std_infer': round(float(np.std(infer_times)), 5),
+            'avg_train': avg_tr,
+            'std_train': std_tr,
+            'avg_infer': avg_inf,
+            'std_infer': std_inf,
             'avg_accuracy': 0.0,  # GAN은 정확도 N/A
+            'train_times': [round(t, 5) for t in train_times],
+            'infer_times': [round(t, 5) for t in infer_times],
+            'n_repeats': self.repeats,
+            'n_used': len(used_tr),
+            'std_ddof': 0,
+            'peak_mem_mb': round(peak_mb, 1),
+            'peak_mem_method': peak_method,
+            'protocol': self.PROTOCOL,
         }

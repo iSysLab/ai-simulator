@@ -1,0 +1,367 @@
+{
+ "gpus": {
+  "gtx1050": {
+   "tflops_fp32": 2.51,
+   "gpu_cores": 640,
+   "gpu_clock_ghz": 1.96,
+   "dedicated_vram_gb": 2.0,
+   "gpu_memory_gb": 2.0,
+   "gpu_compute_capability": 6.1,
+   "cpu_cores": 4,
+   "ram_total_gb": 7.8,
+   "cpu_freq_ghz": 3.6
+  },
+  "rtx3060": {
+   "tflops_fp32": 15.48,
+   "gpu_cores": 3584,
+   "gpu_clock_ghz": 2.16,
+   "dedicated_vram_gb": 12.0,
+   "gpu_memory_gb": 12.0,
+   "gpu_compute_capability": 8.6,
+   "cpu_cores": 8,
+   "ram_total_gb": 31.9,
+   "cpu_freq_ghz": 2.9
+  },
+  "rtx4060ti": {
+   "tflops_fp32": 26.98,
+   "gpu_cores": 4352,
+   "gpu_clock_ghz": 3.1,
+   "dedicated_vram_gb": 8.0,
+   "gpu_memory_gb": 8.0,
+   "gpu_compute_capability": 8.9,
+   "cpu_cores": 8,
+   "ram_total_gb": 31.1,
+   "cpu_freq_ghz": 4.2
+  }
+ },
+ "targets": {
+  "avg_train": {
+   "gtx1050": {
+    "n": 54,
+    "model": {
+     "r2log": 0.8765,
+     "n": 54,
+     "mape": 48.3,
+     "mdape": 22.8,
+     "w20": 44.4,
+     "spearman": 0.952,
+     "pred_over_true": 1.186
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx3060",
+     "r2log": 0.3029,
+     "n": 54,
+     "mape": 60.8,
+     "mdape": 64.6,
+     "w20": 0.0,
+     "spearman": 0.969,
+     "pred_over_true": 0.354
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.9368,
+     "n": 54,
+     "mape": 22.8,
+     "mdape": 20.4,
+     "w20": 50.0,
+     "spearman": 0.976,
+     "pred_over_true": 0.902
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 0.782,
+     "gpu_memory_gb": 1.012,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 0.534,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 0.328
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0011,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.01,
+     "gpu_memory_gb": 0.0006,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0065,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   },
+   "rtx3060": {
+    "n": 56,
+    "model": {
+     "r2log": 0.9778,
+     "n": 56,
+     "mape": 12.9,
+     "mdape": 7.4,
+     "w20": 75.0,
+     "spearman": 0.983,
+     "pred_over_true": 0.989
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx4060ti",
+     "r2log": 0.898,
+     "n": 56,
+     "mape": 24.8,
+     "mdape": 24.5,
+     "w20": 37.5,
+     "spearman": 0.983,
+     "pred_over_true": 0.755
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.9923,
+     "n": 54,
+     "mape": 7.0,
+     "mdape": 5.6,
+     "w20": 92.6,
+     "spearman": 0.994,
+     "pred_over_true": 1.026
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 1.0,
+     "gpu_memory_gb": 1.0,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 1.0,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 1.0
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.0062,
+     "gpu_memory_gb": 0.0166,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0029,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   },
+   "rtx4060ti": {
+    "n": 158,
+    "model": {
+     "r2log": 0.1479,
+     "n": 158,
+     "mape": 120.3,
+     "mdape": 75.2,
+     "w20": 22.8,
+     "spearman": 0.965,
+     "pred_over_true": 1.752
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx3060",
+     "r2log": 0.8736,
+     "n": 56,
+     "mape": 35.4,
+     "mdape": 32.5,
+     "w20": 25.0,
+     "spearman": 0.983,
+     "pred_over_true": 1.325
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.9832,
+     "n": 54,
+     "mape": 9.2,
+     "mdape": 7.7,
+     "w20": 87.0,
+     "spearman": 0.988,
+     "pred_over_true": 0.966
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 0.754,
+     "gpu_memory_gb": 0.656,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 1.0,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 0.569
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.0027,
+     "gpu_memory_gb": 0.0076,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0024,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   }
+  },
+  "avg_infer": {
+   "gtx1050": {
+    "n": 54,
+    "model": {
+     "r2log": 0.3128,
+     "n": 54,
+     "mape": 83.3,
+     "mdape": 70.3,
+     "w20": 5.6,
+     "spearman": 0.931,
+     "pred_over_true": 0.351
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx3060",
+     "r2log": 0.189,
+     "n": 54,
+     "mape": 59.8,
+     "mdape": 71.5,
+     "w20": 9.3,
+     "spearman": 0.943,
+     "pred_over_true": 0.285
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.4386,
+     "n": 54,
+     "mape": 84.0,
+     "mdape": 64.2,
+     "w20": 11.1,
+     "spearman": 0.909,
+     "pred_over_true": 0.387
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 0.968,
+     "gpu_memory_gb": 0.992,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 0.825,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 0.797
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0004,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.0,
+     "gpu_memory_gb": 0.0003,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0004,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   },
+   "rtx3060": {
+    "n": 56,
+    "model": {
+     "r2log": 0.9741,
+     "n": 56,
+     "mape": 19.6,
+     "mdape": 12.0,
+     "w20": 67.9,
+     "spearman": 0.989,
+     "pred_over_true": 0.995
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx4060ti",
+     "r2log": 0.972,
+     "n": 56,
+     "mape": 23.6,
+     "mdape": 15.6,
+     "w20": 66.1,
+     "spearman": 0.987,
+     "pred_over_true": 0.856
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.8338,
+     "n": 54,
+     "mape": 41.8,
+     "mdape": 44.7,
+     "w20": 22.2,
+     "spearman": 0.977,
+     "pred_over_true": 1.413
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 1.0,
+     "gpu_memory_gb": 1.0,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 1.0,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 1.0
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.0001,
+     "gpu_memory_gb": 0.0025,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0001,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   },
+   "rtx4060ti": {
+    "n": 158,
+    "model": {
+     "r2log": -0.8588,
+     "n": 158,
+     "mape": 150.8,
+     "mdape": 137.8,
+     "w20": 2.5,
+     "spearman": 0.98,
+     "pred_over_true": 2.378
+    },
+    "baseline_nearest_copy": {
+     "device": "rtx3060",
+     "r2log": 0.9651,
+     "n": 56,
+     "mape": 32.1,
+     "mdape": 18.5,
+     "w20": 57.1,
+     "spearman": 0.987,
+     "pred_over_true": 1.168
+    },
+    "baseline_logtflops_interp": {
+     "r2log": 0.6615,
+     "n": 54,
+     "mape": 57.5,
+     "mdape": 57.4,
+     "w20": 18.5,
+     "spearman": 0.944,
+     "pred_over_true": 0.494
+    },
+    "sensitivity_swap_to_nearest": {
+     "tflops_fp32": 1.0,
+     "gpu_cores": 1.0,
+     "gpu_clock_ghz": 1.0,
+     "dedicated_vram_gb": 0.693,
+     "gpu_memory_gb": 0.736,
+     "gpu_compute_capability": 1.0,
+     "cpu_cores": 1.0,
+     "ram_total_gb": 1.0,
+     "cpu_freq_ghz": 1.0,
+     "ALL": 0.517
+    },
+    "gain_hw": {
+     "tflops_fp32": 0.0,
+     "gpu_cores": 0.0,
+     "gpu_clock_ghz": 0.0,
+     "dedicated_vram_gb": 0.0015,
+     "gpu_memory_gb": 0.0026,
+     "gpu_compute_capability": 0.0,
+     "cpu_cores": 0.0008,
+     "ram_total_gb": 0.0,
+     "cpu_freq_ghz": 0.0
+    }
+   }
+  }
+ }
+}

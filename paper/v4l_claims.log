@@ -1,0 +1,13 @@
+행 632 | 피처 120 | 절: ['log_target_claims']
+
+[claim2:log1p] avg_train: Δ mem_write 0.5425  flops 0.014  MEM 0.5983  FLOPS 0.1932  HW 0.5261  | gain rank mem_write [1, 1, 1, 1, 1] flops [5, 7, 4, 5, 5]
+        ablation R2: full 0.99 −MEM 0.986 −FLOPS 0.9901 −both 0.9852 | mem_write+id 0.9419 flops+id 0.7896 | MAPE full 17.3 −MEM 20.5 −FLOPS 18.2
+[claim2:log1p] avg_infer: Δ mem_write 0.8643  flops 0.0237  MEM 0.9085  FLOPS 0.0507  HW 0.7077  | gain rank mem_write [1, 1, 1, 1, 1] flops [7, 4, 3, 3, 3]
+        ablation R2: full 0.9899 −MEM 0.9839 −FLOPS 0.9908 −both 0.9842 | mem_write+id 0.9413 flops+id 0.7814 | MAPE full 58.1 −MEM 51.1 −FLOPS 61.6
+[claim2:log] avg_train: Δ mem_write 0.5838  flops 0.0112  MEM 0.67  FLOPS 0.1356  HW 0.5295  | gain rank mem_write [1, 1, 1, 1, 1] flops [5, 5, 5, 5, 4]
+        ablation R2: full 0.9889 −MEM 0.9836 −FLOPS 0.9893 −both 0.9839 | mem_write+id 0.9416 flops+id 0.7888 | MAPE full 15.9 −MEM 19.7 −FLOPS 16.8
+[claim2:log] avg_infer: Δ mem_write 0.723  flops 0.0112  MEM 0.8913  FLOPS 0.0297  HW 0.7207  | gain rank mem_write [2, 2, 2, 2, 2] flops [6, 6, 4, 6, 4]
+        ablation R2: full 0.9902 −MEM 0.9836 −FLOPS 0.9912 −both 0.9857 | mem_write+id 0.9437 flops+id 0.7894 | MAPE full 16.4 −MEM 20.9 −FLOPS 16.6
+   ↳ log_target_claims 저장 (248.0s)
+
+완료: /Users/ijunsu/Documents/Documents/ann/ai-simulator/paper/v4_measured_l.json
