@@ -32,6 +32,10 @@ python make_tables_v4k.py          # → paper/v4k_tables.md
 python eval_fill_v4l.py [--only a,b]   # log-target / ensemble study → paper/v4_measured_l.json
 python make_tables_v4l.py          # → paper/v4l_tables.md
 
+# Extended-manuscript ensemble study (XGB/GB/RF combiners, log target, 10 seeds; deterministic)
+python paper/smj/run_smj_experiments.py [--seeds N --targets avg_train,avg_infer,peak_mem]   # → paper/smj/results/smj_results.json + preds_*.npz
+python paper/smj/analyze_smj_results.py   # reads preds_*.npz only → paper/smj/results/smj_analysis.json (time-range segments, per-platform pairs)
+
 # Predictor CLI (default --estimator log = log-target XGBoost; --estimator xgb = the paper's log1p XGBoost)
 python predict_v4.py --train       # → results/trained_models_v4/bundle_v4.pkl (gitignored)
 python predict_v4.py --onnx model.onnx --backend MPS --dataset mnist   # backends: "Desktop CPU", CUDA, "Mac CPU", MPS

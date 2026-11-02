@@ -1,0 +1,10660 @@
+{
+ "_meta": {
+  "seeds": 10,
+  "elapsed_s": 707.0,
+  "learners": {
+   "xgb": {
+    "n_estimators": [
+     200,
+     400
+    ],
+    "max_depth": [
+     3,
+     6
+    ]
+   },
+   "gb": {
+    "n_estimators": [
+     200,
+     400
+    ],
+    "max_depth": [
+     3,
+     6
+    ]
+   },
+   "rf": {
+    "n_estimators": [
+     100,
+     200
+    ],
+    "max_depth": [
+     null,
+     12
+    ]
+   }
+  },
+  "gate_grid": [
+   [
+    1,
+    40
+   ],
+   [
+    1,
+    80
+   ],
+   [
+    1,
+    120
+   ],
+   [
+    2,
+    40
+   ],
+   [
+    2,
+    80
+   ],
+   [
+    2,
+    120
+   ],
+   [
+    3,
+    40
+   ],
+   [
+    3,
+    80
+   ],
+   [
+    3,
+    120
+   ]
+  ],
+  "meta_alphas": [
+   1.0,
+   10.0,
+   100.0,
+   1000.0,
+   10000.0
+  ],
+  "conditions": [
+   "platform=CUDA",
+   "platform=Desktop CPU",
+   "platform=MPS",
+   "platform=Mac CPU",
+   "family=GAN",
+   "family=MobileNet",
+   "family=ResNet",
+   "family=ANN",
+   "family=CNN",
+   "family=ViT",
+   "log_params",
+   "log_flops"
+  ]
+ },
+ "avg_train": {
+  "n": 632,
+  "best_single": "xgb",
+  "summary": {
+   "xgb": {
+    "r2log": {
+     "mean": 0.9863,
+     "sd": 0.002
+    },
+    "mape": {
+     "mean": 16.9935,
+     "sd": 0.3417
+    },
+    "mdape": {
+     "mean": 12.9057,
+     "sd": 0.6217
+    },
+    "w20": {
+     "mean": 68.9873,
+     "sd": 1.1361
+    },
+    "small_mape": {
+     "mean": 10.6641,
+     "sd": 0.5741
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 15.2796,
+      "sd": 0.5606
+     },
+     "Desktop CPU": {
+      "mean": 17.3695,
+      "sd": 0.5413
+     },
+     "MPS": {
+      "mean": 16.9939,
+      "sd": 0.8954
+     },
+     "Mac CPU": {
+      "mean": 18.3311,
+      "sd": 0.7818
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 12.8836,
+      "sd": 2.2138
+     },
+     "MobileNet": {
+      "mean": 21.883,
+      "sd": 1.8249
+     },
+     "ResNet": {
+      "mean": 16.3452,
+      "sd": 1.2456
+     },
+     "ANN": {
+      "mean": 9.0507,
+      "sd": 0.8459
+     },
+     "CNN": {
+      "mean": 20.4083,
+      "sd": 0.7148
+     },
+     "ViT": {
+      "mean": 24.5406,
+      "sd": 3.5208
+     }
+    },
+    "family_macro": {
+     "mean": 17.5186,
+     "sd": 0.8988
+    }
+   },
+   "gb": {
+    "r2log": {
+     "mean": 0.9863,
+     "sd": 0.0014
+    },
+    "mape": {
+     "mean": 17.1026,
+     "sd": 0.6411
+    },
+    "mdape": {
+     "mean": 12.5358,
+     "sd": 0.7034
+    },
+    "w20": {
+     "mean": 69.7785,
+     "sd": 1.7091
+    },
+    "small_mape": {
+     "mean": 10.5858,
+     "sd": 1.5708
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 15.362,
+      "sd": 0.9767
+     },
+     "Desktop CPU": {
+      "mean": 16.9534,
+      "sd": 0.63
+     },
+     "MPS": {
+      "mean": 17.3758,
+      "sd": 0.635
+     },
+     "Mac CPU": {
+      "mean": 18.7191,
+      "sd": 1.2844
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 12.2742,
+      "sd": 2.7298
+     },
+     "MobileNet": {
+      "mean": 22.6914,
+      "sd": 1.4028
+     },
+     "ResNet": {
+      "mean": 15.0258,
+      "sd": 0.8499
+     },
+     "ANN": {
+      "mean": 8.863,
+      "sd": 1.5776
+     },
+     "CNN": {
+      "mean": 20.4251,
+      "sd": 0.462
+     },
+     "ViT": {
+      "mean": 28.1963,
+      "sd": 5.0993
+     }
+    },
+    "family_macro": {
+     "mean": 17.9127,
+     "sd": 0.7346
+    }
+   },
+   "rf": {
+    "r2log": {
+     "mean": 0.9825,
+     "sd": 0.002
+    },
+    "mape": {
+     "mean": 17.4419,
+     "sd": 1.2304
+    },
+    "mdape": {
+     "mean": 11.0153,
+     "sd": 0.5817
+    },
+    "w20": {
+     "mean": 71.9937,
+     "sd": 1.6894
+    },
+    "small_mape": {
+     "mean": 9.5814,
+     "sd": 0.7418
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.4123,
+      "sd": 0.8151
+     },
+     "Desktop CPU": {
+      "mean": 17.531,
+      "sd": 1.5555
+     },
+     "MPS": {
+      "mean": 14.9193,
+      "sd": 0.644
+     },
+     "Mac CPU": {
+      "mean": 22.9052,
+      "sd": 2.6618
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 16.3708,
+      "sd": 1.7021
+     },
+     "MobileNet": {
+      "mean": 24.3427,
+      "sd": 1.3005
+     },
+     "ResNet": {
+      "mean": 11.7461,
+      "sd": 0.6545
+     },
+     "ANN": {
+      "mean": 7.6115,
+      "sd": 0.6044
+     },
+     "CNN": {
+      "mean": 19.3994,
+      "sd": 2.3691
+     },
+     "ViT": {
+      "mean": 44.2929,
+      "sd": 5.3624
+     }
+    },
+    "family_macro": {
+     "mean": 20.6272,
+     "sd": 1.3221
+    }
+   },
+   "xgb_log1p": {
+    "r2log": {
+     "mean": 0.9882,
+     "sd": 0.0013
+    },
+    "mape": {
+     "mean": 18.8085,
+     "sd": 0.9522
+    },
+    "mdape": {
+     "mean": 14.3981,
+     "sd": 0.6144
+    },
+    "w20": {
+     "mean": 64.7943,
+     "sd": 1.3899
+    },
+    "small_mape": {
+     "mean": 18.0013,
+     "sd": 1.7554
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 16.2371,
+      "sd": 0.8592
+     },
+     "Desktop CPU": {
+      "mean": 18.664,
+      "sd": 1.2261
+     },
+     "MPS": {
+      "mean": 17.8151,
+      "sd": 0.6472
+     },
+     "Mac CPU": {
+      "mean": 22.5178,
+      "sd": 1.9849
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 11.6013,
+      "sd": 2.4945
+     },
+     "MobileNet": {
+      "mean": 20.6719,
+      "sd": 1.1403
+     },
+     "ResNet": {
+      "mean": 15.4968,
+      "sd": 1.5828
+     },
+     "ANN": {
+      "mean": 17.0884,
+      "sd": 1.7912
+     },
+     "CNN": {
+      "mean": 20.5438,
+      "sd": 1.5579
+     },
+     "ViT": {
+      "mean": 23.6206,
+      "sd": 2.4338
+     }
+    },
+    "family_macro": {
+     "mean": 18.1705,
+     "sd": 0.876
+    }
+   },
+   "select": {
+    "r2log": {
+     "mean": 0.9865,
+     "sd": 0.0018
+    },
+    "mape": {
+     "mean": 16.517,
+     "sd": 0.6225
+    },
+    "mdape": {
+     "mean": 12.0782,
+     "sd": 0.5986
+    },
+    "w20": {
+     "mean": 70.8228,
+     "sd": 1.3158
+    },
+    "small_mape": {
+     "mean": 9.7831,
+     "sd": 0.6518
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.9261,
+      "sd": 0.5452
+     },
+     "Desktop CPU": {
+      "mean": 17.3546,
+      "sd": 1.0843
+     },
+     "MPS": {
+      "mean": 15.459,
+      "sd": 0.8033
+     },
+     "Mac CPU": {
+      "mean": 18.3283,
+      "sd": 1.3152
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 13.2801,
+      "sd": 1.4728
+     },
+     "MobileNet": {
+      "mean": 21.8774,
+      "sd": 1.7438
+     },
+     "ResNet": {
+      "mean": 13.9867,
+      "sd": 1.3144
+     },
+     "ANN": {
+      "mean": 8.0931,
+      "sd": 0.6686
+     },
+     "CNN": {
+      "mean": 20.2105,
+      "sd": 1.2103
+     },
+     "ViT": {
+      "mean": 26.1594,
+      "sd": 4.6685
+     }
+    },
+    "family_macro": {
+     "mean": 17.2679,
+     "sd": 0.8473
+    }
+   },
+   "average": {
+    "r2log": {
+     "mean": 0.987,
+     "sd": 0.0014
+    },
+    "mape": {
+     "mean": 15.7503,
+     "sd": 0.5261
+    },
+    "mdape": {
+     "mean": 11.0133,
+     "sd": 0.24
+    },
+    "w20": {
+     "mean": 73.8449,
+     "sd": 1.0576
+    },
+    "small_mape": {
+     "mean": 9.1684,
+     "sd": 0.7071
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.1234,
+      "sd": 0.6046
+     },
+     "Desktop CPU": {
+      "mean": 15.9231,
+      "sd": 0.5138
+     },
+     "MPS": {
+      "mean": 15.3779,
+      "sd": 0.597
+     },
+     "Mac CPU": {
+      "mean": 17.5766,
+      "sd": 1.346
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 10.2202,
+      "sd": 1.9144
+     },
+     "MobileNet": {
+      "mean": 21.2181,
+      "sd": 1.1078
+     },
+     "ResNet": {
+      "mean": 12.8999,
+      "sd": 0.7992
+     },
+     "ANN": {
+      "mean": 7.1356,
+      "sd": 0.6724
+     },
+     "CNN": {
+      "mean": 19.4681,
+      "sd": 0.9678
+     },
+     "ViT": {
+      "mean": 28.244,
+      "sd": 3.3487
+     }
+    },
+    "family_macro": {
+     "mean": 16.531,
+     "sd": 0.7249
+    }
+   },
+   "global_w": {
+    "r2log": {
+     "mean": 0.9869,
+     "sd": 0.0017
+    },
+    "mape": {
+     "mean": 16.0453,
+     "sd": 0.5524
+    },
+    "mdape": {
+     "mean": 11.6038,
+     "sd": 0.5957
+    },
+    "w20": {
+     "mean": 72.8323,
+     "sd": 1.3653
+    },
+    "small_mape": {
+     "mean": 9.4671,
+     "sd": 0.5413
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.4159,
+      "sd": 0.4918
+     },
+     "Desktop CPU": {
+      "mean": 16.1958,
+      "sd": 0.5299
+     },
+     "MPS": {
+      "mean": 15.9845,
+      "sd": 0.7804
+     },
+     "Mac CPU": {
+      "mean": 17.5849,
+      "sd": 1.2423
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 10.873,
+      "sd": 1.8812
+     },
+     "MobileNet": {
+      "mean": 21.1691,
+      "sd": 1.4485
+     },
+     "ResNet": {
+      "mean": 13.7149,
+      "sd": 1.0849
+     },
+     "ANN": {
+      "mean": 7.5189,
+      "sd": 0.5714
+     },
+     "CNN": {
+      "mean": 19.825,
+      "sd": 0.9294
+     },
+     "ViT": {
+      "mean": 27.2621,
+      "sd": 3.0755
+     }
+    },
+    "family_macro": {
+     "mean": 16.7272,
+     "sd": 0.9487
+    }
+   },
+   "platform_w": {
+    "r2log": {
+     "mean": 0.9875,
+     "sd": 0.0016
+    },
+    "mape": {
+     "mean": 15.7636,
+     "sd": 0.5068
+    },
+    "mdape": {
+     "mean": 11.2752,
+     "sd": 0.5506
+    },
+    "w20": {
+     "mean": 73.212,
+     "sd": 1.0602
+    },
+    "small_mape": {
+     "mean": 9.344,
+     "sd": 0.5362
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.1745,
+      "sd": 0.6618
+     },
+     "Desktop CPU": {
+      "mean": 16.1707,
+      "sd": 0.5916
+     },
+     "MPS": {
+      "mean": 15.0456,
+      "sd": 0.5207
+     },
+     "Mac CPU": {
+      "mean": 17.6637,
+      "sd": 1.1103
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 11.3629,
+      "sd": 2.0107
+     },
+     "MobileNet": {
+      "mean": 20.6843,
+      "sd": 1.3256
+     },
+     "ResNet": {
+      "mean": 13.2816,
+      "sd": 0.8768
+     },
+     "ANN": {
+      "mean": 7.3359,
+      "sd": 0.5246
+     },
+     "CNN": {
+      "mean": 19.8583,
+      "sd": 1.0053
+     },
+     "ViT": {
+      "mean": 24.739,
+      "sd": 2.768
+     }
+    },
+    "family_macro": {
+     "mean": 16.2103,
+     "sd": 0.776
+    }
+   },
+   "tree_gate": {
+    "r2log": {
+     "mean": 0.9872,
+     "sd": 0.0018
+    },
+    "mape": {
+     "mean": 15.8485,
+     "sd": 0.6196
+    },
+    "mdape": {
+     "mean": 11.2822,
+     "sd": 0.598
+    },
+    "w20": {
+     "mean": 73.1329,
+     "sd": 1.8644
+    },
+    "small_mape": {
+     "mean": 9.2389,
+     "sd": 0.4182
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.4447,
+      "sd": 0.5691
+     },
+     "Desktop CPU": {
+      "mean": 16.286,
+      "sd": 0.8311
+     },
+     "MPS": {
+      "mean": 15.5861,
+      "sd": 0.8226
+     },
+     "Mac CPU": {
+      "mean": 17.0773,
+      "sd": 1.1428
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 11.4153,
+      "sd": 1.925
+     },
+     "MobileNet": {
+      "mean": 21.2967,
+      "sd": 1.2051
+     },
+     "ResNet": {
+      "mean": 13.1883,
+      "sd": 1.0419
+     },
+     "ANN": {
+      "mean": 7.3273,
+      "sd": 0.4139
+     },
+     "CNN": {
+      "mean": 19.7027,
+      "sd": 1.1454
+     },
+     "ViT": {
+      "mean": 25.9512,
+      "sd": 2.5991
+     }
+    },
+    "family_macro": {
+     "mean": 16.4802,
+     "sd": 0.8499
+    }
+   },
+   "meta_stack": {
+    "r2log": {
+     "mean": 0.9876,
+     "sd": 0.0017
+    },
+    "mape": {
+     "mean": 16.0066,
+     "sd": 0.4512
+    },
+    "mdape": {
+     "mean": 11.2107,
+     "sd": 0.4985
+    },
+    "w20": {
+     "mean": 72.8165,
+     "sd": 0.9006
+    },
+    "small_mape": {
+     "mean": 9.8978,
+     "sd": 0.7641
+    },
+    "small_n": {
+     "mean": 166.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 14.5283,
+      "sd": 0.6259
+     },
+     "Desktop CPU": {
+      "mean": 16.4307,
+      "sd": 0.4838
+     },
+     "MPS": {
+      "mean": 15.5431,
+      "sd": 0.5907
+     },
+     "Mac CPU": {
+      "mean": 17.5243,
+      "sd": 1.1317
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 10.0952,
+      "sd": 2.0242
+     },
+     "MobileNet": {
+      "mean": 21.4458,
+      "sd": 1.4998
+     },
+     "ResNet": {
+      "mean": 12.6657,
+      "sd": 0.9177
+     },
+     "ANN": {
+      "mean": 7.5719,
+      "sd": 0.7513
+     },
+     "CNN": {
+      "mean": 20.1794,
+      "sd": 0.9517
+     },
+     "ViT": {
+      "mean": 26.26,
+      "sd": 3.1538
+     }
+    },
+    "family_macro": {
+     "mean": 16.3697,
+     "sd": 0.7799
+    }
+   }
+  },
+  "paired": {
+   "select_vs_xgb": {
+    "delta_mape_mean": -0.477,
+    "delta_mape_sd": 0.556,
+    "wins": 9,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.00013436103890949582,
+    "cfg_better": 103,
+    "n_cfg": 158
+   },
+   "average_vs_xgb": {
+    "delta_mape_mean": -1.243,
+    "delta_mape_sd": 0.378,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.6511073416679007e-12,
+    "cfg_better": 129,
+    "n_cfg": 158
+   },
+   "global_w_vs_xgb": {
+    "delta_mape_mean": -0.948,
+    "delta_mape_sd": 0.309,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 2.419426705325314e-13,
+    "cfg_better": 129,
+    "n_cfg": 158
+   },
+   "platform_w_vs_xgb": {
+    "delta_mape_mean": -1.23,
+    "delta_mape_sd": 0.341,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 3.562499317245234e-13,
+    "cfg_better": 127,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_xgb": {
+    "delta_mape_mean": -1.145,
+    "delta_mape_sd": 0.37,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 7.859111054408157e-13,
+    "cfg_better": 127,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_xgb": {
+    "delta_mape_mean": -0.987,
+    "delta_mape_sd": 0.282,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 4.536788499187966e-09,
+    "cfg_better": 106,
+    "n_cfg": 158
+   },
+   "platform_w_vs_select": {
+    "delta_mape_mean": -0.753,
+    "delta_mape_sd": 0.325,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 7.890096819800287e-16,
+    "cfg_better": 125,
+    "n_cfg": 158
+   },
+   "platform_w_vs_global_w": {
+    "delta_mape_mean": -0.282,
+    "delta_mape_sd": 0.247,
+    "wins": 9,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.020052316706023476,
+    "cfg_better": 91,
+    "n_cfg": 158
+   },
+   "platform_w_vs_average": {
+    "delta_mape_mean": 0.013,
+    "delta_mape_sd": 0.212,
+    "wins": 5,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.005317506894457108,
+    "cfg_better": 54,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_select": {
+    "delta_mape_mean": -0.668,
+    "delta_mape_sd": 0.523,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.3952690612815063e-09,
+    "cfg_better": 119,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_global_w": {
+    "delta_mape_mean": -0.197,
+    "delta_mape_sd": 0.27,
+    "wins": 6,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.0014318234600353239,
+    "cfg_better": 97,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_average": {
+    "delta_mape_mean": 0.098,
+    "delta_mape_sd": 0.24,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.010793597084169803,
+    "cfg_better": 62,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_select": {
+    "delta_mape_mean": -0.51,
+    "delta_mape_sd": 0.495,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 2.0509763656185948e-05,
+    "cfg_better": 102,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_global_w": {
+    "delta_mape_mean": -0.039,
+    "delta_mape_sd": 0.226,
+    "wins": 5,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.010114822331025888,
+    "cfg_better": 89,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_average": {
+    "delta_mape_mean": 0.256,
+    "delta_mape_sd": 0.176,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.8194258042408908,
+    "cfg_better": 83,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_platform_w": {
+    "delta_mape_mean": 0.085,
+    "delta_mape_sd": 0.239,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.6561151489767514,
+    "cfg_better": 92,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_platform_w": {
+    "delta_mape_mean": 0.243,
+    "delta_mape_sd": 0.236,
+    "wins": 1,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.49783085546295214,
+    "cfg_better": 78,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_meta_stack": {
+    "delta_mape_mean": -0.158,
+    "delta_mape_sd": 0.252,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.1821666852038215,
+    "cfg_better": 74,
+    "n_cfg": 158
+   },
+   "xgb_vs_xgb_log1p": {
+    "delta_mape_mean": -1.815,
+    "delta_mape_sd": 0.819,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.0013645528618768897,
+    "cfg_better": 89,
+    "n_cfg": 158
+   }
+  },
+  "fold_info": [
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.4017,
+      0.5189,
+      0.0794
+     ],
+     [
+      0.819,
+      0.0,
+      0.181
+     ],
+     [
+      0.5295,
+      0.2435,
+      0.227
+     ],
+     [
+      0.5045,
+      0.3034,
+      0.1921
+     ],
+     [
+      0.5883,
+      0.4117,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4848,
+       0.4919,
+       0.0233
+      ],
+      "Desktop CPU": [
+       0.3813,
+       0.557,
+       0.0617
+      ],
+      "MPS": [
+       0.5203,
+       0.0182,
+       0.4616
+      ],
+      "Mac CPU": [
+       0.1361,
+       0.8639,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.7981,
+       0.0,
+       0.2019
+      ],
+      "Desktop CPU": [
+       0.7836,
+       0.0,
+       0.2164
+      ],
+      "MPS": [
+       0.4598,
+       0.0297,
+       0.5105
+      ],
+      "Mac CPU": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2364,
+       0.099,
+       0.6646
+      ],
+      "Desktop CPU": [
+       0.5161,
+       0.0107,
+       0.4732
+      ],
+      "MPS": [
+       0.0,
+       0.3589,
+       0.6411
+      ],
+      "Mac CPU": [
+       0.7599,
+       0.2401,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5462,
+       0.4538,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.3009,
+       0.4108,
+       0.2884
+      ],
+      "MPS": [
+       0.0721,
+       0.0475,
+       0.8804
+      ],
+      "Mac CPU": [
+       0.7155,
+       0.2515,
+       0.033
+      ]
+     },
+     {
+      "CUDA": [
+       0.7389,
+       0.0659,
+       0.1952
+      ],
+      "Desktop CPU": [
+       0.7246,
+       0.2754,
+       0.0
+      ],
+      "MPS": [
+       0.3264,
+       0.2751,
+       0.3986
+      ],
+      "Mac CPU": [
+       0.3965,
+       0.6035,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.536,
+      0.2292,
+      0.2348
+     ],
+     [
+      0.0,
+      0.7591,
+      0.2409
+     ],
+     [
+      0.3913,
+      0.4126,
+      0.1961
+     ],
+     [
+      0.3696,
+      0.4589,
+      0.1714
+     ],
+     [
+      0.3049,
+      0.4742,
+      0.2209
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.2385,
+       0.4015,
+       0.36
+      ],
+      "Desktop CPU": [
+       0.4573,
+       0.0864,
+       0.4563
+      ],
+      "MPS": [
+       0.338,
+       0.1277,
+       0.5343
+      ],
+      "Mac CPU": [
+       0.7113,
+       0.2557,
+       0.0329
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       0.5009,
+       0.4991
+      ],
+      "Desktop CPU": [
+       0.0,
+       0.6983,
+       0.3017
+      ],
+      "MPS": [
+       0.1096,
+       0.2448,
+       0.6456
+      ],
+      "Mac CPU": [
+       0.0,
+       0.966,
+       0.034
+      ]
+     },
+     {
+      "CUDA": [
+       0.2771,
+       0.0,
+       0.7229
+      ],
+      "Desktop CPU": [
+       0.1658,
+       0.6151,
+       0.2191
+      ],
+      "MPS": [
+       0.5329,
+       0.0,
+       0.4671
+      ],
+      "Mac CPU": [
+       0.2842,
+       0.7158,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3166,
+       0.3808,
+       0.3026
+      ],
+      "Desktop CPU": [
+       0.5898,
+       0.1106,
+       0.2995
+      ],
+      "MPS": [
+       0.0305,
+       0.4397,
+       0.5298
+      ],
+      "Mac CPU": [
+       0.1918,
+       0.8082,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5274,
+       0.3023,
+       0.1703
+      ],
+      "Desktop CPU": [
+       0.0952,
+       0.3511,
+       0.5537
+      ],
+      "MPS": [
+       0.4339,
+       0.2569,
+       0.3092
+      ],
+      "Mac CPU": [
+       0.3345,
+       0.6404,
+       0.0251
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     1000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.3293,
+      0.4568,
+      0.2139
+     ],
+     [
+      0.5511,
+      0.3105,
+      0.1384
+     ],
+     [
+      0.1214,
+      0.6506,
+      0.228
+     ],
+     [
+      0.3551,
+      0.2285,
+      0.4164
+     ],
+     [
+      0.14,
+      0.5256,
+      0.3344
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.3095,
+       0.3336,
+       0.3569
+      ],
+      "Desktop CPU": [
+       0.3168,
+       0.4026,
+       0.2806
+      ],
+      "MPS": [
+       0.2983,
+       0.0818,
+       0.6199
+      ],
+      "Mac CPU": [
+       0.3266,
+       0.624,
+       0.0494
+      ]
+     },
+     {
+      "CUDA": [
+       0.4782,
+       0.4515,
+       0.0702
+      ],
+      "Desktop CPU": [
+       0.534,
+       0.2376,
+       0.2285
+      ],
+      "MPS": [
+       0.5492,
+       0.0,
+       0.4508
+      ],
+      "Mac CPU": [
+       0.3121,
+       0.6879,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.1049,
+       0.4925,
+       0.4026
+      ],
+      "Desktop CPU": [
+       0.1999,
+       0.5573,
+       0.2429
+      ],
+      "MPS": [
+       0.0,
+       0.4147,
+       0.5853
+      ],
+      "Mac CPU": [
+       0.106,
+       0.8048,
+       0.0892
+      ]
+     },
+     {
+      "CUDA": [
+       0.3764,
+       0.0,
+       0.6236
+      ],
+      "Desktop CPU": [
+       0.2694,
+       0.04,
+       0.6906
+      ],
+      "MPS": [
+       0.0448,
+       0.015,
+       0.9401
+      ],
+      "Mac CPU": [
+       0.6914,
+       0.3086,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3482,
+       0.2701,
+       0.3817
+      ],
+      "Desktop CPU": [
+       0.156,
+       0.5314,
+       0.3127
+      ],
+      "MPS": [
+       0.0814,
+       0.1868,
+       0.7318
+      ],
+      "Mac CPU": [
+       0.0182,
+       0.7499,
+       0.2319
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.3173,
+      0.6735,
+      0.0092
+     ],
+     [
+      0.4252,
+      0.4402,
+      0.1346
+     ],
+     [
+      0.5756,
+      0.2424,
+      0.182
+     ],
+     [
+      0.3674,
+      0.483,
+      0.1496
+     ],
+     [
+      0.306,
+      0.4795,
+      0.2146
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.2869,
+       0.7131,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.1443,
+       0.6584,
+       0.1973
+      ],
+      "MPS": [
+       0.1383,
+       0.4608,
+       0.4009
+      ],
+      "Mac CPU": [
+       0.3954,
+       0.6046,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2449,
+       0.4937,
+       0.2613
+      ],
+      "Desktop CPU": [
+       0.2357,
+       0.4455,
+       0.3188
+      ],
+      "MPS": [
+       0.314,
+       0.0,
+       0.686
+      ],
+      "Mac CPU": [
+       0.4617,
+       0.5383,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2074,
+       0.5128,
+       0.2798
+      ],
+      "Desktop CPU": [
+       0.4936,
+       0.1664,
+       0.34
+      ],
+      "MPS": [
+       0.3491,
+       0.124,
+       0.5269
+      ],
+      "Mac CPU": [
+       0.8408,
+       0.1574,
+       0.0018
+      ]
+     },
+     {
+      "CUDA": [
+       0.2435,
+       0.6622,
+       0.0943
+      ],
+      "Desktop CPU": [
+       0.182,
+       0.5098,
+       0.3083
+      ],
+      "MPS": [
+       0.2278,
+       0.0,
+       0.7722
+      ],
+      "Mac CPU": [
+       0.5637,
+       0.4363,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       0.3865,
+       0.6135
+      ],
+      "Desktop CPU": [
+       0.2122,
+       0.5287,
+       0.2591
+      ],
+      "MPS": [
+       0.0423,
+       0.3276,
+       0.6301
+      ],
+      "Mac CPU": [
+       0.459,
+       0.5077,
+       0.0333
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      40
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     1000.0,
+     1000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.5764,
+      0.184,
+      0.2397
+     ],
+     [
+      0.0,
+      0.6323,
+      0.3677
+     ],
+     [
+      0.3548,
+      0.4032,
+      0.242
+     ],
+     [
+      0.6747,
+      0.1659,
+      0.1593
+     ],
+     [
+      0.7011,
+      0.1085,
+      0.1905
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.0548,
+       0.2035,
+       0.7417
+      ],
+      "Desktop CPU": [
+       0.5195,
+       0.0,
+       0.4805
+      ],
+      "MPS": [
+       0.3794,
+       0.0618,
+       0.5588
+      ],
+      "Mac CPU": [
+       0.702,
+       0.298,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.1671,
+       0.4397,
+       0.3933
+      ],
+      "Desktop CPU": [
+       0.0628,
+       0.3721,
+       0.5651
+      ],
+      "MPS": [
+       0.0,
+       0.2579,
+       0.7421
+      ],
+      "Mac CPU": [
+       0.0,
+       0.795,
+       0.205
+      ]
+     },
+     {
+      "CUDA": [
+       0.1507,
+       0.0,
+       0.8493
+      ],
+      "Desktop CPU": [
+       0.2667,
+       0.4462,
+       0.2872
+      ],
+      "MPS": [
+       0.0033,
+       0.0406,
+       0.9561
+      ],
+      "Mac CPU": [
+       0.392,
+       0.608,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.476,
+       0.033,
+       0.491
+      ],
+      "Desktop CPU": [
+       0.4809,
+       0.0976,
+       0.4215
+      ],
+      "MPS": [
+       0.4116,
+       0.0,
+       0.5884
+      ],
+      "Mac CPU": [
+       0.7789,
+       0.2211,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5219,
+       0.0365,
+       0.4416
+      ],
+      "Desktop CPU": [
+       0.4261,
+       0.0,
+       0.5739
+      ],
+      "MPS": [
+       0.4301,
+       0.0,
+       0.5699
+      ],
+      "Mac CPU": [
+       0.8563,
+       0.1437,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     10000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.1932,
+      0.5205,
+      0.2863
+     ],
+     [
+      0.2648,
+      0.5026,
+      0.2326
+     ],
+     [
+      0.4402,
+      0.4072,
+      0.1526
+     ],
+     [
+      0.7,
+      0.2324,
+      0.0676
+     ],
+     [
+      0.7952,
+      0.0,
+      0.2048
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4762,
+       0.385,
+       0.1388
+      ],
+      "Desktop CPU": [
+       0.195,
+       0.372,
+       0.4331
+      ],
+      "MPS": [
+       0.0,
+       0.2313,
+       0.7687
+      ],
+      "Mac CPU": [
+       0.1149,
+       0.7858,
+       0.0993
+      ]
+     },
+     {
+      "CUDA": [
+       0.164,
+       0.4176,
+       0.4184
+      ],
+      "Desktop CPU": [
+       0.1931,
+       0.355,
+       0.4518
+      ],
+      "MPS": [
+       0.0,
+       0.1706,
+       0.8294
+      ],
+      "Mac CPU": [
+       0.2945,
+       0.7055,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.4436,
+       0.2319,
+       0.3245
+      ],
+      "Desktop CPU": [
+       0.4711,
+       0.353,
+       0.1759
+      ],
+      "MPS": [
+       0.2754,
+       0.0936,
+       0.631
+      ],
+      "Mac CPU": [
+       0.4486,
+       0.538,
+       0.0134
+      ]
+     },
+     {
+      "CUDA": [
+       0.3861,
+       0.0,
+       0.6139
+      ],
+      "Desktop CPU": [
+       0.4093,
+       0.0,
+       0.5907
+      ],
+      "MPS": [
+       0.4853,
+       0.0,
+       0.5147
+      ],
+      "Mac CPU": [
+       0.6544,
+       0.3456,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3809,
+       0.0,
+       0.6191
+      ],
+      "Desktop CPU": [
+       0.6635,
+       0.0,
+       0.3365
+      ],
+      "MPS": [
+       0.137,
+       0.0,
+       0.863
+      ],
+      "Mac CPU": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      2,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.443,
+      0.4401,
+      0.117
+     ],
+     [
+      0.4176,
+      0.5824,
+      0.0
+     ],
+     [
+      0.6788,
+      0.3212,
+      0.0
+     ],
+     [
+      0.6204,
+      0.2405,
+      0.1391
+     ],
+     [
+      0.1357,
+      0.6588,
+      0.2055
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.0827,
+       0.7655,
+       0.1517
+      ],
+      "Desktop CPU": [
+       0.3626,
+       0.3522,
+       0.2852
+      ],
+      "MPS": [
+       0.4543,
+       0.0,
+       0.5457
+      ],
+      "Mac CPU": [
+       0.5573,
+       0.4427,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.4102,
+       0.3179,
+       0.272
+      ],
+      "Desktop CPU": [
+       0.2591,
+       0.6274,
+       0.1135
+      ],
+      "MPS": [
+       0.1105,
+       0.5354,
+       0.3541
+      ],
+      "Mac CPU": [
+       0.4995,
+       0.5005,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.6984,
+       0.1565,
+       0.1451
+      ],
+      "Desktop CPU": [
+       0.7905,
+       0.0,
+       0.2095
+      ],
+      "MPS": [
+       0.1523,
+       0.3252,
+       0.5225
+      ],
+      "Mac CPU": [
+       0.7179,
+       0.2821,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5375,
+       0.1429,
+       0.3196
+      ],
+      "Desktop CPU": [
+       0.4786,
+       0.1566,
+       0.3648
+      ],
+      "MPS": [
+       0.4948,
+       0.0,
+       0.5052
+      ],
+      "Mac CPU": [
+       0.6412,
+       0.3588,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2946,
+       0.1044,
+       0.6011
+      ],
+      "Desktop CPU": [
+       0.0,
+       0.5542,
+       0.4458
+      ],
+      "MPS": [
+       0.1702,
+       0.1516,
+       0.6782
+      ],
+      "Mac CPU": [
+       0.1196,
+       0.8804,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1000.0,
+     10000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.3382,
+      0.5491,
+      0.1127
+     ],
+     [
+      0.1986,
+      0.5636,
+      0.2379
+     ],
+     [
+      0.4952,
+      0.0956,
+      0.4092
+     ],
+     [
+      0.3681,
+      0.6319,
+      0.0
+     ],
+     [
+      0.3503,
+      0.502,
+      0.1477
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.252,
+       0.4723,
+       0.2757
+      ],
+      "Desktop CPU": [
+       0.4771,
+       0.3765,
+       0.1463
+      ],
+      "MPS": [
+       0.1865,
+       0.3511,
+       0.4624
+      ],
+      "Mac CPU": [
+       0.2276,
+       0.7724,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       0.3099,
+       0.6901
+      ],
+      "Desktop CPU": [
+       0.0821,
+       0.5782,
+       0.3397
+      ],
+      "MPS": [
+       0.1953,
+       0.0792,
+       0.7255
+      ],
+      "Mac CPU": [
+       0.2462,
+       0.7538,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2804,
+       0.2868,
+       0.4329
+      ],
+      "Desktop CPU": [
+       0.4933,
+       0.1349,
+       0.3718
+      ],
+      "MPS": [
+       0.2819,
+       0.0,
+       0.7181
+      ],
+      "Mac CPU": [
+       0.6051,
+       0.0962,
+       0.2987
+      ]
+     },
+     {
+      "CUDA": [
+       0.3207,
+       0.6793,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.2587,
+       0.4804,
+       0.2609
+      ],
+      "MPS": [
+       0.2531,
+       0.5434,
+       0.2035
+      ],
+      "Mac CPU": [
+       0.4764,
+       0.5236,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2252,
+       0.3321,
+       0.4427
+      ],
+      "Desktop CPU": [
+       0.5847,
+       0.1381,
+       0.2773
+      ],
+      "MPS": [
+       0.1854,
+       0.2053,
+       0.6093
+      ],
+      "Mac CPU": [
+       0.1443,
+       0.8557,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      40
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     10000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "xgb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "gb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.4885,
+      0.4433,
+      0.0682
+     ],
+     [
+      0.4564,
+      0.4325,
+      0.1111
+     ],
+     [
+      0.5966,
+      0.125,
+      0.2784
+     ],
+     [
+      0.4029,
+      0.5971,
+      0.0
+     ],
+     [
+      0.4009,
+      0.5991,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.0466,
+       0.5546,
+       0.3988
+      ],
+      "Desktop CPU": [
+       0.2058,
+       0.2297,
+       0.5645
+      ],
+      "MPS": [
+       0.5996,
+       0.1335,
+       0.2669
+      ],
+      "Mac CPU": [
+       0.6269,
+       0.3731,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2721,
+       0.2887,
+       0.4392
+      ],
+      "Desktop CPU": [
+       0.5312,
+       0.3315,
+       0.1372
+      ],
+      "MPS": [
+       0.084,
+       0.5966,
+       0.3195
+      ],
+      "Mac CPU": [
+       0.7445,
+       0.2555,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2436,
+       0.1394,
+       0.617
+      ],
+      "Desktop CPU": [
+       0.393,
+       0.286,
+       0.3211
+      ],
+      "MPS": [
+       0.2932,
+       0.0,
+       0.7068
+      ],
+      "Mac CPU": [
+       0.9132,
+       0.0035,
+       0.0833
+      ]
+     },
+     {
+      "CUDA": [
+       0.2042,
+       0.4976,
+       0.2982
+      ],
+      "Desktop CPU": [
+       0.2205,
+       0.7356,
+       0.0439
+      ],
+      "MPS": [
+       0.1611,
+       0.5266,
+       0.3123
+      ],
+      "Mac CPU": [
+       0.6326,
+       0.3674,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3108,
+       0.6892,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.0146,
+       0.7013,
+       0.2841
+      ],
+      "MPS": [
+       0.2726,
+       0.4043,
+       0.323
+      ],
+      "Mac CPU": [
+       0.6184,
+       0.3816,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      40
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     1000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "gb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.6124,
+      0.3302,
+      0.0575
+     ],
+     [
+      0.2238,
+      0.4324,
+      0.3438
+     ],
+     [
+      0.2749,
+      0.5294,
+      0.1957
+     ],
+     [
+      0.3361,
+      0.5035,
+      0.1603
+     ],
+     [
+      0.246,
+      0.3783,
+      0.3757
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.5353,
+       0.0963,
+       0.3684
+      ],
+      "Desktop CPU": [
+       0.4456,
+       0.5544,
+       0.0
+      ],
+      "MPS": [
+       0.3375,
+       0.0479,
+       0.6146
+      ],
+      "Mac CPU": [
+       0.7439,
+       0.2561,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2357,
+       0.4302,
+       0.334
+      ],
+      "Desktop CPU": [
+       0.284,
+       0.0668,
+       0.6492
+      ],
+      "MPS": [
+       0.1595,
+       0.3813,
+       0.4593
+      ],
+      "Mac CPU": [
+       0.22,
+       0.6264,
+       0.1537
+      ]
+     },
+     {
+      "CUDA": [
+       0.4602,
+       0.4632,
+       0.0766
+      ],
+      "Desktop CPU": [
+       0.2759,
+       0.505,
+       0.2192
+      ],
+      "MPS": [
+       0.374,
+       0.3763,
+       0.2497
+      ],
+      "Mac CPU": [
+       0.1534,
+       0.6604,
+       0.1862
+      ]
+     },
+     {
+      "CUDA": [
+       0.3946,
+       0.237,
+       0.3684
+      ],
+      "Desktop CPU": [
+       0.0263,
+       0.3689,
+       0.6048
+      ],
+      "MPS": [
+       0.2975,
+       0.6839,
+       0.0186
+      ],
+      "Mac CPU": [
+       0.4811,
+       0.4625,
+       0.0565
+      ]
+     },
+     {
+      "CUDA": [
+       0.0832,
+       0.4165,
+       0.5004
+      ],
+      "Desktop CPU": [
+       0.0949,
+       0.3343,
+       0.5708
+      ],
+      "MPS": [
+       0.106,
+       0.326,
+       0.568
+      ],
+      "Mac CPU": [
+       0.4789,
+       0.3111,
+       0.2099
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   }
+  ],
+  "full_fit": {
+   "base_params": {
+    "xgb": {
+     "max_depth": 3,
+     "n_estimators": 400
+    },
+    "gb": {
+     "max_depth": 6,
+     "n_estimators": 400
+    },
+    "rf": {
+     "max_depth": 12,
+     "n_estimators": 100
+    }
+   },
+   "oof_mse_by_platform": {
+    "CUDA": {
+     "xgb": 0.0403,
+     "gb": 0.041,
+     "rf": 0.0407
+    },
+    "Desktop CPU": {
+     "xgb": 0.0827,
+     "gb": 0.0698,
+     "rf": 0.0672
+    },
+    "MPS": {
+     "xgb": 0.0592,
+     "gb": 0.0598,
+     "rf": 0.0515
+    },
+    "Mac CPU": {
+     "xgb": 0.1043,
+     "gb": 0.1098,
+     "rf": 0.1203
+    }
+   },
+   "global_w": {
+    "xgb": 0.402,
+    "gb": 0.313,
+    "rf": 0.285
+   },
+   "platform_w": {
+    "CUDA": {
+     "xgb": 0.443,
+     "gb": 0.335,
+     "rf": 0.222
+    },
+    "Desktop CPU": {
+     "xgb": 0.181,
+     "gb": 0.307,
+     "rf": 0.512
+    },
+    "MPS": {
+     "xgb": 0.261,
+     "gb": 0.0,
+     "rf": 0.739
+    },
+    "Mac CPU": {
+     "xgb": 0.539,
+     "gb": 0.461,
+     "rf": 0.0
+    }
+   },
+   "select": {
+    "CUDA": "xgb",
+    "Desktop CPU": "rf",
+    "MPS": "rf",
+    "Mac CPU": "xgb"
+   },
+   "tree_gate": {
+    "params": [
+     2,
+     40
+    ],
+    "leaves": {
+     "2": {
+      "n": 484,
+      "weights": {
+       "xgb": 0.342,
+       "gb": 0.207,
+       "rf": 0.451
+      },
+      "platform": {
+       "Desktop CPU": 121,
+       "CUDA": 121,
+       "Mac CPU": 121,
+       "MPS": 121
+      },
+      "family": {
+       "ANN": 168,
+       "CNN": 216,
+       "ResNet": 44,
+       "ViT": 36,
+       "GAN": 20
+      }
+     },
+     "3": {
+      "n": 68,
+      "weights": {
+       "xgb": 0.817,
+       "gb": 0.096,
+       "rf": 0.087
+      },
+      "platform": {
+       "Desktop CPU": 17,
+       "CUDA": 17,
+       "Mac CPU": 17,
+       "MPS": 17
+      },
+      "family": {
+       "CNN": 24,
+       "ResNet": 28,
+       "ViT": 4,
+       "GAN": 12
+      }
+     },
+     "5": {
+      "n": 40,
+      "weights": {
+       "xgb": 0.172,
+       "gb": 0.609,
+       "rf": 0.219
+      },
+      "platform": {
+       "Desktop CPU": 10,
+       "CUDA": 10,
+       "Mac CPU": 10,
+       "MPS": 10
+      },
+      "family": {
+       "MobileNet": 40
+      }
+     },
+     "6": {
+      "n": 40,
+      "weights": {
+       "xgb": 0.307,
+       "gb": 0.57,
+       "rf": 0.122
+      },
+      "platform": {
+       "Desktop CPU": 10,
+       "CUDA": 10,
+       "Mac CPU": 10,
+       "MPS": 10
+      },
+      "family": {
+       "MobileNet": 40
+      }
+     }
+    },
+    "tree": "|--- family=MobileNet <= 0.50\n|   |--- log_params <= 14.85\n|   |   |--- value: [0.01, -0.00, -0.01]\n|   |--- log_params >  14.85\n|   |   |--- value: [-0.02, 0.02, -0.00]\n|--- family=MobileNet >  0.50\n|   |--- log_flops <= 7.27\n|   |   |--- value: [0.02, -0.03, 0.02]\n|   |--- log_flops >  7.27\n|   |   |--- value: [-0.01, -0.03, 0.04]\n"
+   },
+   "meta_stack": {
+    "alpha": 10000.0
+   }
+  }
+ },
+ "avg_infer": {
+  "n": 632,
+  "best_single": "rf",
+  "summary": {
+   "xgb": {
+    "r2log": {
+     "mean": 0.9871,
+     "sd": 0.0012
+    },
+    "mape": {
+     "mean": 17.3293,
+     "sd": 1.4047
+    },
+    "mdape": {
+     "mean": 13.3237,
+     "sd": 0.682
+    },
+    "w20": {
+     "mean": 70.3956,
+     "sd": 1.742
+    },
+    "small_mape": {
+     "mean": 21.2468,
+     "sd": 5.6621
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 17.6681,
+      "sd": 1.423
+     },
+     "Desktop CPU": {
+      "mean": 15.7585,
+      "sd": 0.8833
+     },
+     "MPS": {
+      "mean": 20.3571,
+      "sd": 3.2944
+     },
+     "Mac CPU": {
+      "mean": 15.5334,
+      "sd": 1.7908
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 16.3985,
+      "sd": 2.95
+     },
+     "MobileNet": {
+      "mean": 15.6395,
+      "sd": 1.507
+     },
+     "ResNet": {
+      "mean": 15.7444,
+      "sd": 1.0894
+     },
+     "ANN": {
+      "mean": 20.159,
+      "sd": 3.6543
+     },
+     "CNN": {
+      "mean": 15.4997,
+      "sd": 1.1456
+     },
+     "ViT": {
+      "mean": 23.399,
+      "sd": 3.1432
+     }
+    },
+    "family_macro": {
+     "mean": 17.8067,
+     "sd": 1.2398
+    }
+   },
+   "gb": {
+    "r2log": {
+     "mean": 0.9859,
+     "sd": 0.0016
+    },
+    "mape": {
+     "mean": 17.6036,
+     "sd": 1.0152
+    },
+    "mdape": {
+     "mean": 12.7888,
+     "sd": 0.6133
+    },
+    "w20": {
+     "mean": 70.7911,
+     "sd": 1.6615
+    },
+    "small_mape": {
+     "mean": 16.8873,
+     "sd": 2.1141
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 18.4369,
+      "sd": 1.0291
+     },
+     "Desktop CPU": {
+      "mean": 16.4743,
+      "sd": 1.0928
+     },
+     "MPS": {
+      "mean": 19.8047,
+      "sd": 1.4952
+     },
+     "Mac CPU": {
+      "mean": 15.6983,
+      "sd": 1.6285
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 17.0851,
+      "sd": 5.4821
+     },
+     "MobileNet": {
+      "mean": 17.0658,
+      "sd": 0.9343
+     },
+     "ResNet": {
+      "mean": 15.1455,
+      "sd": 1.2064
+     },
+     "ANN": {
+      "mean": 19.2053,
+      "sd": 2.3254
+     },
+     "CNN": {
+      "mean": 15.5281,
+      "sd": 1.3359
+     },
+     "ViT": {
+      "mean": 29.2441,
+      "sd": 4.1681
+     }
+    },
+    "family_macro": {
+     "mean": 18.879,
+     "sd": 0.9809
+    }
+   },
+   "rf": {
+    "r2log": {
+     "mean": 0.9833,
+     "sd": 0.0012
+    },
+    "mape": {
+     "mean": 17.1866,
+     "sd": 0.8472
+    },
+    "mdape": {
+     "mean": 12.4897,
+     "sd": 0.4331
+    },
+    "w20": {
+     "mean": 71.788,
+     "sd": 0.8827
+    },
+    "small_mape": {
+     "mean": 17.1135,
+     "sd": 1.591
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 18.6642,
+      "sd": 1.0244
+     },
+     "Desktop CPU": {
+      "mean": 15.8079,
+      "sd": 0.9662
+     },
+     "MPS": {
+      "mean": 17.9632,
+      "sd": 0.8491
+     },
+     "Mac CPU": {
+      "mean": 16.3109,
+      "sd": 1.4775
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 17.5386,
+      "sd": 3.4636
+     },
+     "MobileNet": {
+      "mean": 18.4525,
+      "sd": 1.3616
+     },
+     "ResNet": {
+      "mean": 15.027,
+      "sd": 0.7856
+     },
+     "ANN": {
+      "mean": 18.0135,
+      "sd": 0.7656
+     },
+     "CNN": {
+      "mean": 14.6489,
+      "sd": 1.793
+     },
+     "ViT": {
+      "mean": 30.0131,
+      "sd": 2.3833
+     }
+    },
+    "family_macro": {
+     "mean": 18.9489,
+     "sd": 0.7282
+    }
+   },
+   "xgb_log1p": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.001
+    },
+    "mape": {
+     "mean": 39.7396,
+     "sd": 6.2998
+    },
+    "mdape": {
+     "mean": 18.2894,
+     "sd": 1.2102
+    },
+    "w20": {
+     "mean": 53.481,
+     "sd": 2.341
+    },
+    "small_mape": {
+     "mean": 118.9772,
+     "sd": 32.701
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 40.6895,
+      "sd": 3.4118
+     },
+     "Desktop CPU": {
+      "mean": 34.4739,
+      "sd": 8.5379
+     },
+     "MPS": {
+      "mean": 30.9802,
+      "sd": 2.5339
+     },
+     "Mac CPU": {
+      "mean": 52.8147,
+      "sd": 15.7764
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 16.7397,
+      "sd": 1.8616
+     },
+     "MobileNet": {
+      "mean": 18.3249,
+      "sd": 0.9432
+     },
+     "ResNet": {
+      "mean": 17.8359,
+      "sd": 1.1642
+     },
+     "ANN": {
+      "mean": 97.6091,
+      "sd": 23.6011
+     },
+     "CNN": {
+      "mean": 18.5476,
+      "sd": 1.3882
+     },
+     "ViT": {
+      "mean": 24.4952,
+      "sd": 2.7357
+     }
+    },
+    "family_macro": {
+     "mean": 32.2587,
+     "sd": 3.8589
+    }
+   },
+   "select": {
+    "r2log": {
+     "mean": 0.9858,
+     "sd": 0.0021
+    },
+    "mape": {
+     "mean": 17.3749,
+     "sd": 1.0151
+    },
+    "mdape": {
+     "mean": 13.1115,
+     "sd": 0.4756
+    },
+    "w20": {
+     "mean": 70.7753,
+     "sd": 1.2348
+    },
+    "small_mape": {
+     "mean": 17.521,
+     "sd": 3.199
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 18.4442,
+      "sd": 1.5753
+     },
+     "Desktop CPU": {
+      "mean": 16.3189,
+      "sd": 0.9863
+     },
+     "MPS": {
+      "mean": 18.8897,
+      "sd": 1.7016
+     },
+     "Mac CPU": {
+      "mean": 15.8467,
+      "sd": 2.1475
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 16.344,
+      "sd": 5.5884
+     },
+     "MobileNet": {
+      "mean": 16.3509,
+      "sd": 1.0982
+     },
+     "ResNet": {
+      "mean": 14.9572,
+      "sd": 0.6413
+     },
+     "ANN": {
+      "mean": 18.99,
+      "sd": 2.344
+     },
+     "CNN": {
+      "mean": 15.3584,
+      "sd": 1.3558
+     },
+     "ViT": {
+      "mean": 29.9143,
+      "sd": 3.9124
+     }
+    },
+    "family_macro": {
+     "mean": 18.6525,
+     "sd": 0.8407
+    }
+   },
+   "average": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.0013
+    },
+    "mape": {
+     "mean": 15.8565,
+     "sd": 1.0407
+    },
+    "mdape": {
+     "mean": 11.7574,
+     "sd": 0.4826
+    },
+    "w20": {
+     "mean": 74.4146,
+     "sd": 1.8513
+    },
+    "small_mape": {
+     "mean": 16.3976,
+     "sd": 2.702
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 16.9544,
+      "sd": 1.0969
+     },
+     "Desktop CPU": {
+      "mean": 14.1673,
+      "sd": 1.0218
+     },
+     "MPS": {
+      "mean": 18.1569,
+      "sd": 1.5044
+     },
+     "Mac CPU": {
+      "mean": 14.1475,
+      "sd": 1.6502
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 14.7017,
+      "sd": 4.4782
+     },
+     "MobileNet": {
+      "mean": 15.3659,
+      "sd": 0.8633
+     },
+     "ResNet": {
+      "mean": 13.5223,
+      "sd": 0.7564
+     },
+     "ANN": {
+      "mean": 16.6942,
+      "sd": 1.7176
+     },
+     "CNN": {
+      "mean": 14.7453,
+      "sd": 1.4767
+     },
+     "ViT": {
+      "mean": 25.1126,
+      "sd": 3.454
+     }
+    },
+    "family_macro": {
+     "mean": 16.6903,
+     "sd": 0.996
+    }
+   },
+   "global_w": {
+    "r2log": {
+     "mean": 0.9873,
+     "sd": 0.0016
+    },
+    "mape": {
+     "mean": 16.1153,
+     "sd": 1.1538
+    },
+    "mdape": {
+     "mean": 11.8942,
+     "sd": 0.5439
+    },
+    "w20": {
+     "mean": 73.9557,
+     "sd": 1.7967
+    },
+    "small_mape": {
+     "mean": 16.7552,
+     "sd": 3.3653
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 17.1621,
+      "sd": 1.1411
+     },
+     "Desktop CPU": {
+      "mean": 14.4321,
+      "sd": 1.1023
+     },
+     "MPS": {
+      "mean": 18.6007,
+      "sd": 1.8647
+     },
+     "Mac CPU": {
+      "mean": 14.2663,
+      "sd": 1.8849
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 14.7345,
+      "sd": 5.3193
+     },
+     "MobileNet": {
+      "mean": 15.4225,
+      "sd": 0.8619
+     },
+     "ResNet": {
+      "mean": 13.6958,
+      "sd": 0.762
+     },
+     "ANN": {
+      "mean": 17.079,
+      "sd": 2.1129
+     },
+     "CNN": {
+      "mean": 14.9328,
+      "sd": 1.4708
+     },
+     "ViT": {
+      "mean": 26.0079,
+      "sd": 3.42
+     }
+    },
+    "family_macro": {
+     "mean": 16.9787,
+     "sd": 1.1938
+    }
+   },
+   "platform_w": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.0017
+    },
+    "mape": {
+     "mean": 16.1966,
+     "sd": 1.1831
+    },
+    "mdape": {
+     "mean": 12.0477,
+     "sd": 0.4494
+    },
+    "w20": {
+     "mean": 73.7658,
+     "sd": 1.566
+    },
+    "small_mape": {
+     "mean": 16.8505,
+     "sd": 3.4246
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 17.2484,
+      "sd": 1.2405
+     },
+     "Desktop CPU": {
+      "mean": 14.3446,
+      "sd": 1.1495
+     },
+     "MPS": {
+      "mean": 18.6959,
+      "sd": 2.0841
+     },
+     "Mac CPU": {
+      "mean": 14.4977,
+      "sd": 1.8153
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 14.6572,
+      "sd": 5.1066
+     },
+     "MobileNet": {
+      "mean": 15.4936,
+      "sd": 1.0379
+     },
+     "ResNet": {
+      "mean": 13.6172,
+      "sd": 0.5462
+     },
+     "ANN": {
+      "mean": 17.4125,
+      "sd": 2.3158
+     },
+     "CNN": {
+      "mean": 14.925,
+      "sd": 1.5296
+     },
+     "ViT": {
+      "mean": 26.0004,
+      "sd": 3.3823
+     }
+    },
+    "family_macro": {
+     "mean": 17.0177,
+     "sd": 1.0574
+    }
+   },
+   "tree_gate": {
+    "r2log": {
+     "mean": 0.9873,
+     "sd": 0.0015
+    },
+    "mape": {
+     "mean": 16.0207,
+     "sd": 0.9838
+    },
+    "mdape": {
+     "mean": 11.9731,
+     "sd": 0.6033
+    },
+    "w20": {
+     "mean": 73.4494,
+     "sd": 1.6874
+    },
+    "small_mape": {
+     "mean": 15.86,
+     "sd": 2.4418
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 17.0934,
+      "sd": 0.965
+     },
+     "Desktop CPU": {
+      "mean": 14.6973,
+      "sd": 1.1044
+     },
+     "MPS": {
+      "mean": 18.1788,
+      "sd": 1.4708
+     },
+     "Mac CPU": {
+      "mean": 14.1133,
+      "sd": 1.6942
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 15.5699,
+      "sd": 4.6278
+     },
+     "MobileNet": {
+      "mean": 15.6111,
+      "sd": 0.9691
+     },
+     "ResNet": {
+      "mean": 13.7869,
+      "sd": 0.7643
+     },
+     "ANN": {
+      "mean": 16.3825,
+      "sd": 1.4087
+     },
+     "CNN": {
+      "mean": 14.9807,
+      "sd": 1.5313
+     },
+     "ViT": {
+      "mean": 25.9417,
+      "sd": 3.7459
+     }
+    },
+    "family_macro": {
+     "mean": 17.0455,
+     "sd": 1.1174
+    }
+   },
+   "meta_stack": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.0014
+    },
+    "mape": {
+     "mean": 16.3039,
+     "sd": 1.1768
+    },
+    "mdape": {
+     "mean": 12.1081,
+     "sd": 0.5814
+    },
+    "w20": {
+     "mean": 73.2595,
+     "sd": 1.8225
+    },
+    "small_mape": {
+     "mean": 17.1764,
+     "sd": 3.0813
+    },
+    "small_n": {
+     "mean": 117.0,
+     "sd": 0.0
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 17.4496,
+      "sd": 1.1061
+     },
+     "Desktop CPU": {
+      "mean": 14.5049,
+      "sd": 1.1374
+     },
+     "MPS": {
+      "mean": 18.7132,
+      "sd": 1.7962
+     },
+     "Mac CPU": {
+      "mean": 14.548,
+      "sd": 1.8686
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 15.9112,
+      "sd": 7.5532
+     },
+     "MobileNet": {
+      "mean": 16.0014,
+      "sd": 1.1616
+     },
+     "ResNet": {
+      "mean": 13.3983,
+      "sd": 0.8329
+     },
+     "ANN": {
+      "mean": 17.4287,
+      "sd": 2.0496
+     },
+     "CNN": {
+      "mean": 14.9776,
+      "sd": 1.4507
+     },
+     "ViT": {
+      "mean": 25.6867,
+      "sd": 3.3871
+     }
+    },
+    "family_macro": {
+     "mean": 17.234,
+     "sd": 1.4612
+    }
+   }
+  },
+  "paired": {
+   "select_vs_rf": {
+    "delta_mape_mean": 0.188,
+    "delta_mape_sd": 0.594,
+    "wins": 4,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.30123621409682333,
+    "cfg_better": 65,
+    "n_cfg": 158
+   },
+   "average_vs_rf": {
+    "delta_mape_mean": -1.33,
+    "delta_mape_sd": 0.376,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.001406246609140469,
+    "cfg_better": 87,
+    "n_cfg": 158
+   },
+   "global_w_vs_rf": {
+    "delta_mape_mean": -1.071,
+    "delta_mape_sd": 0.581,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.01959323468785581,
+    "cfg_better": 85,
+    "n_cfg": 158
+   },
+   "platform_w_vs_rf": {
+    "delta_mape_mean": -0.99,
+    "delta_mape_sd": 0.638,
+    "wins": 9,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.05697268316388109,
+    "cfg_better": 80,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_rf": {
+    "delta_mape_mean": -1.166,
+    "delta_mape_sd": 0.455,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.03779048526910225,
+    "cfg_better": 86,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_rf": {
+    "delta_mape_mean": -0.883,
+    "delta_mape_sd": 0.642,
+    "wins": 9,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.005461679241272755,
+    "cfg_better": 95,
+    "n_cfg": 158
+   },
+   "platform_w_vs_select": {
+    "delta_mape_mean": -1.178,
+    "delta_mape_sd": 0.318,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.2885721697382844e-16,
+    "cfg_better": 127,
+    "n_cfg": 158
+   },
+   "platform_w_vs_global_w": {
+    "delta_mape_mean": 0.081,
+    "delta_mape_sd": 0.207,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.0714145202228499,
+    "cfg_better": 70,
+    "n_cfg": 158
+   },
+   "platform_w_vs_average": {
+    "delta_mape_mean": 0.34,
+    "delta_mape_sd": 0.296,
+    "wins": 2,
+    "n_seeds": 10,
+    "wilcoxon_p": 2.9450282609044234e-05,
+    "cfg_better": 52,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_select": {
+    "delta_mape_mean": -1.354,
+    "delta_mape_sd": 0.411,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 8.373018747953244e-12,
+    "cfg_better": 116,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_global_w": {
+    "delta_mape_mean": -0.095,
+    "delta_mape_sd": 0.237,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.10586082251779844,
+    "cfg_better": 72,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_average": {
+    "delta_mape_mean": 0.164,
+    "delta_mape_sd": 0.195,
+    "wins": 2,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.00011021289479350857,
+    "cfg_better": 58,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_select": {
+    "delta_mape_mean": -1.071,
+    "delta_mape_sd": 0.473,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 5.887270529943809e-09,
+    "cfg_better": 108,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_global_w": {
+    "delta_mape_mean": 0.189,
+    "delta_mape_sd": 0.135,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.9163537513652418,
+    "cfg_better": 80,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_average": {
+    "delta_mape_mean": 0.447,
+    "delta_mape_sd": 0.291,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.11799027982471952,
+    "cfg_better": 74,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_platform_w": {
+    "delta_mape_mean": -0.176,
+    "delta_mape_sd": 0.305,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.8984688913506201,
+    "cfg_better": 79,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_platform_w": {
+    "delta_mape_mean": 0.107,
+    "delta_mape_sd": 0.257,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.43213791441071825,
+    "cfg_better": 81,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_meta_stack": {
+    "delta_mape_mean": -0.283,
+    "delta_mape_sd": 0.31,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.5649647582036175,
+    "cfg_better": 77,
+    "n_cfg": 158
+   },
+   "xgb_vs_xgb_log1p": {
+    "delta_mape_mean": -22.41,
+    "delta_mape_sd": 6.594,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 3.2557308042378834e-13,
+    "cfg_better": 113,
+    "n_cfg": 158
+   }
+  },
+  "fold_info": [
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "xgb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.6037,
+      0.0282,
+      0.3681
+     ],
+     [
+      0.2121,
+      0.4426,
+      0.3453
+     ],
+     [
+      0.3448,
+      0.5953,
+      0.06
+     ],
+     [
+      0.4366,
+      0.3234,
+      0.24
+     ],
+     [
+      0.5657,
+      0.4343,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.5653,
+       0.0,
+       0.4347
+      ],
+      "Desktop CPU": [
+       0.6045,
+       0.0104,
+       0.3852
+      ],
+      "MPS": [
+       0.4582,
+       0.2185,
+       0.3232
+      ],
+      "Mac CPU": [
+       0.6762,
+       0.0,
+       0.3238
+      ]
+     },
+     {
+      "CUDA": [
+       0.4707,
+       0.0,
+       0.5293
+      ],
+      "Desktop CPU": [
+       0.3532,
+       0.3221,
+       0.3248
+      ],
+      "MPS": [
+       0.0,
+       0.5489,
+       0.4511
+      ],
+      "Mac CPU": [
+       0.1887,
+       0.6934,
+       0.1179
+      ]
+     },
+     {
+      "CUDA": [
+       0.5941,
+       0.0912,
+       0.3148
+      ],
+      "Desktop CPU": [
+       0.2003,
+       0.7997,
+       0.0
+      ],
+      "MPS": [
+       0.0,
+       0.4637,
+       0.5363
+      ],
+      "Mac CPU": [
+       0.3863,
+       0.6137,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5915,
+       0.0,
+       0.4085
+      ],
+      "Desktop CPU": [
+       0.5024,
+       0.0739,
+       0.4237
+      ],
+      "MPS": [
+       0.4082,
+       0.256,
+       0.3357
+      ],
+      "Mac CPU": [
+       0.3536,
+       0.6464,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.4797,
+       0.5203,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.5179,
+       0.1914,
+       0.2907
+      ],
+      "MPS": [
+       0.7039,
+       0.1195,
+       0.1767
+      ],
+      "Mac CPU": [
+       0.4204,
+       0.5796,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      120
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      2,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.1815,
+      0.3944,
+      0.4241
+     ],
+     [
+      0.2743,
+      0.4186,
+      0.3071
+     ],
+     [
+      0.2115,
+      0.4858,
+      0.3027
+     ],
+     [
+      0.4135,
+      0.1529,
+      0.4336
+     ],
+     [
+      0.2904,
+      0.5798,
+      0.1298
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.005,
+       0.4356,
+       0.5594
+      ],
+      "Desktop CPU": [
+       0.6031,
+       0.0,
+       0.3969
+      ],
+      "MPS": [
+       0.0,
+       0.3192,
+       0.6808
+      ],
+      "Mac CPU": [
+       0.4724,
+       0.383,
+       0.1446
+      ]
+     },
+     {
+      "CUDA": [
+       0.3363,
+       0.4401,
+       0.2236
+      ],
+      "Desktop CPU": [
+       0.421,
+       0.1979,
+       0.3811
+      ],
+      "MPS": [
+       0.016,
+       0.5473,
+       0.4367
+      ],
+      "Mac CPU": [
+       0.3041,
+       0.5356,
+       0.1603
+      ]
+     },
+     {
+      "CUDA": [
+       0.2472,
+       0.5872,
+       0.1656
+      ],
+      "Desktop CPU": [
+       0.5106,
+       0.2185,
+       0.2709
+      ],
+      "MPS": [
+       0.0459,
+       0.0,
+       0.9541
+      ],
+      "Mac CPU": [
+       0.0173,
+       0.9827,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.4559,
+       0.0,
+       0.5441
+      ],
+      "Desktop CPU": [
+       0.6661,
+       0.0565,
+       0.2775
+      ],
+      "MPS": [
+       0.0,
+       0.1554,
+       0.8446
+      ],
+      "Mac CPU": [
+       0.5407,
+       0.1037,
+       0.3557
+      ]
+     },
+     {
+      "CUDA": [
+       0.3197,
+       0.5482,
+       0.1321
+      ],
+      "Desktop CPU": [
+       0.3467,
+       0.4208,
+       0.2325
+      ],
+      "MPS": [
+       0.5241,
+       0.0,
+       0.4759
+      ],
+      "Mac CPU": [
+       0.0623,
+       0.9377,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.2201,
+      0.4801,
+      0.2998
+     ],
+     [
+      0.3536,
+      0.4458,
+      0.2006
+     ],
+     [
+      0.3222,
+      0.6512,
+      0.0267
+     ],
+     [
+      0.4459,
+      0.365,
+      0.1892
+     ],
+     [
+      0.0,
+      0.6288,
+      0.3712
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.2733,
+       0.6237,
+       0.1029
+      ],
+      "Desktop CPU": [
+       0.2975,
+       0.4007,
+       0.3018
+      ],
+      "MPS": [
+       0.0,
+       0.0131,
+       0.9869
+      ],
+      "Mac CPU": [
+       0.3733,
+       0.6267,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.6555,
+       0.2306,
+       0.1139
+      ],
+      "Desktop CPU": [
+       0.6118,
+       0.0,
+       0.3882
+      ],
+      "MPS": [
+       0.0,
+       0.7548,
+       0.2452
+      ],
+      "Mac CPU": [
+       0.3045,
+       0.6955,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3916,
+       0.6084,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.4482,
+       0.2,
+       0.3518
+      ],
+      "MPS": [
+       0.0,
+       0.9937,
+       0.0063
+      ],
+      "Mac CPU": [
+       0.4158,
+       0.5842,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5321,
+       0.1606,
+       0.3073
+      ],
+      "Desktop CPU": [
+       0.5242,
+       0.282,
+       0.1938
+      ],
+      "MPS": [
+       0.3343,
+       0.3679,
+       0.2978
+      ],
+      "Mac CPU": [
+       0.3857,
+       0.5373,
+       0.077
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       0.7583,
+       0.2417
+      ],
+      "Desktop CPU": [
+       0.024,
+       0.6981,
+       0.2779
+      ],
+      "MPS": [
+       0.0871,
+       0.2756,
+       0.6373
+      ],
+      "Mac CPU": [
+       0.0,
+       0.6435,
+       0.3565
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      2,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     1000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.2403,
+      0.3948,
+      0.3649
+     ],
+     [
+      0.5022,
+      0.2929,
+      0.2049
+     ],
+     [
+      0.3249,
+      0.3095,
+      0.3656
+     ],
+     [
+      0.2756,
+      0.6413,
+      0.083
+     ],
+     [
+      0.2943,
+      0.3583,
+      0.3474
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4424,
+       0.204,
+       0.3536
+      ],
+      "Desktop CPU": [
+       0.3308,
+       0.2842,
+       0.385
+      ],
+      "MPS": [
+       0.0,
+       0.2678,
+       0.7322
+      ],
+      "Mac CPU": [
+       0.405,
+       0.4657,
+       0.1293
+      ]
+     },
+     {
+      "CUDA": [
+       0.7238,
+       0.1104,
+       0.1658
+      ],
+      "Desktop CPU": [
+       0.5114,
+       0.2216,
+       0.267
+      ],
+      "MPS": [
+       0.2592,
+       0.2603,
+       0.4805
+      ],
+      "Mac CPU": [
+       0.5791,
+       0.3913,
+       0.0296
+      ]
+     },
+     {
+      "CUDA": [
+       0.6421,
+       0.0759,
+       0.282
+      ],
+      "Desktop CPU": [
+       0.3434,
+       0.1756,
+       0.4811
+      ],
+      "MPS": [
+       0.0,
+       0.3517,
+       0.6483
+      ],
+      "Mac CPU": [
+       0.3227,
+       0.5479,
+       0.1294
+      ]
+     },
+     {
+      "CUDA": [
+       0.2602,
+       0.7398,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.3215,
+       0.4093,
+       0.2693
+      ],
+      "MPS": [
+       0.0877,
+       0.7903,
+       0.122
+      ],
+      "Mac CPU": [
+       0.335,
+       0.6335,
+       0.0315
+      ]
+     },
+     {
+      "CUDA": [
+       0.1146,
+       0.4915,
+       0.3939
+      ],
+      "Desktop CPU": [
+       0.3104,
+       0.297,
+       0.3926
+      ],
+      "MPS": [
+       0.5886,
+       0.0,
+       0.4114
+      ],
+      "Mac CPU": [
+       0.1317,
+       0.6692,
+       0.1991
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      80
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "rf"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.6818,
+      0.2633,
+      0.0549
+     ],
+     [
+      0.055,
+      0.6259,
+      0.3191
+     ],
+     [
+      0.4711,
+      0.1716,
+      0.3573
+     ],
+     [
+      0.2967,
+      0.497,
+      0.2062
+     ],
+     [
+      0.3518,
+      0.5144,
+      0.1338
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.8894,
+       0.1106,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.6577,
+       0.1035,
+       0.2389
+      ],
+      "MPS": [
+       0.4479,
+       0.0,
+       0.5521
+      ],
+      "Mac CPU": [
+       0.5644,
+       0.4356,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2726,
+       0.3397,
+       0.3877
+      ],
+      "Desktop CPU": [
+       0.0,
+       0.7777,
+       0.2223
+      ],
+      "MPS": [
+       0.197,
+       0.5563,
+       0.2467
+      ],
+      "Mac CPU": [
+       0.0,
+       0.6056,
+       0.3944
+      ]
+     },
+     {
+      "CUDA": [
+       0.613,
+       0.0923,
+       0.2947
+      ],
+      "Desktop CPU": [
+       0.3123,
+       0.21,
+       0.4777
+      ],
+      "MPS": [
+       0.4907,
+       0.0,
+       0.5093
+      ],
+      "Mac CPU": [
+       0.3811,
+       0.6189,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3722,
+       0.589,
+       0.0388
+      ],
+      "Desktop CPU": [
+       0.3633,
+       0.4901,
+       0.1466
+      ],
+      "MPS": [
+       0.0571,
+       0.5979,
+       0.345
+      ],
+      "Mac CPU": [
+       0.3457,
+       0.3348,
+       0.3194
+      ]
+     },
+     {
+      "CUDA": [
+       0.4547,
+       0.3428,
+       0.2026
+      ],
+      "Desktop CPU": [
+       0.3805,
+       0.3114,
+       0.3082
+      ],
+      "MPS": [
+       0.2035,
+       0.5078,
+       0.2887
+      ],
+      "Mac CPU": [
+       0.2863,
+       0.7137,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "xgb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.2471,
+      0.2333,
+      0.5197
+     ],
+     [
+      0.2647,
+      0.4573,
+      0.278
+     ],
+     [
+      0.4604,
+      0.3676,
+      0.172
+     ],
+     [
+      0.3129,
+      0.6871,
+      0.0
+     ],
+     [
+      0.1885,
+      0.7478,
+      0.0636
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4263,
+       0.1667,
+       0.407
+      ],
+      "Desktop CPU": [
+       0.3315,
+       0.2142,
+       0.4543
+      ],
+      "MPS": [
+       0.0101,
+       0.0,
+       0.9899
+      ],
+      "Mac CPU": [
+       0.2228,
+       0.5225,
+       0.2547
+      ]
+     },
+     {
+      "CUDA": [
+       0.6778,
+       0.2798,
+       0.0424
+      ],
+      "Desktop CPU": [
+       0.2092,
+       0.6063,
+       0.1845
+      ],
+      "MPS": [
+       0.0235,
+       0.2062,
+       0.7703
+      ],
+      "Mac CPU": [
+       0.1914,
+       0.5544,
+       0.2541
+      ]
+     },
+     {
+      "CUDA": [
+       0.3635,
+       0.6365,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.4036,
+       0.0956,
+       0.5008
+      ],
+      "MPS": [
+       0.4727,
+       0.414,
+       0.1133
+      ],
+      "Mac CPU": [
+       0.4627,
+       0.4532,
+       0.0841
+      ]
+     },
+     {
+      "CUDA": [
+       0.2565,
+       0.7435,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.2522,
+       0.5943,
+       0.1535
+      ],
+      "MPS": [
+       0.1262,
+       0.7283,
+       0.1455
+      ],
+      "Mac CPU": [
+       0.5217,
+       0.4783,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3048,
+       0.6952,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.3247,
+       0.3641,
+       0.3113
+      ],
+      "MPS": [
+       0.5865,
+       0.3176,
+       0.096
+      ],
+      "Mac CPU": [
+       0.0,
+       0.983,
+       0.017
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      120
+     ],
+     [
+      3,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "rf",
+      "Desktop CPU": "gb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.3649,
+      0.1289,
+      0.5063
+     ],
+     [
+      0.3473,
+      0.4897,
+      0.163
+     ],
+     [
+      0.1745,
+      0.4616,
+      0.3639
+     ],
+     [
+      0.3012,
+      0.2815,
+      0.4173
+     ],
+     [
+      0.1956,
+      0.6157,
+      0.1887
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.5187,
+       0.0597,
+       0.4216
+      ],
+      "Desktop CPU": [
+       0.4856,
+       0.0346,
+       0.4798
+      ],
+      "MPS": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "Mac CPU": [
+       0.4194,
+       0.25,
+       0.3306
+      ]
+     },
+     {
+      "CUDA": [
+       0.2137,
+       0.7863,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.3768,
+       0.1228,
+       0.5004
+      ],
+      "MPS": [
+       0.0,
+       0.364,
+       0.636
+      ],
+      "Mac CPU": [
+       0.4557,
+       0.5443,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.0331,
+       0.4223,
+       0.5446
+      ],
+      "Desktop CPU": [
+       0.2621,
+       0.331,
+       0.4069
+      ],
+      "MPS": [
+       0.0,
+       0.2835,
+       0.7165
+      ],
+      "Mac CPU": [
+       0.3876,
+       0.5442,
+       0.0682
+      ]
+     },
+     {
+      "CUDA": [
+       0.3545,
+       0.247,
+       0.3986
+      ],
+      "Desktop CPU": [
+       0.4934,
+       0.0815,
+       0.4252
+      ],
+      "MPS": [
+       0.1724,
+       0.4025,
+       0.4252
+      ],
+      "Mac CPU": [
+       0.1776,
+       0.3868,
+       0.4356
+      ]
+     },
+     {
+      "CUDA": [
+       0.494,
+       0.0,
+       0.506
+      ],
+      "Desktop CPU": [
+       0.1073,
+       0.655,
+       0.2377
+      ],
+      "MPS": [
+       0.2054,
+       0.5841,
+       0.2105
+      ],
+      "Mac CPU": [
+       0.1501,
+       0.8053,
+       0.0446
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      120
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      1,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "rf"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.5668,
+      0.0725,
+      0.3607
+     ],
+     [
+      0.3314,
+      0.1634,
+      0.5052
+     ],
+     [
+      0.3708,
+      0.4419,
+      0.1873
+     ],
+     [
+      0.4655,
+      0.2589,
+      0.2756
+     ],
+     [
+      0.2919,
+      0.4345,
+      0.2737
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.6146,
+       0.0,
+       0.3854
+      ],
+      "Desktop CPU": [
+       0.4638,
+       0.2287,
+       0.3076
+      ],
+      "MPS": [
+       0.4683,
+       0.0,
+       0.5317
+      ],
+      "Mac CPU": [
+       0.4732,
+       0.3219,
+       0.205
+      ]
+     },
+     {
+      "CUDA": [
+       0.456,
+       0.3487,
+       0.1953
+      ],
+      "Desktop CPU": [
+       0.591,
+       0.0,
+       0.409
+      ],
+      "MPS": [
+       0.0105,
+       0.0,
+       0.9895
+      ],
+      "Mac CPU": [
+       0.3299,
+       0.2497,
+       0.4204
+      ]
+     },
+     {
+      "CUDA": [
+       0.3401,
+       0.3318,
+       0.328
+      ],
+      "Desktop CPU": [
+       0.448,
+       0.0331,
+       0.5189
+      ],
+      "MPS": [
+       0.1949,
+       0.6971,
+       0.108
+      ],
+      "Mac CPU": [
+       0.4153,
+       0.5847,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.444,
+       0.3563,
+       0.1997
+      ],
+      "Desktop CPU": [
+       0.3995,
+       0.1762,
+       0.4243
+      ],
+      "MPS": [
+       0.4752,
+       0.0,
+       0.5248
+      ],
+      "Mac CPU": [
+       0.3963,
+       0.504,
+       0.0997
+      ]
+     },
+     {
+      "CUDA": [
+       0.1424,
+       0.5897,
+       0.2679
+      ],
+      "Desktop CPU": [
+       0.4628,
+       0.2553,
+       0.2818
+      ],
+      "MPS": [
+       0.0,
+       0.2295,
+       0.7705
+      ],
+      "Mac CPU": [
+       0.4549,
+       0.5451,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      2,
+      120
+     ],
+     [
+      2,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "rf",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "gb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     }
+    ],
+    "global_w": [
+     [
+      0.2599,
+      0.3059,
+      0.4341
+     ],
+     [
+      0.3171,
+      0.6732,
+      0.0097
+     ],
+     [
+      0.0639,
+      0.6436,
+      0.2925
+     ],
+     [
+      0.3534,
+      0.6057,
+      0.0409
+     ],
+     [
+      0.0935,
+      0.6292,
+      0.2774
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4158,
+       0.1338,
+       0.4503
+      ],
+      "Desktop CPU": [
+       0.1742,
+       0.3094,
+       0.5165
+      ],
+      "MPS": [
+       0.2098,
+       0.1419,
+       0.6483
+      ],
+      "Mac CPU": [
+       0.2424,
+       0.4332,
+       0.3244
+      ]
+     },
+     {
+      "CUDA": [
+       0.0626,
+       0.5449,
+       0.3925
+      ],
+      "Desktop CPU": [
+       0.2732,
+       0.705,
+       0.0219
+      ],
+      "MPS": [
+       0.3464,
+       0.3511,
+       0.3025
+      ],
+      "Mac CPU": [
+       0.3196,
+       0.6804,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.1992,
+       0.5177,
+       0.283
+      ],
+      "Desktop CPU": [
+       0.0,
+       0.6829,
+       0.3171
+      ],
+      "MPS": [
+       0.2513,
+       0.0,
+       0.7487
+      ],
+      "Mac CPU": [
+       0.0,
+       0.91,
+       0.09
+      ]
+     },
+     {
+      "CUDA": [
+       0.1655,
+       0.8345,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.5125,
+       0.0565,
+       0.4309
+      ],
+      "MPS": [
+       0.2018,
+       0.728,
+       0.0702
+      ],
+      "Mac CPU": [
+       0.4378,
+       0.5622,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       0.5279,
+       0.4721
+      ],
+      "Desktop CPU": [
+       0.2331,
+       0.6248,
+       0.1421
+      ],
+      "MPS": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "Mac CPU": [
+       0.1891,
+       0.8109,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      40
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     1.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "gb",
+      "MPS": "rf",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "Desktop CPU": "gb",
+      "MPS": "xgb",
+      "Mac CPU": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "Desktop CPU": "xgb",
+      "MPS": "rf",
+      "Mac CPU": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.3858,
+      0.3161,
+      0.2981
+     ],
+     [
+      0.5047,
+      0.2113,
+      0.284
+     ],
+     [
+      0.3213,
+      0.586,
+      0.0927
+     ],
+     [
+      0.3614,
+      0.6386,
+      0.0
+     ],
+     [
+      0.4757,
+      0.1244,
+      0.3998
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.5413,
+       0.2939,
+       0.1648
+      ],
+      "Desktop CPU": [
+       0.4356,
+       0.429,
+       0.1354
+      ],
+      "MPS": [
+       0.0,
+       0.1978,
+       0.8022
+      ],
+      "Mac CPU": [
+       0.5339,
+       0.2775,
+       0.1886
+      ]
+     },
+     {
+      "CUDA": [
+       0.5344,
+       0.1119,
+       0.3537
+      ],
+      "Desktop CPU": [
+       0.5033,
+       0.0296,
+       0.4671
+      ],
+      "MPS": [
+       0.3945,
+       0.0,
+       0.6055
+      ],
+      "Mac CPU": [
+       0.5608,
+       0.4392,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.2666,
+       0.7334,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.4287,
+       0.5196,
+       0.0518
+      ],
+      "MPS": [
+       0.0,
+       0.423,
+       0.577
+      ],
+      "Mac CPU": [
+       0.4442,
+       0.5558,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5378,
+       0.4622,
+       0.0
+      ],
+      "Desktop CPU": [
+       0.3598,
+       0.5484,
+       0.0918
+      ],
+      "MPS": [
+       0.5912,
+       0.3812,
+       0.0276
+      ],
+      "Mac CPU": [
+       0.0662,
+       0.9338,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.4281,
+       0.4061,
+       0.1658
+      ],
+      "Desktop CPU": [
+       0.6392,
+       0.0,
+       0.3608
+      ],
+      "MPS": [
+       0.0076,
+       0.3623,
+       0.6301
+      ],
+      "Mac CPU": [
+       0.7162,
+       0.0373,
+       0.2465
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      80
+     ],
+     [
+      3,
+      80
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      80
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ]
+   }
+  ],
+  "full_fit": {
+   "base_params": {
+    "xgb": {
+     "max_depth": 6,
+     "n_estimators": 400
+    },
+    "gb": {
+     "max_depth": 3,
+     "n_estimators": 400
+    },
+    "rf": {
+     "max_depth": 12,
+     "n_estimators": 200
+    }
+   },
+   "oof_mse_by_platform": {
+    "CUDA": {
+     "xgb": 0.0576,
+     "gb": 0.0733,
+     "rf": 0.0804
+    },
+    "Desktop CPU": {
+     "xgb": 0.0453,
+     "gb": 0.049,
+     "rf": 0.0541
+    },
+    "MPS": {
+     "xgb": 0.0854,
+     "gb": 0.0896,
+     "rf": 0.0928
+    },
+    "Mac CPU": {
+     "xgb": 0.0552,
+     "gb": 0.0638,
+     "rf": 0.0761
+    }
+   },
+   "global_w": {
+    "xgb": 0.56,
+    "gb": 0.278,
+    "rf": 0.162
+   },
+   "platform_w": {
+    "CUDA": {
+     "xgb": 0.68,
+     "gb": 0.181,
+     "rf": 0.139
+    },
+    "Desktop CPU": {
+     "xgb": 0.479,
+     "gb": 0.257,
+     "rf": 0.265
+    },
+    "MPS": {
+     "xgb": 0.519,
+     "gb": 0.243,
+     "rf": 0.238
+    },
+    "Mac CPU": {
+     "xgb": 0.582,
+     "gb": 0.372,
+     "rf": 0.046
+    }
+   },
+   "select": {
+    "CUDA": "xgb",
+    "Desktop CPU": "xgb",
+    "MPS": "xgb",
+    "Mac CPU": "xgb"
+   },
+   "tree_gate": {
+    "params": [
+     2,
+     40
+    ],
+    "leaves": {
+     "2": {
+      "n": 352,
+      "weights": {
+       "xgb": 0.671,
+       "gb": 0.108,
+       "rf": 0.221
+      },
+      "platform": {
+       "Desktop CPU": 88,
+       "CUDA": 88,
+       "Mac CPU": 88,
+       "MPS": 88
+      },
+      "family": {
+       "ANN": 168,
+       "ResNet": 72,
+       "MobileNet": 80,
+       "GAN": 32
+      }
+     },
+     "3": {
+      "n": 40,
+      "weights": {
+       "xgb": 0.378,
+       "gb": 0.552,
+       "rf": 0.069
+      },
+      "platform": {
+       "Desktop CPU": 10,
+       "CUDA": 10,
+       "Mac CPU": 10,
+       "MPS": 10
+      },
+      "family": {
+       "ViT": 40
+      }
+     },
+     "5": {
+      "n": 200,
+      "weights": {
+       "xgb": 0.22,
+       "gb": 0.405,
+       "rf": 0.376
+      },
+      "platform": {
+       "Desktop CPU": 50,
+       "CUDA": 50,
+       "Mac CPU": 50,
+       "MPS": 50
+      },
+      "family": {
+       "CNN": 200
+      }
+     },
+     "6": {
+      "n": 40,
+      "weights": {
+       "xgb": 0.256,
+       "gb": 0.246,
+       "rf": 0.498
+      },
+      "platform": {
+       "Desktop CPU": 10,
+       "CUDA": 10,
+       "Mac CPU": 10,
+       "MPS": 10
+      },
+      "family": {
+       "CNN": 40
+      }
+     }
+    },
+    "tree": "|--- family=CNN <= 0.50\n|   |--- family=ViT <= 0.50\n|   |   |--- value: [-0.02, 0.01, 0.01]\n|   |--- family=ViT >  0.50\n|   |   |--- value: [0.01, -0.05, 0.04]\n|--- family=CNN >  0.50\n|   |--- log_params <= 14.26\n|   |   |--- value: [0.01, -0.00, -0.01]\n|   |--- log_params >  14.26\n|   |   |--- value: [0.05, -0.02, -0.03]\n"
+   },
+   "meta_stack": {
+    "alpha": 10000.0
+   }
+  }
+ },
+ "peak_mem": {
+  "n": 316,
+  "best_single": "xgb",
+  "summary": {
+   "xgb": {
+    "r2log": {
+     "mean": 0.9873,
+     "sd": 0.0018
+    },
+    "mape": {
+     "mean": 4.6058,
+     "sd": 0.3461
+    },
+    "mdape": {
+     "mean": 1.2973,
+     "sd": 0.1816
+    },
+    "w20": {
+     "mean": 93.6709,
+     "sd": 1.4073
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.2373,
+      "sd": 0.5159
+     },
+     "MPS": {
+      "mean": 4.9742,
+      "sd": 0.393
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 2.2876,
+      "sd": 0.5011
+     },
+     "MobileNet": {
+      "mean": 13.3431,
+      "sd": 0.9485
+     },
+     "ResNet": {
+      "mean": 7.4608,
+      "sd": 0.7741
+     },
+     "ANN": {
+      "mean": 0.8918,
+      "sd": 0.0805
+     },
+     "CNN": {
+      "mean": 2.7252,
+      "sd": 0.8793
+     },
+     "ViT": {
+      "mean": 10.7286,
+      "sd": 1.8877
+     }
+    },
+    "family_macro": {
+     "mean": 6.2395,
+     "sd": 0.4186
+    }
+   },
+   "gb": {
+    "r2log": {
+     "mean": 0.9845,
+     "sd": 0.0022
+    },
+    "mape": {
+     "mean": 4.917,
+     "sd": 0.3952
+    },
+    "mdape": {
+     "mean": 1.0781,
+     "sd": 0.235
+    },
+    "w20": {
+     "mean": 92.8797,
+     "sd": 1.2234
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.382,
+      "sd": 0.5167
+     },
+     "MPS": {
+      "mean": 5.4519,
+      "sd": 0.5725
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 5.5535,
+      "sd": 0.9204
+     },
+     "MobileNet": {
+      "mean": 13.4326,
+      "sd": 0.8452
+     },
+     "ResNet": {
+      "mean": 7.518,
+      "sd": 0.5478
+     },
+     "ANN": {
+      "mean": 1.9058,
+      "sd": 0.6367
+     },
+     "CNN": {
+      "mean": 2.3633,
+      "sd": 0.7088
+     },
+     "ViT": {
+      "mean": 10.6635,
+      "sd": 2.0212
+     }
+    },
+    "family_macro": {
+     "mean": 6.9061,
+     "sd": 0.4863
+    }
+   },
+   "rf": {
+    "r2log": {
+     "mean": 0.9815,
+     "sd": 0.0019
+    },
+    "mape": {
+     "mean": 5.5545,
+     "sd": 0.3113
+    },
+    "mdape": {
+     "mean": 1.1814,
+     "sd": 0.1746
+    },
+    "w20": {
+     "mean": 92.5633,
+     "sd": 1.4093
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 5.8083,
+      "sd": 0.534
+     },
+     "MPS": {
+      "mean": 5.3008,
+      "sd": 0.2794
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 6.5281,
+      "sd": 0.6931
+     },
+     "MobileNet": {
+      "mean": 13.705,
+      "sd": 0.9375
+     },
+     "ResNet": {
+      "mean": 6.9831,
+      "sd": 0.4814
+     },
+     "ANN": {
+      "mean": 1.9875,
+      "sd": 0.2238
+     },
+     "CNN": {
+      "mean": 4.1975,
+      "sd": 0.6089
+     },
+     "ViT": {
+      "mean": 9.0266,
+      "sd": 1.0539
+     }
+    },
+    "family_macro": {
+     "mean": 7.0713,
+     "sd": 0.3047
+    }
+   },
+   "select": {
+    "r2log": {
+     "mean": 0.9869,
+     "sd": 0.0018
+    },
+    "mape": {
+     "mean": 4.6714,
+     "sd": 0.4186
+    },
+    "mdape": {
+     "mean": 1.2666,
+     "sd": 0.2163
+    },
+    "w20": {
+     "mean": 93.4494,
+     "sd": 1.5435
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.215,
+      "sd": 0.5812
+     },
+     "MPS": {
+      "mean": 5.1279,
+      "sd": 0.3965
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 2.8056,
+      "sd": 1.1832
+     },
+     "MobileNet": {
+      "mean": 13.2176,
+      "sd": 0.9031
+     },
+     "ResNet": {
+      "mean": 7.4666,
+      "sd": 0.7812
+     },
+     "ANN": {
+      "mean": 1.1576,
+      "sd": 0.5135
+     },
+     "CNN": {
+      "mean": 2.6533,
+      "sd": 0.9199
+     },
+     "ViT": {
+      "mean": 10.9076,
+      "sd": 2.1912
+     }
+    },
+    "family_macro": {
+     "mean": 6.368,
+     "sd": 0.4823
+    }
+   },
+   "average": {
+    "r2log": {
+     "mean": 0.9867,
+     "sd": 0.0015
+    },
+    "mape": {
+     "mean": 4.681,
+     "sd": 0.3072
+    },
+    "mdape": {
+     "mean": 1.1607,
+     "sd": 0.1419
+    },
+    "w20": {
+     "mean": 93.5759,
+     "sd": 1.3998
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.402,
+      "sd": 0.4528
+     },
+     "MPS": {
+      "mean": 4.9601,
+      "sd": 0.3535
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 4.4727,
+      "sd": 0.5362
+     },
+     "MobileNet": {
+      "mean": 12.9859,
+      "sd": 0.7912
+     },
+     "ResNet": {
+      "mean": 6.5905,
+      "sd": 0.6073
+     },
+     "ANN": {
+      "mean": 1.3576,
+      "sd": 0.2028
+     },
+     "CNN": {
+      "mean": 2.8654,
+      "sd": 0.6767
+     },
+     "ViT": {
+      "mean": 9.6532,
+      "sd": 1.691
+     }
+    },
+    "family_macro": {
+     "mean": 6.3209,
+     "sd": 0.3841
+    }
+   },
+   "global_w": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.0016
+    },
+    "mape": {
+     "mean": 4.5655,
+     "sd": 0.3473
+    },
+    "mdape": {
+     "mean": 1.1936,
+     "sd": 0.1633
+    },
+    "w20": {
+     "mean": 93.8924,
+     "sd": 1.2215
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.1332,
+      "sd": 0.4894
+     },
+     "MPS": {
+      "mean": 4.9978,
+      "sd": 0.3971
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 3.2915,
+      "sd": 0.9473
+     },
+     "MobileNet": {
+      "mean": 13.2448,
+      "sd": 0.9837
+     },
+     "ResNet": {
+      "mean": 7.2056,
+      "sd": 0.6341
+     },
+     "ANN": {
+      "mean": 0.9271,
+      "sd": 0.1951
+     },
+     "CNN": {
+      "mean": 2.5971,
+      "sd": 0.8324
+     },
+     "ViT": {
+      "mean": 10.5657,
+      "sd": 1.9696
+     }
+    },
+    "family_macro": {
+     "mean": 6.3053,
+     "sd": 0.4218
+    }
+   },
+   "platform_w": {
+    "r2log": {
+     "mean": 0.9874,
+     "sd": 0.0016
+    },
+    "mape": {
+     "mean": 4.5551,
+     "sd": 0.3445
+    },
+    "mdape": {
+     "mean": 1.1549,
+     "sd": 0.1588
+    },
+    "w20": {
+     "mean": 93.7975,
+     "sd": 1.2499
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.1321,
+      "sd": 0.4926
+     },
+     "MPS": {
+      "mean": 4.9781,
+      "sd": 0.3836
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 3.3731,
+      "sd": 0.9579
+     },
+     "MobileNet": {
+      "mean": 13.1282,
+      "sd": 0.8651
+     },
+     "ResNet": {
+      "mean": 7.1562,
+      "sd": 0.6842
+     },
+     "ANN": {
+      "mean": 1.0064,
+      "sd": 0.2228
+     },
+     "CNN": {
+      "mean": 2.5723,
+      "sd": 0.7876
+     },
+     "ViT": {
+      "mean": 10.4741,
+      "sd": 2.0364
+     }
+    },
+    "family_macro": {
+     "mean": 6.285,
+     "sd": 0.4322
+    }
+   },
+   "tree_gate": {
+    "r2log": {
+     "mean": 0.9869,
+     "sd": 0.0018
+    },
+    "mape": {
+     "mean": 4.5787,
+     "sd": 0.3717
+    },
+    "mdape": {
+     "mean": 1.125,
+     "sd": 0.1373
+    },
+    "w20": {
+     "mean": 93.5759,
+     "sd": 1.2486
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.1773,
+      "sd": 0.4339
+     },
+     "MPS": {
+      "mean": 4.9801,
+      "sd": 0.4749
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 4.073,
+      "sd": 1.1879
+     },
+     "MobileNet": {
+      "mean": 13.0538,
+      "sd": 0.9707
+     },
+     "ResNet": {
+      "mean": 7.0974,
+      "sd": 0.6933
+     },
+     "ANN": {
+      "mean": 1.062,
+      "sd": 0.4981
+     },
+     "CNN": {
+      "mean": 2.577,
+      "sd": 0.7225
+     },
+     "ViT": {
+      "mean": 10.2793,
+      "sd": 1.8223
+     }
+    },
+    "family_macro": {
+     "mean": 6.3571,
+     "sd": 0.4979
+    }
+   },
+   "meta_stack": {
+    "r2log": {
+     "mean": 0.9871,
+     "sd": 0.0014
+    },
+    "mape": {
+     "mean": 4.9702,
+     "sd": 0.3522
+    },
+    "mdape": {
+     "mean": 1.6598,
+     "sd": 0.2408
+    },
+    "w20": {
+     "mean": 93.3228,
+     "sd": 1.4498
+    },
+    "by_platform": {
+     "CUDA": {
+      "mean": 4.5718,
+      "sd": 0.4704
+     },
+     "MPS": {
+      "mean": 5.3686,
+      "sd": 0.4463
+     }
+    },
+    "by_family": {
+     "GAN": {
+      "mean": 4.08,
+      "sd": 0.9041
+     },
+     "MobileNet": {
+      "mean": 13.2896,
+      "sd": 1.1433
+     },
+     "ResNet": {
+      "mean": 7.109,
+      "sd": 0.8592
+     },
+     "ANN": {
+      "mean": 1.8875,
+      "sd": 0.4426
+     },
+     "CNN": {
+      "mean": 3.0262,
+      "sd": 0.8124
+     },
+     "ViT": {
+      "mean": 9.8045,
+      "sd": 1.75
+     }
+    },
+    "family_macro": {
+     "mean": 6.5328,
+     "sd": 0.4699
+    }
+   }
+  },
+  "paired": {
+   "select_vs_xgb": {
+    "delta_mape_mean": 0.066,
+    "delta_mape_sd": 0.222,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.006141642923134057,
+    "cfg_better": 101,
+    "n_cfg": 158
+   },
+   "average_vs_xgb": {
+    "delta_mape_mean": 0.075,
+    "delta_mape_sd": 0.155,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.00025704071051934994,
+    "cfg_better": 107,
+    "n_cfg": 158
+   },
+   "global_w_vs_xgb": {
+    "delta_mape_mean": -0.04,
+    "delta_mape_sd": 0.106,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.3288222305646817e-07,
+    "cfg_better": 119,
+    "n_cfg": 158
+   },
+   "platform_w_vs_xgb": {
+    "delta_mape_mean": -0.051,
+    "delta_mape_sd": 0.116,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.8684393345455767e-08,
+    "cfg_better": 119,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_xgb": {
+    "delta_mape_mean": -0.027,
+    "delta_mape_sd": 0.205,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 7.242229282510028e-09,
+    "cfg_better": 116,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_xgb": {
+    "delta_mape_mean": 0.364,
+    "delta_mape_sd": 0.247,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.014271373451883087,
+    "cfg_better": 61,
+    "n_cfg": 158
+   },
+   "platform_w_vs_select": {
+    "delta_mape_mean": -0.116,
+    "delta_mape_sd": 0.129,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.5387024503087556e-10,
+    "cfg_better": 121,
+    "n_cfg": 158
+   },
+   "platform_w_vs_global_w": {
+    "delta_mape_mean": -0.01,
+    "delta_mape_sd": 0.037,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.013207107996769205,
+    "cfg_better": 95,
+    "n_cfg": 158
+   },
+   "platform_w_vs_average": {
+    "delta_mape_mean": -0.126,
+    "delta_mape_sd": 0.132,
+    "wins": 8,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.020520758993047433,
+    "cfg_better": 59,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_select": {
+    "delta_mape_mean": -0.093,
+    "delta_mape_sd": 0.279,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 7.347567552416404e-08,
+    "cfg_better": 114,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_global_w": {
+    "delta_mape_mean": 0.013,
+    "delta_mape_sd": 0.182,
+    "wins": 5,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.0001524300561723296,
+    "cfg_better": 105,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_average": {
+    "delta_mape_mean": -0.102,
+    "delta_mape_sd": 0.2,
+    "wins": 7,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.2135578651499518,
+    "cfg_better": 66,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_select": {
+    "delta_mape_mean": 0.299,
+    "delta_mape_sd": 0.302,
+    "wins": 1,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.000764800118890967,
+    "cfg_better": 54,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_global_w": {
+    "delta_mape_mean": 0.405,
+    "delta_mape_sd": 0.212,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.0946593742332344e-06,
+    "cfg_better": 52,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_average": {
+    "delta_mape_mean": 0.289,
+    "delta_mape_sd": 0.173,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.3251878152424574e-08,
+    "cfg_better": 41,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_platform_w": {
+    "delta_mape_mean": 0.024,
+    "delta_mape_sd": 0.177,
+    "wins": 3,
+    "n_seeds": 10,
+    "wilcoxon_p": 0.02552523370662433,
+    "cfg_better": 98,
+    "n_cfg": 158
+   },
+   "meta_stack_vs_platform_w": {
+    "delta_mape_mean": 0.415,
+    "delta_mape_sd": 0.23,
+    "wins": 0,
+    "n_seeds": 10,
+    "wilcoxon_p": 3.431421429248428e-08,
+    "cfg_better": 47,
+    "n_cfg": 158
+   },
+   "tree_gate_vs_meta_stack": {
+    "delta_mape_mean": -0.391,
+    "delta_mape_sd": 0.225,
+    "wins": 10,
+    "n_seeds": 10,
+    "wilcoxon_p": 1.527185319436886e-08,
+    "cfg_better": 115,
+    "n_cfg": 158
+   }
+  },
+  "fold_info": [
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "MPS": "gb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.0438,
+      0.9562,
+      0.0
+     ],
+     [
+      0.6349,
+      0.3651,
+      0.0
+     ],
+     [
+      0.9435,
+      0.0,
+      0.0565
+     ],
+     [
+      1.0,
+      0.0,
+      0.0
+     ],
+     [
+      0.6532,
+      0.3468,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "MPS": [
+       0.0855,
+       0.8279,
+       0.0866
+      ]
+     },
+     {
+      "CUDA": [
+       0.1124,
+       0.8876,
+       0.0
+      ],
+      "MPS": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.9974,
+       0.0026,
+       0.0
+      ],
+      "MPS": [
+       0.8778,
+       0.0,
+       0.1222
+      ]
+     },
+     {
+      "CUDA": [
+       0.7091,
+       0.2909,
+       0.0
+      ],
+      "MPS": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.729,
+       0.1733,
+       0.0977
+      ],
+      "MPS": [
+       0.5741,
+       0.4259,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1000.0,
+     1000.0,
+     100.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "rf"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.8499,
+      0.0173,
+      0.1328
+     ],
+     [
+      0.7525,
+      0.2228,
+      0.0247
+     ],
+     [
+      0.3969,
+      0.3676,
+      0.2356
+     ],
+     [
+      0.7194,
+      0.2806,
+      0.0
+     ],
+     [
+      0.7302,
+      0.2064,
+      0.0634
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.8546,
+       0.1454,
+       0.0
+      ],
+      "MPS": [
+       0.6861,
+       0.0,
+       0.3139
+      ]
+     },
+     {
+      "CUDA": [
+       0.432,
+       0.568,
+       0.0
+      ],
+      "MPS": [
+       0.8866,
+       0.0,
+       0.1134
+      ]
+     },
+     {
+      "CUDA": [
+       0.2554,
+       0.7446,
+       0.0
+      ],
+      "MPS": [
+       0.4672,
+       0.0,
+       0.5328
+      ]
+     },
+     {
+      "CUDA": [
+       0.507,
+       0.493,
+       0.0
+      ],
+      "MPS": [
+       0.8092,
+       0.1908,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.7342,
+       0.2658,
+       0.0
+      ],
+      "MPS": [
+       0.7561,
+       0.0302,
+       0.2137
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     1000.0,
+     10000.0,
+     1000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.5726,
+      0.4274,
+      0.0
+     ],
+     [
+      0.7391,
+      0.2609,
+      0.0
+     ],
+     [
+      0.8436,
+      0.1564,
+      0.0
+     ],
+     [
+      0.4849,
+      0.5151,
+      0.0
+     ],
+     [
+      0.56,
+      0.44,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.4616,
+       0.5384,
+       0.0
+      ],
+      "MPS": [
+       0.6665,
+       0.3335,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5566,
+       0.4434,
+       0.0
+      ],
+      "MPS": [
+       0.9174,
+       0.0826,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5367,
+       0.4633,
+       0.0
+      ],
+      "MPS": [
+       0.9382,
+       0.0,
+       0.0618
+      ]
+     },
+     {
+      "CUDA": [
+       0.1657,
+       0.8343,
+       0.0
+      ],
+      "MPS": [
+       0.6959,
+       0.3041,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.1786,
+       0.8214,
+       0.0
+      ],
+      "MPS": [
+       0.9049,
+       0.0,
+       0.0951
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1000.0,
+     10000.0,
+     1000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.8007,
+      0.1652,
+      0.0341
+     ],
+     [
+      0.8408,
+      0.1592,
+      0.0
+     ],
+     [
+      0.8288,
+      0.0816,
+      0.0896
+     ],
+     [
+      0.8191,
+      0.1809,
+      0.0
+     ],
+     [
+      0.9606,
+      0.0394,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.8072,
+       0.1928,
+       0.0
+      ],
+      "MPS": [
+       0.8264,
+       0.0,
+       0.1736
+      ]
+     },
+     {
+      "CUDA": [
+       0.9211,
+       0.0789,
+       0.0
+      ],
+      "MPS": [
+       0.7595,
+       0.2405,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.7395,
+       0.2605,
+       0.0
+      ],
+      "MPS": [
+       0.8314,
+       0.0,
+       0.1686
+      ]
+     },
+     {
+      "CUDA": [
+       0.574,
+       0.426,
+       0.0
+      ],
+      "MPS": [
+       0.9851,
+       0.0149,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "MPS": [
+       0.8684,
+       0.0448,
+       0.0868
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     1000.0,
+     10000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 6,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 100
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.8443,
+      0.0,
+      0.1557
+     ],
+     [
+      0.592,
+      0.2851,
+      0.1229
+     ],
+     [
+      0.7314,
+      0.2686,
+      0.0
+     ],
+     [
+      0.7255,
+      0.2745,
+      0.0
+     ],
+     [
+      0.7982,
+      0.1805,
+      0.0213
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.5845,
+       0.2299,
+       0.1856
+      ],
+      "MPS": [
+       0.9125,
+       0.0,
+       0.0875
+      ]
+     },
+     {
+      "CUDA": [
+       0.5446,
+       0.4554,
+       0.0
+      ],
+      "MPS": [
+       0.5933,
+       0.0,
+       0.4067
+      ]
+     },
+     {
+      "CUDA": [
+       0.6499,
+       0.3501,
+       0.0
+      ],
+      "MPS": [
+       0.8061,
+       0.1939,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.5746,
+       0.4254,
+       0.0
+      ],
+      "MPS": [
+       0.8673,
+       0.1327,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.65,
+       0.35,
+       0.0
+      ],
+      "MPS": [
+       0.8665,
+       0.0,
+       0.1335
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     1000.0,
+     1000.0,
+     10000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.8218,
+      0.0,
+      0.1782
+     ],
+     [
+      0.6889,
+      0.3111,
+      0.0
+     ],
+     [
+      0.7286,
+      0.2271,
+      0.0442
+     ],
+     [
+      0.66,
+      0.2922,
+      0.0478
+     ],
+     [
+      0.7304,
+      0.2696,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.907,
+       0.0,
+       0.093
+      ],
+      "MPS": [
+       0.7554,
+       0.0,
+       0.2446
+      ]
+     },
+     {
+      "CUDA": [
+       0.7831,
+       0.2169,
+       0.0
+      ],
+      "MPS": [
+       0.6078,
+       0.3922,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.6149,
+       0.3851,
+       0.0
+      ],
+      "MPS": [
+       0.7257,
+       0.0,
+       0.2743
+      ]
+     },
+     {
+      "CUDA": [
+       0.5158,
+       0.4842,
+       0.0
+      ],
+      "MPS": [
+       0.7857,
+       0.0,
+       0.2143
+      ]
+     },
+     {
+      "CUDA": [
+       0.6964,
+       0.3036,
+       0.0
+      ],
+      "MPS": [
+       0.7494,
+       0.0631,
+       0.1875
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      3,
+      40
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     1000.0,
+     10000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.7286,
+      0.2714,
+      0.0
+     ],
+     [
+      0.98,
+      0.02,
+      0.0
+     ],
+     [
+      0.7249,
+      0.1617,
+      0.1135
+     ],
+     [
+      0.7251,
+      0.1933,
+      0.0816
+     ],
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.7759,
+       0.2241,
+       0.0
+      ],
+      "MPS": [
+       0.7044,
+       0.1857,
+       0.1099
+      ]
+     },
+     {
+      "CUDA": [
+       0.9511,
+       0.0489,
+       0.0
+      ],
+      "MPS": [
+       0.9422,
+       0.0,
+       0.0578
+      ]
+     },
+     {
+      "CUDA": [
+       0.4606,
+       0.4359,
+       0.1035
+      ],
+      "MPS": [
+       0.8793,
+       0.0,
+       0.1207
+      ]
+     },
+     {
+      "CUDA": [
+       0.5115,
+       0.4215,
+       0.067
+      ],
+      "MPS": [
+       0.8743,
+       0.0138,
+       0.112
+      ]
+     },
+     {
+      "CUDA": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "MPS": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      2,
+      40
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.8076,
+      0.1924,
+      0.0
+     ],
+     [
+      0.6317,
+      0.3683,
+      0.0
+     ],
+     [
+      0.8461,
+      0.0,
+      0.1539
+     ],
+     [
+      0.9791,
+      0.0209,
+      0.0
+     ],
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.7146,
+       0.2854,
+       0.0
+      ],
+      "MPS": [
+       0.9107,
+       0.0387,
+       0.0505
+      ]
+     },
+     {
+      "CUDA": [
+       0.5796,
+       0.4204,
+       0.0
+      ],
+      "MPS": [
+       0.6722,
+       0.321,
+       0.0068
+      ]
+     },
+     {
+      "CUDA": [
+       0.8502,
+       0.0409,
+       0.109
+      ],
+      "MPS": [
+       0.8143,
+       0.0,
+       0.1857
+      ]
+     },
+     {
+      "CUDA": [
+       0.9214,
+       0.0786,
+       0.0
+      ],
+      "MPS": [
+       0.9695,
+       0.0,
+       0.0305
+      ]
+     },
+     {
+      "CUDA": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "MPS": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      3,
+      40
+     ],
+     [
+      1,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "gb"
+     },
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.544,
+      0.456,
+      0.0
+     ],
+     [
+      0.5659,
+      0.4341,
+      0.0
+     ],
+     [
+      0.837,
+      0.0248,
+      0.1382
+     ],
+     [
+      0.6402,
+      0.3598,
+      0.0
+     ],
+     [
+      0.6904,
+      0.3096,
+      0.0
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.3195,
+       0.6805,
+       0.0
+      ],
+      "MPS": [
+       0.7999,
+       0.1786,
+       0.0215
+      ]
+     },
+     {
+      "CUDA": [
+       0.9258,
+       0.0742,
+       0.0
+      ],
+      "MPS": [
+       0.0,
+       0.9836,
+       0.0164
+      ]
+     },
+     {
+      "CUDA": [
+       0.7061,
+       0.2939,
+       0.0
+      ],
+      "MPS": [
+       0.7179,
+       0.0,
+       0.2821
+      ]
+     },
+     {
+      "CUDA": [
+       0.3275,
+       0.6725,
+       0.0
+      ],
+      "MPS": [
+       0.7992,
+       0.2008,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.3218,
+       0.6782,
+       0.0
+      ],
+      "MPS": [
+       0.8314,
+       0.0,
+       0.1686
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      120
+     ]
+    ],
+    "meta_alpha": [
+     10000.0,
+     1000.0,
+     10000.0,
+     1000.0,
+     1000.0
+    ]
+   },
+   {
+    "base_params": [
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 200
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 6,
+       "n_estimators": 200
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": 12,
+       "n_estimators": 200
+      }
+     },
+     {
+      "xgb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "gb": {
+       "max_depth": 3,
+       "n_estimators": 400
+      },
+      "rf": {
+       "max_depth": null,
+       "n_estimators": 200
+      }
+     }
+    ],
+    "select": [
+     {
+      "CUDA": "xgb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "rf"
+     },
+     {
+      "CUDA": "gb",
+      "MPS": "xgb"
+     }
+    ],
+    "global_w": [
+     [
+      0.9478,
+      0.0522,
+      0.0
+     ],
+     [
+      0.4245,
+      0.5679,
+      0.0075
+     ],
+     [
+      0.5951,
+      0.3814,
+      0.0235
+     ],
+     [
+      0.4803,
+      0.5103,
+      0.0093
+     ],
+     [
+      0.4677,
+      0.4594,
+      0.0729
+     ]
+    ],
+    "platform_w": [
+     {
+      "CUDA": [
+       0.7211,
+       0.2789,
+       0.0
+      ],
+      "MPS": [
+       1.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "CUDA": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "MPS": [
+       0.6975,
+       0.0,
+       0.3025
+      ]
+     },
+     {
+      "CUDA": [
+       0.2446,
+       0.7554,
+       0.0
+      ],
+      "MPS": [
+       0.7857,
+       0.0,
+       0.2143
+      ]
+     },
+     {
+      "CUDA": [
+       0.3928,
+       0.6072,
+       0.0
+      ],
+      "MPS": [
+       0.4351,
+       0.0,
+       0.5649
+      ]
+     },
+     {
+      "CUDA": [
+       0.3269,
+       0.6198,
+       0.0533
+      ],
+      "MPS": [
+       0.54,
+       0.3611,
+       0.0989
+      ]
+     }
+    ],
+    "gate_params": [
+     [
+      1,
+      120
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      1,
+      80
+     ],
+     [
+      2,
+      40
+     ],
+     [
+      1,
+      80
+     ]
+    ],
+    "meta_alpha": [
+     1000.0,
+     10000.0,
+     1000.0,
+     1000.0,
+     10000.0
+    ]
+   }
+  ],
+  "full_fit": {
+   "base_params": {
+    "xgb": {
+     "max_depth": 3,
+     "n_estimators": 400
+    },
+    "gb": {
+     "max_depth": 3,
+     "n_estimators": 400
+    },
+    "rf": {
+     "max_depth": null,
+     "n_estimators": 200
+    }
+   },
+   "oof_mse_by_platform": {
+    "CUDA": {
+     "xgb": 0.0045,
+     "gb": 0.0056,
+     "rf": 0.0105
+    },
+    "MPS": {
+     "xgb": 0.0088,
+     "gb": 0.0111,
+     "rf": 0.0146
+    }
+   },
+   "global_w": {
+    "xgb": 0.892,
+    "gb": 0.022,
+    "rf": 0.085
+   },
+   "platform_w": {
+    "CUDA": {
+     "xgb": 0.734,
+     "gb": 0.266,
+     "rf": 0.0
+    },
+    "MPS": {
+     "xgb": 0.887,
+     "gb": 0.0,
+     "rf": 0.113
+    }
+   },
+   "select": {
+    "CUDA": "xgb",
+    "MPS": "xgb"
+   },
+   "tree_gate": {
+    "params": [
+     1,
+     120
+    ],
+    "leaves": {
+     "1": {
+      "n": 196,
+      "weights": {
+       "xgb": 0.849,
+       "gb": 0.003,
+       "rf": 0.148
+      },
+      "platform": {
+       "CUDA": 98,
+       "MPS": 98
+      },
+      "family": {
+       "ANN": 84,
+       "ResNet": 36,
+       "MobileNet": 40,
+       "ViT": 20,
+       "GAN": 16
+      }
+     },
+     "2": {
+      "n": 120,
+      "weights": {
+       "xgb": 0.908,
+       "gb": 0.075,
+       "rf": 0.017
+      },
+      "platform": {
+       "CUDA": 60,
+       "MPS": 60
+      },
+      "family": {
+       "CNN": 120
+      }
+     }
+    },
+    "tree": "|--- family=CNN <= 0.50\n|   |--- value: [-0.00, 0.00, 0.00]\n|--- family=CNN >  0.50\n|   |--- value: [-0.01, -0.01, 0.02]\n"
+   },
+   "meta_stack": {
+    "alpha": 1000.0
+   }
+  }
+ }
+}

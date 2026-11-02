@@ -84,6 +84,16 @@ KIISE 원고에서 시작해 RACS 2026 제출(7월), 심사 대응과 camera-rea
 - **외부 기기 4대**(GTX 1050, Intel i3-8100, RTX 3060, Intel i7-10700F)를 v2 프로토콜로 재서 처음 보는 하드웨어 예측을 시험했습니다. 모델은 하드웨어 사양을 속도의 연속적인 축으로 쓰지 않고 기기 구별(예: VRAM 분기)에만 써서, 사양만 바꿔서는 새 기기를 맞히지 못합니다. GTX 1050은 계열당 4개(24구성)를 재서 학습에 넣으면 기존 정확도 수준이 됐습니다. → `paper/72`~`75` (d6476a0 ~ f9b0efd)
 - **GPU 3대 leave-one-GPU-out**: 트리 모델은 TFLOPS를 쓰지 않아 양끝 GPU를 외삽하지 못하고, 학습 시간은 구성별 log-TFLOPS 직선 보간이 더 정확했습니다. 같은 구성을 세 GPU에서 비교해 오버헤드·메모리·연산 세 체제를 나누고, 호스트·TFLOPS·대역폭으로 된 4-파라미터 식이 GPU 사이에 전이되는지 시험했습니다. → [`paper/76_logo_gpu_results.md`](paper/76_logo_gpu_results.md), [`paper/77_roofline_three_gpu.md`](paper/77_roofline_three_gpu.md) (1657574, 244d16e)
 
+### 7. 확장 원고용 결합 앙상블 실험 (2026년 10~11월, `smj-ensemble` 브랜치)
+
+단일 XGBoost 대신 XGB·GB·RF 세 모델을 기반 모델로 두고, 결합 가중치를 데이터로 학습하는 앙상블을 시험했습니다. 타깃은 log(y)이고, 검증은 모델 구성 단위 중첩 교차검증(외부 GroupKFold 5 × 내부 4)을 시드 10개로 반복했습니다. 학습·추론 시간 632셀에 더해 v2 재측정의 GPU 피크 메모리 316셀(CUDA·MPS)도 예측했습니다. 결합 방법은 단순 평균, 공통 가중 결합, 플랫폼별 모델 선택, 플랫폼별 가중 결합, 결정 트리 선택, 메타 모델(조건 가중 선형 스태킹)의 6종입니다.
+
+- 가장 정확한 단일 모델은 플랫폼과 예측 대상마다 달랐습니다(학습 시간: CUDA·MPS는 RF, x86 CPU는 GB, ARM CPU는 XGB).
+- 플랫폼별 가중 결합의 MAPE는 학습 15.76%, 추론 16.20%, 메모리 4.56%로 최고 단일 모델(16.99%, 17.19%, 4.61%)보다 낮았습니다. 하지만 시간 예측은 단순 평균(15.75%, 15.86%)과 비슷했고, 플랫폼별 가중치가 공통 가중치보다 나았던 경우는 대부분 학습 시간의 MPS(−0.94%p)였습니다.
+- 실행 시간 구간별로 보면 log1p XGB의 추론 오차는 10 ms 미만에서 119.0%, 10 ms 이상에서 21.7%였고, 플랫폼별 가중 결합은 16.9%, 16.0%였습니다.
+
+→ `paper/smj/run_smj_experiments.py`, `paper/smj/analyze_smj_results.py`. 결과는 `paper/smj/results/`의 `smj_results.json`, `smj_analysis.json`, `preds_*.npz`이고, 같은 환경에서 다시 돌리면 같은 값이 나옵니다.
+
 ## 설치
 
 ```bash
@@ -117,6 +127,10 @@ python make_tables_v4l.py
 # 7. 그림 1과 국문 원고 PDF
 python make_fig_pipeline.py
 python paper/build_pdf.py 50_draft_v4.md
+# 8. (확장 원고) 결합 앙상블 실험 → paper/smj/results/smj_results.json, preds_*.npz (8코어 약 7~12분)
+python paper/smj/run_smj_experiments.py
+python paper/smj/analyze_smj_results.py   # 구간별·플랫폼별 분석 → paper/smj/results/smj_analysis.json
+python paper/smj/make_fig_smj_scatter.py  # 실측 대 예측 산점도 → paper/smj/figures/
 ```
 
 다시 돌리면 논문 표와 값이 다를 수 있습니다.
